@@ -69,12 +69,14 @@ C *** Load angle data in arrays depending on angular quadrature scheme.
          SECANG(IANG) = SECREG(IANG,NUMANGS)
          ANGWEIGH(IANG) = WTREG(IANG,NUMANGS)
  100  CONTINUE
-
-      TOTUFLUX(0) = 0.0
-      TOTDFLUX(0) = 0.0
-      DO 200 LAY = 1, NLAYERS
+      
+      DO 200 LAY = 0, NLAYERS
          TOTUFLUX(LAY) = 0.0
          TOTDFLUX(LAY) = 0.0
+         DO 150 IANG = 1, NUMANGS
+            URAD(LAY,IANG) = 0.
+            DRAD(LAY,IANG) = 0.
+ 150     CONTINUE
  200  CONTINUE
 
 C *** Loop over frequency bands.
