@@ -20,7 +20,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SURFACE/  TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
-     &                  NMOL
+     &                  COLMOL(MXLAY),NMOL
 
 C  Output
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,COLH2O(MXLAY),
