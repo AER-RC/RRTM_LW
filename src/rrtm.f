@@ -111,11 +111,12 @@ C ***    Calculate information needed by the radiative transfer routine
 C        that is specific to this atmosphere, especially some of the 
 C        coefficients and indices needed to compute the optical depths
 C        by interpolating data from stored reference atmospheres. 
+
          CALL SETCOEF
 
 C ***    Call the radiative transfer routine.
          IF (NUMANGS .EQ. 0) THEN
-            CALL RT 
+            CALL RTR
          ELSE
             CALL RTREG
          ENDIF
