@@ -1156,7 +1156,7 @@ c     ..
 
       CHARACTER*18       HNAMLPK,HVRLPK
 
-      HVRLPK = '$Revision$
+      HVRLPK = '$Revision$'
 
       NM1  = N - 1
 
