@@ -752,7 +752,7 @@ C        Left-justify all inputed names.
      *     HNAMDIS / '         disort.f:' /
      *     HNAMATM / '         rrtatm.f:' /,      
      *     HNAMSET / '        setcoef.f:' /,
-     *     HNAMTAU / '      taumoldis.f:' /,
+     *     HNAMTAU / '         taumol.f:' /,
      *     HNAMRGC / '       rtregcld.f:' /,
      *     HNAMRTC / '         rtrcld.f:' /,
      *     HNAMCLD / '        cldprop.f:' /,      
