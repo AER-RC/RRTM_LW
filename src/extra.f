@@ -38,6 +38,12 @@ C                                                                         E00280
       COMMON /XSECTR/ V1FX(5,35),V2FX(5,35),DVFX(5,35),WXM(35),           E00310
      *                NTEMPF(5,35),NSPECR(35),IXFORM(5,35),               E00320
      *                XSMASS(35),XDOPLR(5,35),NUMXS,IXSBIN                E00325
+C
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
+C
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350
@@ -52,6 +58,8 @@ C     T296 IS TEMPERATURE FOR INITAL CALCULATIN OF DOPPLER WIDTHS         E00412
 C                                                                         E00413
       DATA T296 / 296.0 /                                                 E00414
 C                                                                         E00420
+      HVREXT = '$Revision$'
+C
       IXMAX = 35                                                          E00430
       DO 10 I = 1, IXMAX                                                  E00440
          XSNAME(I) = BLANK                                                E00450

@@ -131,9 +131,15 @@ C     BAND 1:  10-250 cm-1 (low - H2O; high - H2O)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+
 C  Output
 
       COMMON /TAUGCOM/  TAUG(MXLAY,MG)
+
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
 
 C  Input
 
@@ -155,6 +161,8 @@ C  Input
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       REAL KA,KB
+
+      HVRTAU = '$Revision$'
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum 

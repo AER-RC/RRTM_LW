@@ -31,8 +31,14 @@ C  Output
      &                  JS(MXLAY,NBANDS),JS1(MXLAY,NBANDS)
       COMMON /SELF/     SELFFAC, SELFFRAC, INDSELF
 
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
+
       CHARACTER*30 A1
       CHARACTER*10 A2
+
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       DIMENSION PREF(59),PREFLOG(59),TREF(59)
@@ -255,6 +261,8 @@ C     Since there is at most one key specie in this band, there is no
 C     need for for a ratio between two key species as in other bands.
 
 C ****************** START OF EXECUTABLE CODE ***************************
+
+      HVRSET = '$Revision$'
 
       STPFAC = 296./1013.
 
