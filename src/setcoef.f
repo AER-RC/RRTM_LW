@@ -17,7 +17,8 @@ C     for each band at the level and layer temperatures.
 C  Input      
       COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /SURFACE/  TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
      &                  NMOL
 
@@ -99,7 +100,6 @@ C ****************** START OF EXECUTABLE CODE ***************************
       TBNDFRAC = TBOUND - INT(TBOUND)
       INDLEV0 = TZ(0) - 159.
       T0FRAC = TZ(0) - INT(TZ(0))
-
       LAYTROP = 0
       LAYSWTCH = 0
       LAYLOW = 0
@@ -114,8 +114,8 @@ C        surface, level, and layer temperatures.
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
      &              - TOTPLNK(INDBOUND,IBAND)
-               PLANKBND(IBAND) = TOTPLNK(INDBOUND,IBAND) + 
-     &              TBNDFRAC * DBDTLEV
+               PLANKBND(IBAND) = SEMISS(IBAND) * 
+     &              (TOTPLNK(INDBOUND,IBAND) + TBNDFRAC * DBDTLEV)
                DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
                PLANKLEV(0,IBAND) = TOTPLNK(INDLEV0,IBAND) + 
      &              T0FRAC * DBDTLEV
@@ -136,8 +136,8 @@ C        contributions from 2600 cm-1 to infinity.
          IF (ISTART .EQ. 16) THEN
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLK16(INDBOUND+1) - TOTPLK16(INDBOUND)
-               PLANKBND(IBAND) = TOTPLK16(INDBOUND) + 
-     &              TBNDFRAC * DBDTLEV
+               PLANKBND(IBAND) = SEMISS(IBAND) * 
+     &              (TOTPLK16(INDBOUND) + TBNDFRAC * DBDTLEV)
                DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
                PLANKLEV(0,IBAND) = TOTPLK16(INDLEV0) + 
      &              T0FRAC * DBDTLEV
@@ -152,8 +152,8 @@ C        contributions from 2600 cm-1 to infinity.
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
      &              - TOTPLNK(INDBOUND,IBAND)
-               PLANKBND(IBAND) = TOTPLNK(INDBOUND,IBAND) + 
-     &              TBNDFRAC * DBDTLEV
+               PLANKBND(IBAND) = SEMISS(IBAND) * 
+     &              (TOTPLNK(INDBOUND,IBAND) + TBNDFRAC * DBDTLEV)
                DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
                PLANKLEV(0,IBAND) = TOTPLNK(INDLEV0,IBAND) + 
      &              T0FRAC * DBDTLEV
@@ -268,7 +268,6 @@ C        the optical depths (performed in routines TAUGBn for band n).
          FAC01(LAY) = FP * (1. - FT1)
 
  7000 CONTINUE
-
       RETURN
       END
 
