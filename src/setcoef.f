@@ -30,6 +30,7 @@ C  Output
      &                  FAC10(MXLAY),FAC11(MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC, SELFFRAC, INDSELF
+      COMMON /FOREIGN/  FORFAC(MXLAY)
       COMMON /PLNKDAT/  PLANKLAY(MXLAY,NBANDS),
      &                  PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
 
@@ -233,9 +234,10 @@ C        For one band, the "switch" occurs at ~300 mb.
          IF (PLOG .GE. 5.76) LAYSWTCH = LAYSWTCH + 1
          IF (PLOG .GE. 6.62) LAYLOW = LAYLOW + 1
 C
+         FORFAC(LAY) = SCALEFAC / (1.+WATER)
 C        Set up factors needed to separately include the water vapor
 C        self-continuum in the calculation of absorption coefficient.
-         SELFFAC(LAY) = WATER * SCALEFAC / (1.+WATER)
+         SELFFAC(LAY) = WATER * FORFAC(LAY)
          FACTOR = (TAVEL(LAY)-188.0)/7.2
          INDSELF(LAY) = MIN(9, MAX(1, INT(FACTOR)-7))
          SELFFRAC(LAY) = FACTOR - FLOAT(INDSELF(LAY) + 7)
@@ -259,6 +261,7 @@ C        Using E = 1334.2 cm-1.
 C        Above LAYTROP.
  5300    CONTINUE
 
+         FORFAC(LAY) = SCALEFAC / (1.+WATER)
 C        Calculate needed column amounts.
          COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
          COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
