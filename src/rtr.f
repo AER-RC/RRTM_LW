@@ -1,4 +1,4 @@
-      SUBROUTINE RT
+      SUBROUTINE RTR
 
 C *** This program calculates the upward fluxes, downward fluxes,
 C     and heating rates for an arbitrary atmosphere.  The input to
