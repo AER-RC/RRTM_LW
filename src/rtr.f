@@ -71,10 +71,6 @@ C *** SECANG is equal to the secant of the first angle.
 
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
-         DRAD1(NLAYERS) = 0.
-         DRAD2(NLAYERS) = 0.
-         DRAD3(NLAYERS) = 0.
-
          IF (IBAND .EQ. 1) THEN
             CALL TAUGB1
          ELSEIF (IBAND .EQ. 2) THEN
