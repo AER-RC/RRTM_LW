@@ -47,9 +47,10 @@ C     presently: %H%  %T%
 *     COMMON /PRECISE/  ONEMINUS                                              *
 *     COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),                    *
 *    &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND                        *
-*     COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),         *
+*     COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,                              *
+*    &                  COLH2O(MXLAY),COLCO2(MXLAY),                          *
 *    &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),             *
-*    &                  COLO2(MXLAY),CO2MULT(MXLAY)
+*    &                  COLO2(MXLAY),CO2MULT(MXLAY)            *
 *     COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            *
 *    &                  FAC10(MXLAY),FAC11(MXLAY)                             *
 *     COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)                        *
@@ -136,7 +137,8 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -167,7 +169,6 @@ C  Input
      &    0.00234381,0.00167167,0.00062744,0.00010889/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
 
       HVRTAU = '$Revision$'
@@ -228,7 +229,8 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
      &                  NMOL
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -318,7 +320,6 @@ C     From P = 0.432 mb.
      &    0.03931715,0.00428572,0.00349352,0.00278938,
      &    0.00203448,0.00130037,0.00051560,0.00006255/
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
@@ -402,7 +403,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -412,7 +414,9 @@ C  Input
       COMMON /K3/       KA(10,5,13,MG), KB(5,5,13:59,MG), SELFREF(10,MG)
 
       DIMENSION ABSA(650,MG),ABSB(1175,MG)
+      DIMENSION ABSN2OA(MG),ABSN2OB(MG)
       DIMENSION FRACREFA(MG,10), FRACREFB(MG,5)
+      DIMENSION N2OREF(59),H2OREF(59),CO2REF(59), ETAREF(10)
 
       DATA FRACREFA/
 C     From P = 1053.6 mb.
@@ -478,10 +482,50 @@ C     From P = 64.1 mb.
      &    0.11508400,0.09906020,0.08087940,0.06078190,
      &    0.04140530,0.00452724,0.00374558,0.00295328,
      &    0.00218509,0.00138644,0.00056018,0.00008003/
-
+      DATA ABSN2OA/
+     &     1.50387E-01,2.91407E-01,6.28803E-01,9.65619E-01,
+     &     1.15054E-00,2.23424E-00,1.83392E-00,1.39033E-00,
+     &     4.28457E-01,2.73502E-01,1.84307E-01,1.61325E-01,
+     &     7.66314E-02,1.33862E-01,6.71196E-07,1.59293E-06/
+      DATA ABSN2OB/
+     &     9.37044E-05,1.23318E-03,7.91720E-03,5.33005E-02,
+     &     1.72343E-01,4.29571E-01,1.01288E+00,3.83863E+00,
+     &     1.15312E+01,1.08383E+00,2.24847E+00,1.51268E+00,
+     &     3.33177E-01,7.82102E-01,3.44631E-01,1.61039E-03/
+      DATA ETAREF/
+     &     0.,0.125,0.25,0.375,0.5,0.625,0.75,0.875,0.9875,1.0/
+      DATA H2OREF/
+     &     1.87599E-02,1.22233E-02,5.89086E-03,2.76753E-03,1.40651E-03, 
+     &     7.59698E-04,3.88758E-04,1.65422E-04,3.71895E-05,7.47648E-06, 
+     &     4.30818E-06,3.33194E-06,3.20393E-06,3.16186E-06,3.25235E-06, 
+     &     3.42258E-06,3.62884E-06,3.91482E-06,4.14875E-06,4.30810E-06,
+     &     4.44204E-06,4.57783E-06,4.70865E-06,4.79432E-06,4.86971E-06, 
+     &     4.92603E-06,4.96688E-06,4.99628E-06,5.05266E-06,5.12658E-06, 
+     &     5.25028E-06,5.35708E-06,5.45085E-06,5.48304E-06,5.50000E-06, 
+     &     5.50000E-06,5.45359E-06,5.40468E-06,5.35576E-06,5.25327E-06,
+     &     5.14362E-06,5.03396E-06,4.87662E-06,4.69787E-06,4.51911E-06, 
+     &     4.33600E-06,4.14416E-06,3.95232E-06,3.76048E-06,3.57217E-06, 
+     &     3.38549E-06,3.19881E-06,3.01212E-06,2.82621E-06,2.64068E-06, 
+     &     2.45515E-06,2.26962E-06,2.08659E-06,1.93029E-06/
+      DATA N2OREF/
+     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
+     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
+     &     2.76714E-07,2.64709E-07,2.42847E-07,2.09547E-07,1.71945E-07,
+     &     1.37491E-07,1.13319E-07,1.00354E-07,9.12812E-08,8.54633E-08,
+     &     8.03631E-08,7.33718E-08,6.59754E-08,5.60386E-08,4.70901E-08,
+     &     3.99774E-08,3.29786E-08,2.60642E-08,2.10663E-08,1.65918E-08,
+     &     1.30167E-08,1.00900E-08,7.62490E-09,6.11592E-09,4.66725E-09,
+     &     3.28574E-09,2.84838E-09,2.46198E-09,2.07557E-09,1.85507E-09,
+     &     1.65675E-09,1.45843E-09,1.31948E-09,1.20716E-09,1.09485E-09,
+     &     9.97803E-10,9.31260E-10,8.64721E-10,7.98181E-10,7.51380E-10,
+     &     7.13670E-10,6.75960E-10,6.38250E-10,6.09811E-10,5.85998E-10,
+     &     5.62185E-10,5.38371E-10,5.15183E-10,4.98660E-10/
+      DATA CO2REF/
+     &     53*3.55E-04, 3.5470873E-04, 3.5427220E-04, 3.5383567E-04,
+     &     3.5339911E-04, 3.5282588E-04, 3.5079606E-04/  
+  
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
-      REAL KA,KB
+      REAL N2OMULT,KA,KB,N2OREF
       STRRAT = 1.19268
 
 C     Compute the optical depth by interpolating in ln(pressure), 
@@ -502,6 +546,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
                FS = FS/0.9
             ENDIF
          ENDIF
+         FP = FAC01(LAY) + FAC11(LAY)
+         NS = JS + INT(FS + 0.5)
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
@@ -513,6 +559,18 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(3) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(3) + JS
          INDS = INDSELF(LAY)
+         COLREF1 = N2OREF(JP(LAY))
+         COLREF2 = N2OREF(JP(LAY)+1)
+         IF (NS .EQ. 10) THEN
+            WCOMB1 = H2OREF(JP(LAY))
+            WCOMB2 = H2OREF(JP(LAY)+1)
+         ELSE
+            WCOMB1 = STRRAT * CO2REF(JP(LAY))/(1.-ETAREF(NS))
+            WCOMB2 = STRRAT * CO2REF(JP(LAY)+1)/(1.-ETAREF(NS))
+         ENDIF
+         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
+         CURRN2O = SPECCOMB * RATIO
+         N2OMULT = COLN2O(LAY) - CURRN2O 
          DO 2000 IG = 1, NG(3)
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSA(IND0,IG) +
@@ -527,6 +585,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+     &           + N2OMULT * ABSN2OA(IG)
             FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
      &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
  2000    CONTINUE
@@ -539,6 +598,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
+         FP = FAC01(LAY) + FAC11(LAY)
+         NS = JS + INT(FS + 0.5)
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
@@ -549,6 +610,17 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          FAC111 = FS * FAC11(LAY)
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(3) + JS
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(3) + JS
+         COLREF1 = N2OREF(JP(LAY)) 
+         COLREF2 = N2OREF(JP(LAY)+1) 
+         IF (NS .EQ. 5) THEN
+            WCOMB1 = H2OREF(JP(LAY))
+            WCOMB2 = H2OREF(JP(LAY)+1)
+         ELSE
+            WCOMB1 = STRRAT * CO2REF(JP(LAY))/(1.-ETAREF(NS))
+            WCOMB2 = STRRAT * CO2REF(JP(LAY)+1)/(1.-ETAREF(NS))
+         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
+         CURRN2O = SPECCOMB * RATIO
+         N2OMULT = COLN2O(LAY) - CURRN2O 
          DO 3000 IG = 1, NG(3)
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSB(IND0,IG) +
@@ -559,6 +631,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           FAC101 * ABSB(IND1+1,IG) +
      &           FAC011 * ABSB(IND1+5,IG) +
      &           FAC111 * ABSB(IND1+6,IG))
+     &           + N2OMULT * ABSN2OB(IG)
             FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
      &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
  3000    CONTINUE
@@ -586,7 +659,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -664,7 +738,6 @@ C     From P = 1.17 mb.
      &    0.00211550,0.00134746,0.00050874,0.00007863/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
       STRRAT1 = 850.577
       STRRAT2 = 35.7416
@@ -772,7 +845,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
@@ -853,7 +927,6 @@ C     From P = 1.17 mb.
      &     0.,0.,0.,0./
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
       STRRAT1 = 90.4894
       STRRAT2 = 0.900502
@@ -953,7 +1026,8 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
@@ -996,8 +1070,8 @@ C     CFC11 is multiplied by 1.385 to account for the 1060-1107 cm-1 band.
      &     9.80381E-05, 3.51680E-05, 5.31766E-05, 1.01542E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
+
 C     Compute the optical depth by interpolating in ln(pressure) and
 C     temperature. The water vapor self-continuum is interpolated
 C     (in temperature) separately.  
@@ -1053,7 +1127,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1116,7 +1191,6 @@ C  Input
      &     7.66978E-04, 6.70661E-04, 7.89971E-04, 7.55709E-04/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
       STRRAT1 = 8.21104E4
 
@@ -1196,7 +1270,8 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
@@ -1207,7 +1282,9 @@ C  Input
       COMMON /K8/       KA(5,7,MG), KB(5,7:59,MG), SELFREF(10,MG)
 
       DIMENSION ABSA(35,MG),ABSB(265,MG),CFC12(MG),CFC22ADJ(MG)
-      DIMENSION FRACREFA(MG),FRACREFB(MG),ABSCO2(MG),ABSCO2B(MG)
+      DIMENSION ABSN2OA(MG),ABSN2OB(MG)
+      DIMENSION FRACREFA(MG),FRACREFB(MG),ABSCO2A(MG),ABSCO2B(MG)
+      DIMENSION N2OREF(59),H2OREF(59),O3REF(59)
 
 C     From P = 1053.6 mb.
       DATA FRACREFA/
@@ -1235,29 +1312,84 @@ C     and 1290-1335 cm-1 bands.
      &     51.3018, 7.07911, 5.86928, 0.398693,
      &     2.82885, 9.12751, 6.28271, 0./
 
-C     For lower atmosphere.
-      DATA ABSCO2/
+      DATA ABSCO2A/
      &     1.11233E-05, 3.92400E-05, 6.62059E-05, 8.51687E-05,
      &     7.79035E-05, 1.34058E-04, 2.82553E-04, 5.41741E-04,
      &     1.47029E-05, 2.34982E-05, 6.91094E-08, 8.48917E-08,
      &     6.58783E-08, 4.64849E-08, 3.62742E-08, 3.62742E-08/
-C     For upper atmosphere.
       DATA ABSCO2B/
      &     4.10977E-09, 5.65200E-08, 1.70800E-07, 4.16840E-07,
      &     9.53684E-07, 2.36468E-06, 7.29502E-06, 4.93883E-05, 
      &     5.10440E-04, 9.75248E-04, 1.36495E-03, 2.40451E-03,
      &     4.50277E-03, 2.24486E-02, 4.06756E-02, 2.17447E-10/
+      DATA ABSN2OA/
+     &     1.28527E-02,5.28651E-02,1.01668E-01,1.57224E-01,
+     &     2.76947E-01,4.93048E-01,6.71387E-01,3.48809E-01,
+     &     4.19840E-01,3.13558E-01,2.44432E-01,2.05108E-01,
+     &     1.21423E-01,1.22158E-01,1.49702E-01,1.47799E-01/
+      DATA ABSN2OB/
+     &     3.15864E-03,4.87347E-03,8.63235E-03,2.16053E-02,
+     &     3.63699E-02,7.89149E-02,3.53807E-01,1.27140E-00,
+     &     2.31464E-00,7.75834E-02,5.15063E-02,4.07059E-02,
+     &     5.91947E-02,5.83546E-02,3.12716E-01,1.47456E-01/
+
+      DATA H2OREF/
+     &     1.87599E-02,1.22233E-02,5.89086E-03,2.76753E-03,1.40651E-03, 
+     &     7.59698E-04,3.88758E-04,1.65422E-04,3.71895E-05,7.47648E-06, 
+     &     4.30818E-06,3.33194E-06,3.20393E-06,3.16186E-06,3.25235E-06, 
+     &     3.42258E-06,3.62884E-06,3.91482E-06,4.14875E-06,4.30810E-06,
+     &     4.44204E-06,4.57783E-06,4.70865E-06,4.79432E-06,4.86971E-06, 
+     &     4.92603E-06,4.96688E-06,4.99628E-06,5.05266E-06,5.12658E-06, 
+     &     5.25028E-06,5.35708E-06,5.45085E-06,5.48304E-06,5.50000E-06, 
+     &     5.50000E-06,5.45359E-06,5.40468E-06,5.35576E-06,5.25327E-06,
+     &     5.14362E-06,5.03396E-06,4.87662E-06,4.69787E-06,4.51911E-06, 
+     &     4.33600E-06,4.14416E-06,3.95232E-06,3.76048E-06,3.57217E-06, 
+     &     3.38549E-06,3.19881E-06,3.01212E-06,2.82621E-06,2.64068E-06, 
+     &     2.45515E-06,2.26962E-06,2.08659E-06,1.93029E-06/
+      DATA N2OREF/
+     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
+     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
+     &     2.76714E-07,2.64709E-07,2.42847E-07,2.09547E-07,1.71945E-07,
+     &     1.37491E-07,1.13319E-07,1.00354E-07,9.12812E-08,8.54633E-08,
+     &     8.03631E-08,7.33718E-08,6.59754E-08,5.60386E-08,4.70901E-08,
+     &     3.99774E-08,3.29786E-08,2.60642E-08,2.10663E-08,1.65918E-08,
+     &     1.30167E-08,1.00900E-08,7.62490E-09,6.11592E-09,4.66725E-09,
+     &     3.28574E-09,2.84838E-09,2.46198E-09,2.07557E-09,1.85507E-09,
+     &     1.65675E-09,1.45843E-09,1.31948E-09,1.20716E-09,1.09485E-09,
+     &     9.97803E-10,9.31260E-10,8.64721E-10,7.98181E-10,7.51380E-10,
+     &     7.13670E-10,6.75960E-10,6.38250E-10,6.09811E-10,5.85998E-10,
+     &     5.62185E-10,5.38371E-10,5.15183E-10,4.98660E-10/
+      DATA O3REF/
+     &     3.01700E-08,3.47254E-08,4.24769E-08,5.27592E-08,6.69439E-08,
+     &     8.71295E-08,1.13911E-07,1.56771E-07,2.17878E-07,3.24430E-07,
+     &     4.65942E-07,5.68057E-07,6.96065E-07,1.11863E-06,1.76175E-06,
+     &     2.32689E-06,2.95769E-06,3.65930E-06,4.59503E-06,5.31891E-06,
+     &     5.96179E-06,6.51133E-06,7.06350E-06,7.69169E-06,8.25771E-06,
+     &     8.70824E-06,8.83245E-06,8.71486E-06,8.09434E-06,7.33071E-06,
+     &     6.31014E-06,5.36717E-06,4.48289E-06,3.83913E-06,3.28270E-06,
+     &     2.82351E-06,2.49061E-06,2.16453E-06,1.83845E-06,1.66182E-06,
+     &     1.50517E-06,1.34852E-06,1.19718E-06,1.04822E-06,8.99264E-07,
+     &     7.63432E-07,6.53806E-07,5.44186E-07,4.34564E-07,3.64210E-07,
+     &     3.11938E-07,2.59667E-07,2.07395E-07,1.91456E-07,1.93639E-07,
+     &     1.95821E-07,1.98004E-07,2.06442E-07,2.81546E-07/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
-      REAL KA,KB
+      REAL N2OMULT,KA,KB, N2OREF
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  
       DO 2500 LAY = 1, LAYSWTCH
+         FP = FAC01(LAY) + FAC11(LAY)
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(8) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(8) + 1
          INDS = INDSELF(LAY)
+         COLREF1 = N2OREF(JP(LAY))
+         COLREF2 = N2OREF(JP(LAY)+1)
+         WCOMB1 = H2OREF(JP(LAY))
+         WCOMB2 = H2OREF(JP(LAY)+1)
+         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
+         CURRN2O = COLH2O(LAY) * RATIO
+         N2OMULT = COLN2O(LAY) - CURRN2O 
          DO 2000 IG = 1, NG(8)
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
@@ -1269,14 +1401,23 @@ C     temperature.
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
-     &           + CO2MULT(LAY) * ABSCO2(IG)
+     &           + CO2MULT(LAY) * ABSCO2A(IG)
+     &           + N2OMULT * ABSN2OA(IG)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYSWTCH+1, NLAYERS
+         FP = FAC01(LAY) + FAC11(LAY)
          IND0 = ((JP(LAY)-7)*5+(JT(LAY)-1))*NSPB(8) + 1
          IND1 = ((JP(LAY)-6)*5+(JT1(LAY)-1))*NSPB(8) + 1
+         COLREF1 = N2OREF(JP(LAY))
+         COLREF2 = N2OREF(JP(LAY)+1)
+         WCOMB1 = O3REF(JP(LAY))
+         WCOMB2 = O3REF(JP(LAY)+1)
+         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
+         CURRN2O = COLO3(LAY) * RATIO
+         N2OMULT = COLN2O(LAY) - CURRN2O 
          DO 3000 IG = 1, NG(8)
             TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
@@ -1286,6 +1427,7 @@ C     temperature.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + CO2MULT(LAY) * ABSCO2B(IG)
+     &           + N2OMULT * ABSN2OB(IG)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1312,7 +1454,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1321,8 +1464,9 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K9/       KA(11,5,13,MG),KB(5,13:59,MG),SELFREF(10,MG)
 
-      DIMENSION ABSA(715,MG),ABSB(235,MG)
+      DIMENSION ABSA(715,MG),ABSB(235,MG),ABSN2O(3*MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
+      DIMENSION N2OREF(13),H2OREF(13),CH4REF(13),ETAREF(11)
 
       DATA FRACREFA/
 C     From P = 1053.6 mb.
@@ -1369,16 +1513,49 @@ C     From P = 0.071 mb.
      &    0.04001480,0.00424612,0.00346896,0.00269954,
      &    0.00196864,0.00122562,0.00043628,0.00004892/
 
-      EQUIVALENCE (KA,ABSA),(KB,ABSB)
+      DATA N2OREF/
+     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
+     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
+     &     2.76714E-07,2.64709E-07,2.42847E-07/
+      DATA H2OREF/
+     &     1.8759999E-02, 1.2223309E-02, 5.8908667E-03, 2.7675382E-03,  
+     &     1.4065107E-03, 7.5969833E-04, 3.8875898E-04, 1.6542293E-04,  
+     &     3.7189537E-05, 7.4764857E-06, 4.3081886E-06, 3.3319423E-06,  
+     &     3.2039343E-06/  
+      DATA CH4REF/
+     &     1.7000001E-06, 1.7000001E-06, 1.6998713E-06, 1.6904165E-06,  
+     &     1.6671424E-06, 1.6350652E-06, 1.6097551E-06, 1.5590465E-06,  
+     &     1.5119849E-06, 1.4741138E-06, 1.4384609E-06, 1.4002215E-06,  
+     &     1.3573376E-06/
+      DATA ETAREF/
+     &     0.,0.125,0.25,0.375,0.5,0.625,0.75,0.875,0.96,0.99,1.0/
+      DATA ABSN2O/
+C     From P = 952.
+     &     3.26267E-01,2.42869E-00,1.15455E+01,7.39478E-00,
+     &     5.16550E-00,2.54474E-00,3.53082E-00,3.82278E-00,
+     &     1.81297E-00,6.65313E-01,1.23652E-01,1.83895E-03,
+     &     1.70592E-03,2.68434E-09,0.,0.,
+C     From P = 620.
+     &     2.08632E-01,1.11865E+00,4.95975E+00,8.10907E+00,
+     &     1.10408E+01,5.45460E+00,4.18611E+00,3.53422E+00,
+     &     2.54164E+00,3.65093E-01,5.84480E-01,2.26918E-01,
+     &     1.36230E-03,5.54400E-10,6.83703E-10,0.,
+C     From P=313.
+     &     6.20022E-02,2.69521E-01,9.81928E-01,1.65004E-00,
+     &     3.08089E-00,5.38696E-00,1.14600E+01,2.41211E+01,
+     &     1.69655E+01,1.37556E-00,5.43254E-01,3.52079E-01,
+     &     4.31888E-01,4.82523E-06,5.74747E-11,0./
 
-      REAL KA, KB
-      STRRAT1 = 21.6282
+      EQUIVALENCE (KA,ABSA),(KB,ABSB)
+      REAL N2OREF,N2OMULT,KA, KB
+      STRRAT = 21.6282
+      IOFF = 0
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLCH4(LAY)
+         SPECCOMB = COLH2O(LAY) + STRRAT*COLCH4(LAY)
          SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
@@ -1402,6 +1579,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
             JFRAC = 8
             FFRAC = 1.
          ENDIF
+         FP = FAC01(LAY) + FAC11(LAY)
+         NS = JS + INT(FS + 0.5)
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
@@ -1413,6 +1592,20 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(9) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(9) + JS
          INDS = INDSELF(LAY)
+         IF (LAY .EQ. LAYLOW) IOFF = 16
+         IF (LAY .EQ. LAYSWTCH) IOFF = 32
+         COLREF1 = N2OREF(JP(LAY))
+         COLREF2 = N2OREF(JP(LAY)+1)
+         IF (NS .EQ. 11) THEN
+            WCOMB1 = H2OREF(JP(LAY))
+            WCOMB2 = H2OREF(JP(LAY)+1)
+         ELSE
+            WCOMB1 = STRRAT * CH4REF(JP(LAY))/(1.-ETAREF(NS))
+            WCOMB2 = STRRAT * CH4REF(JP(LAY)+1)/(1.-ETAREF(NS))
+         ENDIF
+         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
+         CURRN2O = SPECCOMB * RATIO
+         N2OMULT = COLN2O(LAY) - CURRN2O 
          DO 2000 IG = 1, NG(9)
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSA(IND0,IG) +
@@ -1427,6 +1620,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+     &           + N2OMULT * ABSN2O(IG+IOFF)
             FRACS(LAY,IG) = FRACREFA(IG,JFRAC) + FFRAC *
      &           (FRACREFA(IG,JFRAC+1) - FRACREFA(IG,JFRAC))
  2000    CONTINUE
@@ -1467,13 +1661,14 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
-      COMMON /K10/   KA(5,13,MG), KB(5,13:59,MG)
+      COMMON /K10/      KA(5,13,MG), KB(5,13:59,MG)
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -1492,7 +1687,6 @@ C     From P = 1.17 mb.
      &    0.00223034,0.00139432,0.00051516,0.00007095/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
@@ -1544,7 +1738,8 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1570,7 +1765,6 @@ C     From P = 1.17 mb.
      &    0.00224221,0.00145100,0.00055586,0.00007934/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
@@ -1628,7 +1822,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1680,7 +1875,6 @@ C     From P = 706.3 mb.
      &    0.00288871,0.00187396,0.00067218,0.00010150/
 
       EQUIVALENCE (KA,ABSA)
-
       REAL KA
       STRRAT1 = 0.009736757
 
@@ -1753,7 +1947,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1805,7 +2000,6 @@ C     From P = 706.3 mb.
      &    0.00200156,0.00124812,0.00064664,0.00009768/
 
       EQUIVALENCE (KA,ABSA)
-
       REAL KA
       STRRAT1 = 16658.87
 
@@ -1877,7 +2071,8 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -1903,7 +2098,6 @@ C     From P = 0.64 mb.
      &    0.00198860,0.00116529,0.00043616,0.00005987/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
@@ -1961,7 +2155,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -2013,7 +2208,6 @@ C     From P = 1053.6 mb.
      &    0.00152114,0.00095635,0.00035374,0.00004980/
 
       EQUIVALENCE (KA,ABSA)
-
       REAL KA
       STRRAT1 = 0.2883201
 
@@ -2087,7 +2281,8 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
      &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -2139,7 +2334,6 @@ C     From P = 862.6 mb.
      &    0.00098377,0.00063181,0.00023193,0.00003148/
 
       EQUIVALENCE (KA,ABSA)
-
       REAL KA
       STRRAT1 = 830.411
 
