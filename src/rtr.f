@@ -58,9 +58,13 @@ C     quadrature is chosen.
 C *** SECANG is equal to the secant of the first angle.
       SECANG = 1.219512195
 
-      TOTUFLUX(0) = 0.0
-      TOTDFLUX(0) = 0.0
-      DO 200 LAY = 1, NLAYERS
+      DO 200 LAY = 0, NLAYERS
+         URAD1(LAY) = 0.0
+         URAD2(LAY) = 0.0
+         URAD3(LAY) = 0.0
+         DRAD1(LAY) = 0.0
+         DRAD2(LAY) = 0.0
+         DRAD3(LAY) = 0.0
          TOTUFLUX(LAY) = 0.0
          TOTDFLUX(LAY) = 0.0
  200  CONTINUE
