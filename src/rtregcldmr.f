@@ -40,13 +40,10 @@ C     Clouds are treated with maximum/random overlap scheme.
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *                   HVRRTX,HVRRGX
 
-      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *            HVRRTX,HVRRGX
+      COMMON /CVRRGX/    HVRRGX
+
+      CHARACTER*15       HVRRGX
 
       DIMENSION ATRANS(MXLAY,MXANG),BBUGAS(MXLAY,MXANG)
       DIMENSION ATOT(MXLAY,MXANG),ODCLD(MXLAY,NBANDS,MXANG)
@@ -88,6 +85,7 @@ C     weight.
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
       DATA REC_6 /0.166667/
+
       HVRRGX = '$Revision$'
 
       RADSUM = 0.

@@ -38,13 +38,10 @@ C     Clouds are treated with maximum/random overlap scheme
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *                   HVRRTX,HVRRGX
 
-      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *            HVRRTX,HVRRGX
+      COMMON /CVRRTX/    HVRRTX
+
+      CHARACTER*15       HVRRTX
                                        
       DIMENSION BBUGAS(MXLAY)
       DIMENSION BBUTOT(MXLAY)

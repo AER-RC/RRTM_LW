@@ -36,14 +36,11 @@ C     Gaussian quadrature.
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *                   HVRRTX,HVRRGX
 
-      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *            HVRRTX,HVRRGX
-                                       
+      COMMON /CVRRTR/    HVRRTR
+
+      CHARACTER*15       HVRRTR
+
       DIMENSION BBU1(MXLAY)
       DIMENSION ATRANS1(MXLAY)
       DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)

@@ -38,13 +38,10 @@ C                                                                         E00280
       COMMON /XSECTR/ V1FX(5,35),V2FX(5,35),DVFX(5,35),WXM(35),           E00310
      *                NTEMPF(5,35),NSPECR(35),IXFORM(5,35),               E00320
      *                XSMASS(35),XDOPLR(5,35),NUMXS,IXSBIN                E00325
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *                   HVRRTX,HVRRGX
 
-      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *            HVRRTX,HVRRGX
+      COMMON /CVREXT/    HVREXT
+
+      CHARACTER*15       HVREXT
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350

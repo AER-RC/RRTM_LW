@@ -41,13 +41,9 @@ C     Clouds are treated with random overlap scheme.
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
 
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *                   HVRRTX,HVRRGX
+      COMMON /CVRRGC/    HVRRGC
 
-      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
-     *            HVRRTX,HVRRGX
+      CHARACTER*15       HVRRGC
 
       DIMENSION ATRANS(MXLAY,MXANG),BBUGAS(MXLAY,MXANG)
       DIMENSION ATOT(MXLAY,MXANG),ODCLD(MXLAY,NBANDS,MXANG)
@@ -84,7 +80,9 @@ C     weight.
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
       DATA REC_6 /0.166667/
-      HVRRGC = '$Revision'
+
+      HVRRGC = '$Revision$'
+
       RADSUM = 0.
       NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
