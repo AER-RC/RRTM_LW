@@ -33,15 +33,21 @@ C     created:   $Date$
             CXID(1) is the flag which determines program initialization and termination.  
                     The actual input data stream for RRTM commences with the record 
                     containing a '$' in CXID(1).  Any records that are read prior to a 
-                    record containing a '$' in CXID(1) are ignored.
+                    record containing a '$' in CXID(1) are ignored.Since RRTM automatically
+                    recycles and reads Record 1.1 at the end of each run (this allows the 
+		    stacking of multiple runs), each subsequent run of RRTM must also have 
+	            a '$' in CXID(1) on Record 1.1.  In order to effect a normal termination of 
+                    RRTM, CXID(1) should be set to '%', on the final record of
+                    the input file.  Thus a standard RRTM input file would begin with a '$' 
+                    and end with a '%'.  
 
  RECORD 1.2
  
-      IATM,  IXSECT, NUMANGS,   IOUT,   ICLD
+      IATM,  IXSECT, ISCAT,  NUMANGS,   IOUT,   ICLD
  
-        50,      70,   84-85,  88-90,     95   
+        50,      70,      83,  84-85,  88-90,     95   
  
-   49X, I1, 19X, I1, 13X, I2, 2X, I3, 4X, I1
+   49X, I1, 19X, I1, 12X, I1,     I2, 2X, I3, 4X, I1
  
  
 	  IATM   (0,1)   flag for RRTATM    1 = yes
@@ -50,12 +56,40 @@ C     created:   $Date$
                   = 0  no cross-sections included in calculation
                   = 1  cross-sections included in calculation
 
-          NUMANGS = 0  if the radiance is to be computed at 1 angle, the cosine of
-                       which equals 1/1.66 (standard angle in diffusivity approximation)
-                  = n  (1-4) if the radiances are to be computed at n angles 
-	               chosen such that their cosines have the standard x-axis 
-	               values in first-moment Gaussian quadrature.  This requires 
-	               the computation of one exponential for each angle.
+	  ISCAT (0,1,2) flag for radiative transfer solver 
+		  = 0  Use RRTM radiative transfer solver, based on that
+                       utilized by LBLRTM.  No scattering is included in
+                       these calculations.
+	          = 1  Use DISORT radiative transfer solver, but NO SCATTERING
+                       included.  Example, if including a cloud in the calculation,
+                       only its absorption properties are included. Reference:
+	               Stamnes, K., S.C. Tsay, W. Wiscombe and K. Jayaweera:
+		       A Numerically Stable Algorithm for Discrete-Ordinate-Method 
+                       Radiative Transfer in Multiple Scattering and Emitting Layered 
+                       Media, Appl. Opt. (June, 1988).
+
+	          = 2  Use DISORT radiative transfer solver, but SCATTERING
+                       is included.  Example, if including a cloud in the calculation,
+                       all scattering properties are included.
+
+	  NUMANGS (0,1,2,3,4) flag for number of quadrature angles to use in RT 
+                       calculations.
+	  If ISCAT = 0 then the NUMANGS choices are:
+          
+		       NUMANGS = 0 if the radiance is to be computed at 1 angle, the cosine of
+                                   which equals 1/1.66 (standard angle in diffusivity approximation)
+	                       = n (1-4) if the radiances are to be computed at n angles 
+		                   chosen such that their cosines have the standard x-axis 
+	        	           values in first-moment Gaussian quadrature.  This requires 
+	               	           the computation of one exponential for each angle.
+
+	  If ISCAT = 1 then the NUMANGS correspond to the number of streams to be used in
+                       DISORT.  These quadrature angles are not identical to those used in
+                       ISCAT = 0.
+
+        	       NUMANGS = 0  - 4 streams
+	                       = 1  - 8 streams
+                	       = 2  - 16 streams 
 
 	  IOUT = -1 if no output is to be printed out.
 	       =  0 if the only output is for 10-3250 cm-1.
@@ -319,8 +353,11 @@ C     created:   $Date$
 			b)        1          RE = 6378.39 km
 			c)        4,5        RE = 6356.91 km
  
-           CO2MX     mixing ratio for CO2 (ppm).  Default is 330 ppm.
- 
+           CO2MX     mixing ratio for CO2 (ppm).  Default is 330 ppm.  
+		    
+		     Note: if CO2MX > 0. the user input profile values 
+                           for CO2 are ignored in Record 3.6.N
+
 	 REF_LAT     latitude of location of calculation (degrees)
 		     defaults for REF_LAT = 0:
 		     a) MODEL 0,2,3,6    REF_LAT = 45.0 degrees
@@ -685,12 +722,12 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
             ICEFLAG = 0 the optical depths (gray) due to ice clouds are computed as in CCM3.
                     = 1 the optical depths (non-gray) due to ice clouds are computed as closely as
                         possible to the method in E.E. Ebert and J.A. Curry, JGR, 97, 3831-3836 (1992).
-                    = 2 the optical depths (non-gray) due to ice clouds are computed by a method
+                    = 2 the optical properties (non-gray) due to ice clouds are computed by a method
                         based on the parameterization used in the radiative transfer model Streamer
-                        (reference: J. Key, Streamer User's Guide, Technical Report 96-01, Boston
-                        University, 85 pp. (1996)), which is closely related to the parameterization
-                        of water clouds due to Hu and Stamnes (see below).
-		    = 3 the optical depths (non-gray) due to ice clouds are computed by a method
+                        (reference: Key. J., Streamer User's Guide, Cooperative Institute for
+                        Meteorological Satellite Studies, 2001, 96 pp.), which is closely related 
+                        to the parameterization of water clouds due to Hu and Stamnes (see below).
+		    = 3 the optical properties (non-gray) due to ice clouds are computed by a method
 	 	 	based on the parameterization given in Fu et al., J. Clim.,11,2223-2237 (1998).
 
             LIQFLAG = 0 the optical depths (gray) due to water clouds are computed as in CCM3.
@@ -704,7 +741,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
 
  RECORD C1.2  (one record for each cloudy layer)
 
-      TESTCHAR,    LAY, CLDFRAC,   TAUCLD or CWP, FRACICE, EFFRADICE, EFFRADLIQ
+      TESTCHAR,    LAY, CLDFRAC,   TAUCLD or CWP, FRACICE, EFFSIZEICE, EFFSIZELIQ
 
              1,    3-5,    6-15,           16-25,   26-35,     36-45,     46-55
 
@@ -734,16 +771,18 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
             FRACICE    (INFLAG = 2) fraction of the layer's cloud water path in the form
                        of ice particles  
 
-            EFFRADICE  (INFLAG = 2) Size description of ice particles
-		
-		       ICEFLAG = 2 ice particle effective radius (microns) 
+            EFFSIZEICE (INFLAG = 2 and ICEFLAG = 2) Effective radius of spherical  
+	               ice crystals, re (see STREAMER manual for defition of this parameter)
+	               Valid sizes are 5.0 - 131.0 microns. 
+                  
+                       (INFLAG = 2 and ICEFLAG = 3) Generalized effective size of hexagonal
+	               ice crystals, dge (see Q. Fu, 1996, for definition of this parameter)
+	               Valid sizes are 5.0 - 140.0 microns.  
 
-		       ICEFLAG = 3 generalized effective size (microns)
+		       NOTE: The size descriptions for the two iceflag options are NOT
+		       equivalent.  See the particular references for the appropriate definition.
 
-			NOTE: The size descriptions for the two iceflag options are NOT
-			equivalent.  See the particular references for the appropriate definition.
-
-            EFFRADLIQ  (INFLAG = 2 and LIQFLAG = 1) liquid droplet effective radius (microns) 
+            EFFSIZELIQ  (INFLAG = 2 and LIQFLAG = 1) liquid droplet effective radius (microns) 
 
 
 
