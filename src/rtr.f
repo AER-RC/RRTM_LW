@@ -121,46 +121,64 @@ C ***    Upward radiative transfer.  Due to the simple form taken by
 C        certain equations when the optical depth is small, this 
 C        condition is tested for.  In either case, the labels 1, 2, and
 C        3 refer to the three angles.
+         BGLEV = FRACS(1,IG) * PLANKLEV(0,IBAND)
          DO 2500 LEV = 1, NLAYERS
             BLAY = PLANKLAY(LEV,IBAND)
             PLFRAC = FRACS(LEV,IG)
+            BGLAY = PLFRAC * BLAY
             ODEPTH = SECANG * TAUG(LEV,IG)
             IF (ODEPTH .LE. 1.E-2) THEN
                ATRANS1(LEV) = ODEPTH
                ATRANS2(LEV) = ODEPTH + ODEPTH
                ATRANS3(LEV) = ATRANS2(LEV) + ODEPTH
-               BBU = PLFRAC * BLAY
-               BBD1(LEV) = BBU
-               BBD2(LEV) = BBU
-               BBD3(LEV) = BBU
-               RADLU1 = RADLU1 + (BBU-RADLU1)*ATRANS1(LEV)
-               RADLU2 = RADLU2 + (BBU-RADLU2)*ATRANS2(LEV)
-               RADLU3 = RADLU3 + (BBU-RADLU3)*ATRANS3(LEV)
+               BBD1(LEV) = BGLAY
+               BBD2(LEV) = BGLAY
+               BBD3(LEV) = BGLAY
+               RADLU1 = RADLU1 + (BGLAY-RADLU1)*ATRANS1(LEV)
+               RADLU2 = RADLU2 + (BGLAY-RADLU2)*ATRANS2(LEV)
+               RADLU3 = RADLU3 + (BGLAY-RADLU3)*ATRANS3(LEV)
+               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
+            ELSEIF (ODEPTH .GE. 10.) THEN
+               ATRANS1(LEV) = 1.
+               ATRANS2(LEV) = 1.
+               ATRANS3(LEV) = 1.
+               DELBGDN = BGLEV - BGLAY
+               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
+               DELBGUP = BGLEV - BGLAY
+               TAUSFAC = ODEPTH/(5.+ODEPTH)
+               BBD1(LEV) = BGLAY + TAUSFAC * DELBGDN
+               RADLU1 = BGLAY + TAUSFAC * DELBGUP
+               TAUSFAC = ODEPTH/(2.5+ODEPTH)
+               BBD2(LEV) = BGLAY + TAUSFAC * DELBGDN
+               RADLU2 = BGLAY + TAUSFAC * DELBGUP
+               TAUSFAC = ODEPTH/(1.666667+ODEPTH)
+               BBD3(LEV) = BGLAY + TAUSFAC * DELBGDN
+               RADLU3 = BGLAY + TAUSFAC * DELBGUP
             ELSE
                TRANS1 = EXP(-ODEPTH)
                ATRANS1(LEV) = 1. - TRANS1
                ATRANS2(LEV) = 1. - TRANS1*TRANS1
                ATRANS3(LEV) = ATRANS1(LEV) + TRANS1*ATRANS2(LEV)
-
-               DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
-               DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
+               DELBGDN = BGLEV - BGLAY
+               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
+               DELBGUP = BGLEV - BGLAY
 
 C ***          TAUSFAC is needed for the Pade approximation for
 C              the Planck function.
                TAUSFAC = ODEPTH/(5.+ODEPTH)
-               BBU = PLFRAC * (BLAY + TAUSFAC * DPLANKUP)
+               BBU = BGLAY + TAUSFAC * DELBGUP
                RADLU1 = RADLU1 + (BBU-RADLU1)*ATRANS1(LEV)
-               BBD1(LEV) = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
+               BBD1(LEV) = BGLAY + TAUSFAC * DELBGDN
 
                TAUSFAC = ODEPTH/(2.5+ODEPTH)
-               BBU = PLFRAC * (BLAY + TAUSFAC * DPLANKUP)
+               BBU = BGLAY + TAUSFAC * DELBGUP
                RADLU2 = RADLU2 + (BBU-RADLU2)*ATRANS2(LEV)
-               BBD2(LEV) = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
+               BBD2(LEV) = BGLAY + TAUSFAC * DELBGDN
 
                TAUSFAC = ODEPTH/(1.6666667+ODEPTH)
-               BBU = PLFRAC * (BLAY + TAUSFAC * DPLANKUP)
+               BBU = BGLAY + TAUSFAC * DELBGUP
                RADLU3 = RADLU3 + (BBU-RADLU3)*ATRANS3(LEV)
-               BBD3(LEV) = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
+               BBD3(LEV) = BGLAY + TAUSFAC * DELBGDN
             ENDIF
 
             URAD1(LEV) = URAD1(LEV) + RADLU1
@@ -201,19 +219,20 @@ C ***    Calculate upward, downward, and net flux.
  5000    CONTINUE
  6000 CONTINUE
 
-      DO 7000 LEV = 0, NLAYERS
+      TOTUFLUX(0) = TOTUFLUX(0) * FLUXFAC
+      TOTDFLUX(0) = TOTDFLUX(0) * FLUXFAC
+      FNET(0) = TOTUFLUX(0) - TOTDFLUX(0)
+      DO 7000 LEV = 1, NLAYERS
          TOTUFLUX(LEV) = TOTUFLUX(LEV) * FLUXFAC
          TOTDFLUX(LEV) = TOTDFLUX(LEV) * FLUXFAC
          FNET(LEV) = TOTUFLUX(LEV) - TOTDFLUX(LEV)
+         L = LEV - 1
+
+C        Calculate Heating Rates.
+         HTR(L)=HEATFAC*(FNET(L)-FNET(LEV))/(PZ(L)-PZ(LEV)) 
  7000 CONTINUE
 
-C *** Calculate Heating Rates.
-
       HTR(NLAYERS) = 0.0
-      DO 8000 LEV  = NLAYERS-1, 0, -1
-         LAY = LEV + 1
-         HTR(LEV)=HEATFAC*(FNET(LEV)-FNET(LAY))/(PZ(LEV)-PZ(LAY)) 
- 8000 CONTINUE
 
       RETURN
       END   
