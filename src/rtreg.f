@@ -29,7 +29,7 @@ C     is used for the angle integration.
       COMMON /PLANKG/    FRACS(MXLAY,MG)                                       
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
-     &                   FNET(0:MXLAY), HTR(MXLAY)
+     &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                   HVDUM1(4),HVRUTL,HVREXT
       COMMON /HVRSNB/    HVRKG(NBANDS)
@@ -81,9 +81,6 @@ C *** Load angle data in arrays depending on angular quadrature scheme.
 
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
-         DO 1100 IANG = 1, NUMANGS
-            DRAD(NLAYERS,IANG) = 0.
- 1100    CONTINUE
 
          IF (IBAND .EQ. 1) THEN
             CALL TAUGB1
