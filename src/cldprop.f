@@ -59,10 +59,12 @@ C                     E&C 4      IB = 2      RRTM band 2
 C                     E&C 5      IB = 1      RRTM band 1
 C       ICEFLAG = 2:  The ice effective radius (microns) is input and the
 C                     optical depths due to ice clouds are computed as in 
-C                     Key (1995).  The values of absorption coefficients
-C                     appropriate for the spectral bands of RRTM were 
-C                     obtained by an averaging procedure based on the 
-C                     work of J. Pinto (private communication).
+C                     Streamer (reference:  J. Key, Streamer User's Guide, 
+C                     Technical Report 96-01, Department of Geography,
+C                     Boston University, 85 pp. (1996)).  The values of 
+C                     absorption coefficients appropriate for the spectral 
+C                     bands of RRTM were obtained by an averaging procedure 
+C                     based on the work of J. Pinto (private communication).
 C       LIQFLAG = 0:  The optical depths due to water clouds are computed as
 C                     in CCM3.
 C       LIQFLAG = 1:  The water droplet effective radius (microns) is input 
