@@ -1,7 +1,9 @@
-rrtm : rrtm.o rrtatm.o setcoef.o rtr.o rtreg.o taumol.o k_g.o extra.o\
-util_sun.o rtrcld.o rtregcld.o cldprop.o
-	f77 -fast -o  rrtm  rrtm.o rrtatm.o setcoef.o rtr.o\
-  rtreg.o taumol.o k_g.o extra.o util_sun.o rtrcld.o rtregcld.o cldprop.o
+rrtm : rrtm.o rrtatm.o setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o \
+	           util_sun.o rtrcld.o rtregcld.o cldprop.o rtrcldmr.o rtregcldmr.o
+#
+	f77 -fast  -o  rrtm  rrtm.o rrtatm.o \
+	           setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o util_sun.o \
+                   rtrcld.o rtregcld.o cldprop.o rtrcldmr.o rtregcldmr.o
 #
 rrtm.o: rrtm.f
 	f77  -fast    -c  rrtm.f
@@ -38,4 +40,10 @@ rtregcld.o: rtregcld.f
 #
 cldprop.o: cldprop.f
 	f77    -fast    -c  cldprop.f
+#
+rtrcldmr.o: rtrcldmr.f
+	f77    -fast    -c  rtrcldmr.f
+#
+rtregcldmr.o: rtregcldmr.f
+	f77    -fast    -c  rtregcldmr.f
 #
