@@ -618,6 +618,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          ELSE
             WCOMB1 = STRRAT * CO2REF(JP(LAY))/(1.-ETAREF(NS))
             WCOMB2 = STRRAT * CO2REF(JP(LAY)+1)/(1.-ETAREF(NS))
+         ENDIF
          RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
          CURRN2O = SPECCOMB * RATIO
          N2OMULT = COLN2O(LAY) - CURRN2O 
