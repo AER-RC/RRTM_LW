@@ -125,7 +125,6 @@ C        that is specific to this atmosphere, especially some of the
 C        coefficients and indices needed to compute the optical depths
 C        by interpolating data from stored reference atmospheres. 
 
-         ICLD = 1
          IF (ICLD .EQ. 1) CALL CLDPROP(ICLDATM)
 
          CALL SETCOEF
