@@ -7,10 +7,8 @@ C     presently: %H%  %T%
 C     Purpose:  For a given atmosphere, calculate the indices and
 C     fractions related to the pressure and temperature interpolations.
 C     Also calculate the values of the integrated Planck functions 
-C     for each band at the level and layer temperatures.
-
-C     Note:  Uncomment all lines marked with 'CX' if you want 
-C     extrapolation warnings.
+C     for each band at the level and layer temperatures.  Compute
+C     the column amounts of the major species.
 
       PARAMETER (MXLAY = 203)
       PARAMETER (NBANDS = 16)
@@ -26,7 +24,7 @@ C  Input
 C  Output
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),
      &                  COLCO2(MXLAY),COLO3(MXLAY),COLN2O(MXLAY),
-     &                  COLCH4(MXLAY)
+     &                  COLCH4(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
      &                  FAC10(MXLAY),FAC11(MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -48,8 +46,6 @@ C  --------
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       DIMENSION PREF(59),PREFLOG(59),TREF(59)
-CX      CHARACTER*30 A1
-CX      CHARACTER*10 A2
 
 C     These pressures are chosen such that the ln of the first pressure
 C     has only a few non-zero digits (i.e. ln(PREF(1)) = 6.96000) and
@@ -106,13 +102,6 @@ C ****************** START OF EXECUTABLE CODE ***************************
       TBNDFRAC = TBOUND - INT(TBOUND)
       INDLEV0 = TZ(0) - 179.
       T0FRAC = TZ(0) - INT(TZ(0))
-
-C     Since the output absorption coefficient might not be too accurate
-C     if it resulted from extrapolation (in any of the variables) rather
-C     than interpolation, print out a message warning the user that this
-C     has occurred.
-CX      IERR = 13
-CX      OPEN(IERR,FILE='EXTRAP.WARNINGS',FORM='FORMATTED')
 
       LAYTROP = 0
       LAYSWTCH = 0
@@ -188,21 +177,12 @@ C        two values that the layer pressure lies.
          JP(LAY) = INT(36. - 5*(PLOG+0.04))
          IF (JP(LAY) .LT. 1) THEN
             JP(LAY) = 1
-CX            A1 = 'PRESSURE'
-CX            A2 = 'HIGH'
-CX            WRITE(IERR,9810)A1,PAVEL(LAY)
-CX            WRITE(IERR,9811)LAY,A2
-CX            WRITE(IERR,9812)
          ELSEIF (JP(LAY) .GT. 58) THEN
             JP(LAY) = 58
-CX            A1 = 'PRESSURE'
-CX            A2 = 'LOW'
-CX            WRITE(IERR,9810)A1,PAVEL(LAY)
-CX            WRITE(IERR,9811)LAY,A2
-CX            WRITE(IERR,9812)
          ENDIF
          JP1 = JP(LAY) + 1
          FP = 5. * (PREFLOG(JP(LAY)) - PLOG)
+
 C        Determine, for each reference pressure (JP and JP1), which
 C        reference temperature (these are different for each  
 C        reference pressure) is nearest the layer temperature but does
@@ -213,25 +193,15 @@ C        layer temperature falls.
          JT(LAY) = INT(3. + (TAVEL(LAY)-TREF(JP(LAY)))/15.)
          IF (JT(LAY) .LT. 1) THEN
             JT(LAY) = 1
-CX            A1 = 'TEMPERATURE'
-CX            A2 = 'LOW'
-CX            WRITE(IERR,9810)A1,TAVEL(LAY)
-CX            WRITE(IERR,9811)LAY,A2
-CX            WRITE(IERR,9812)
-         ELSEIF(JT(LAY) .GT. 4) THEN
+         ELSEIF (JT(LAY) .GT. 4) THEN
             JT(LAY) = 4
          ENDIF
          FT = ((TAVEL(LAY)-TREF(JP(LAY)))/15.) - FLOAT(JT(LAY)-3)
          JT1(LAY) = INT(3. + (TAVEL(LAY)-TREF(JP1))/15.)
          IF (JT1(LAY) .LT. 1) THEN
             JT1(LAY) = 1
-         ELSEIF(JT1(LAY) .GT. 4) THEN
+         ELSEIF (JT1(LAY) .GT. 4) THEN
             JT1(LAY) = 4
-CX            A1 = 'TEMPERATURE'
-CX            A2 = 'HIGH'
-CX            WRITE(IERR,9810)A1,TAVEL(LAY)
-CX            WRITE(IERR,9811)LAY,A2
-CX            WRITE(IERR,9812)
          ENDIF
          FT1 = ((TAVEL(LAY)-TREF(JP1))/15.) - FLOAT(JT1(LAY)-3)
 
@@ -247,7 +217,7 @@ C        self-continuum in the calculation of absorption coefficient.
          WATER = WKL(1,LAY)/COLDRY(LAY)
          SCALEFAC = PAVEL(LAY) * STPFAC / TAVEL(LAY)
          SELFFAC(LAY) = SCALEFAC * WATER / (1.+WATER)
-         FACTOR = (TAVEL(LAY)-188.0)/7.2
+         FACTOR = (TAVEL(LAY)-188.0) / 7.2
          INDSELF(LAY) = MIN(9, MAX(1, INT(FACTOR)-7))
          SELFFRAC(LAY) = FACTOR - FLOAT(INDSELF(LAY) + 7)
 
@@ -257,7 +227,9 @@ C        Calculate needed column amounts.
          COLO3(LAY) = 1.E-20 * WKL(3,LAY)
          COLN2O(LAY) = 1.E-20 * WKL(4,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
-
+         CO2REG = 3.55E-24 * COLDRY(LAY)
+         CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
+     &        EXP(-1919.4/TAVEL(LAY))/1.527E-3
          GO TO 5400
 
 C        Above LAYTROP.
@@ -269,7 +241,7 @@ C        Calculate needed column amounts.
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
 
  5400    CONTINUE
-C
+
 C        We have now isolated the layer ln pressure and temperature,
 C        between two reference pressures and two reference temperatures 
 C        (for each reference pressure).  We multiply the pressure 
@@ -282,13 +254,8 @@ C        the optical depths (performed in routines TAUGBn for band n).
          FAC00(LAY) = COMPFP * (1. - FT)
          FAC11(LAY) = FP * FT1
          FAC01(LAY) = FP * (1. - FT1)
+
  7000 CONTINUE
-
-CX      CLOSE(IERR)
-
- 9810 FORMAT(' EXTRAPOLATION WARNING:  YOUR ',A11,' OF ',1P,G13.7,0P)
- 9811 FORMAT(' FROM LAYER ',I3,' IS TOO ',A4,' FOR INTERPOLATION.')
- 9812 FORMAT(' THE OPTICAL DEPTHS CALCULATED MAY NOT BE ACCURATE.')
 
       RETURN
       END
