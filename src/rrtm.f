@@ -359,7 +359,7 @@ C     Test for mixing ratio input.
  9000 CONTINUE
 
  9010 FORMAT (A1)
- 9011 FORMAT (49X,I1,19X,I1,14X,I1,2X,I3)
+ 9011 FORMAT (49X,I1,19X,I1,13X,I2,2X,I3)
  9012 FORMAT (E10.3)
  9013 FORMAT (1X,I1,I3,I5)                                     
  9300 FORMAT (I5)
