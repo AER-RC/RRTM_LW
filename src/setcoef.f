@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE SETCOEF
 
 C     Purpose:  For a given atmosphere, calculate the indices and
@@ -32,6 +36,15 @@ C  Output
 
 C  Internal
       COMMON /AVGPLNK/  TOTPLNK(141,NBANDS), TOTPLK16(141)
+C  --------
+
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       DIMENSION PREF(59),PREFLOG(59),TREF(59)
@@ -85,6 +98,7 @@ C     pressures for the MLS standard atmosphere.
 
 
 C ****************** START OF EXECUTABLE CODE ***************************
+      HVRSET = '$Revision$'
 
       STPFAC = 296./1013.
 

@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE RTREG
 
 C *** This program calculates the upward fluxes, downward fluxes,
@@ -26,6 +30,13 @@ C     is used for the angle integration.
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(MXLAY)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
 
       DIMENSION ATRANS(MXLAY),BBD(MXLAY)
       DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)
@@ -50,6 +61,8 @@ C     weight.
       DATA WTREG(1,3) /0.2009319137/
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
+
+      HVRREG = '$Revision$'
 
 C *** Load angle data in arrays depending on angular quadrature scheme.
       DO 100 IANG = 1, NUMANGS

@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE RTR
 
 C *** This program calculates the upward fluxes, downward fluxes,
@@ -27,6 +31,13 @@ C     per g-value per band.
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
                                        
       DIMENSION BBD1(MXLAY),BBD2(MXLAY),BBD3(MXLAY)
       DIMENSION ATRANS1(MXLAY),ATRANS2(MXLAY),ATRANS3(MXLAY)
@@ -41,6 +52,8 @@ C     degrees, resp.  They are used when "numerical" Gaussian
 C     quadrature is chosen.
       DATA WTNUM(3) /0.1084176674/, WTNUM(2) /0.0424353369/
       DATA WTNUM(1) /0.3491473794/
+
+      HVRRTR = '$Revision$'
 
 C *** SECANG is equal to the secant of the first angle.
       SECANG = 1.219512195

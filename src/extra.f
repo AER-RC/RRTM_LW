@@ -14,6 +14,7 @@ C**********************************************************************   E00090
 C                                                                         E00100
 C     IFIL CARRIES FILE INFORMATION                                       E00110
 C                                                                         E00120
+      PARAMETER (NBANDS = 16)
       PARAMETER (MXFSC=200, MXLAY=MXFSC+3,MXZMD=3400,
      *           MXPDIM=MXLAY+MXZMD,IM2=MXPDIM-2,MXMOL=35,MXTRAC=22)
 C
@@ -38,6 +39,13 @@ C                                                                         E00280
       COMMON /XSECTR/ V1FX(5,35),V2FX(5,35),DVFX(5,35),WXM(35),           E00310
      *                NTEMPF(5,35),NSPECR(35),IXFORM(5,35),               E00320
      *                XSMASS(35),XDOPLR(5,35),NUMXS,IXSBIN                E00325
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350
@@ -51,6 +59,8 @@ C                                                                         E00411
 C     T296 IS TEMPERATURE FOR INITAL CALCULATIN OF DOPPLER WIDTHS         E00412
 C                                                                         E00413
       DATA T296 / 296.0 /                                                 E00414
+C
+      HVREXT = '$Revision$'
 C                                                                         E00420
       IXMAX = 35                                                          E00430
       DO 10 I = 1, IXMAX                                                  E00440

@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
 *******************************************************************************
 *                                                                             *
 *                  Optical depths developed for the                           *
@@ -131,6 +135,13 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -149,6 +160,8 @@ C  Input
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
       REAL KA,KB
+
+      HVRTAU = '$Revision$'
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum 
