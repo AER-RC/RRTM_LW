@@ -18,7 +18,7 @@ C     is used for the angle integration.
       IMPLICIT DOUBLE PRECISION (V)                                     
 
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
-      COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
+      COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
@@ -49,6 +49,7 @@ C     the method to approximate the integral over angles that yields
 C     flux from radiances, then SECREG(I,J) is the secant of the Ith  
 C     (out of a total of J angles) and WTREG(I,J) is the corresponding
 C     weight.
+      DATA SECDIFF / 1.66/
       DATA SECREG(1,1) / 1.5/
       DATA SECREG(2,2) / 2.81649655/, SECREG(1,2) / 1.18350343/
       DATA SECREG(3,3) / 4.70941630/, SECREG(2,3) / 1.69338507/
@@ -63,17 +64,19 @@ C     weight.
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
 
       HVRREG = '$Revision$'
-
+      
+      NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
-      DO 100 IANG = 1, NUMANGS
-         SECANG(IANG) = SECREG(IANG,NUMANGS)
-         ANGWEIGH(IANG) = WTREG(IANG,NUMANGS)
+      DO 100 IANG = 1, NUMANG
+         SECANG(IANG) = SECREG(IANG,NUMANG)
+         ANGWEIGH(IANG) = WTREG(IANG,NUMANG)
  100  CONTINUE
+      IF (NUMANGS .EQ. -1) SECANG(1) = SECDIFF
       
       DO 200 LAY = 0, NLAYERS
          TOTUFLUX(LAY) = 0.0
          TOTDFLUX(LAY) = 0.0
-         DO 150 IANG = 1, NUMANGS
+         DO 150 IANG = 1, NUMANG
             URAD(LAY,IANG) = 0.
             DRAD(LAY,IANG) = 0.
  150     CONTINUE
@@ -81,7 +84,6 @@ C *** Load angle data in arrays depending on angular quadrature scheme.
 
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
-
          IF (IBAND .EQ. 1) THEN
             CALL TAUGB1
          ELSEIF (IBAND .EQ. 2) THEN
@@ -121,7 +123,7 @@ C ***    Loop over g-channels.
  1000    CONTINUE
          
 C ***    Loop over each angle for which the radiance is to be computed.
-         DO 3000 IANG = 1, NUMANGS
+         DO 3000 IANG = 1, NUMANG
 C ***       Radiative transfer starts here.
             RADLU = FRACS(1,IG) * PLANKBND(IBAND)
             URAD(0,IANG) = URAD(0,IANG) + RADLU
@@ -156,7 +158,7 @@ C ***    Calculate upward, downward, and net flux.
          DO 5000 LEV = NLAYERS, 0, -1
             UFLUX(LEV) = 0.0
             DFLUX(LEV) = 0.0
-            DO 4500 IANG = 1, NUMANGS
+            DO 4500 IANG = 1, NUMANG
                UFLUX(LEV) = UFLUX(LEV) + URAD(LEV,IANG)*ANGWEIGH(IANG)
                DFLUX(LEV) = DFLUX(LEV) + DRAD(LEV,IANG)*ANGWEIGH(IANG)
                URAD(LEV,IANG) = 0.0
