@@ -387,6 +387,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -748,6 +749,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT*COLCO2(LAY)
          SPECPARM = COLH2O(LAY)/SPECCOMB
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          DO 2300 IREF = 2, 6
             IF(SPECPARM .LE. SPARM31(IREF,JP(LAY))) GO TO 2350
  2300    CONTINUE
@@ -801,7 +803,8 @@ C     &           (FRACREFA(IG,INDPLNK+1) - FRACREFA(IG,INDPLNK))
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
          SPECCOMB = COLH2O(LAY) + STRRAT*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          IREF = 3
          IF(SPECPARM .LE. SPARM32(2,JP(LAY))) IREF = 2
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(3) + IREF - 1
@@ -863,6 +866,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -1225,7 +1229,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          DO 2300 IREF = 2, 6
             IF(SPECPARM .LE. SPARM41(IREF,JP(LAY))) GO TO 2350
  2300    CONTINUE
@@ -1279,7 +1284,8 @@ C     &           (FRACREFA(IG,INDPLNK+1) - FRACREFA(IG,INDPLNK))
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
          SPECCOMB = COLO3(LAY) + STRRAT2*COLCO2(LAY)
-         SPECPARM = COLO3(LAY)/SPECCOMB
+         SPECPARM = COLO3(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          IREF = 3
          IF(SPECPARM .LE. SPARM42(2,JP(LAY))) IREF = 2
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(4) + IREF - 1
@@ -1341,6 +1347,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -1703,7 +1710,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          DO 2300 IREF = 2, 6
             IF(SPECPARM .LE. SPARM51(IREF,JP(LAY))) GO TO 2350
  2300    CONTINUE
@@ -1757,7 +1765,8 @@ C     &           (FRACREFA(IG,INDPLNK+1) - FRACREFA(IG,INDPLNK))
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
          SPECCOMB = COLO3(LAY) + STRRAT2*COLCO2(LAY)
-         SPECPARM = COLO3(LAY)/SPECCOMB
+         SPECPARM = COLO3(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          IREF = 3
          IF(SPECPARM .LE. SPARM52(2,JP(LAY))) IREF = 2
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(5) + IREF - 1
@@ -1890,6 +1899,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -1957,7 +1967,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLO3(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*SPECPARM
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
@@ -2107,6 +2118,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -2172,7 +2184,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCH4(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          JFRAC = JS
@@ -2415,6 +2428,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -2477,7 +2491,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
@@ -2537,6 +2552,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -2599,7 +2615,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLN2O(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
@@ -2741,6 +2758,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -2803,7 +2821,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLN2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLN2O(LAY)/SPECCOMB
+         SPECPARM = COLN2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
@@ -2863,6 +2882,7 @@ C  Output
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
@@ -2925,7 +2945,8 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCH4(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB
+         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
