@@ -1,0 +1,43 @@
+rrtm : rrtm.o rrtatm.o setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o \
+	           util_sgi.o rtrcld.o rtregcld.o cldprop.o
+#
+	pgf90  -o  rrtm  rrtm.o rrtatm.o \
+	           setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o util_sgi.o \
+                   rtrcld.o rtregcld.o cldprop.o
+#
+rrtm.o: rrtm.f
+	pgf90  -c  rrtm.f
+#
+rrtatm.o: rrtatm.f
+	pgf90  -c  rrtatm.f
+#
+setcoef.o: setcoef.f
+	pgf90  -c  setcoef.f
+#
+rtr.o: rtr.f
+	pgf90  -c  rtr.f
+#
+rtreg.o: rtreg.f
+	pgf90  -c  rtreg.f
+#
+taumol.o: taumol.f
+	pgf90  -c  taumol.f
+#
+k_g.o: k_g.f
+	pgf90  -c  k_g.f
+#
+extra.o: extra.f
+	pgf90  -c  extra.f
+#
+util_sgi.o: util_sgi.f
+	pgf90  -c  util_sgi.f
+#
+rtrcld.o: rtrcld.f
+	pgf90  -c  rtrcld.f
+#
+rtregcld.o: rtregcld.f
+	pgf90  -c  rtregcld.f
+#
+cldprop.o: cldprop.f
+	pgf90  -c  cldprop.f
+#

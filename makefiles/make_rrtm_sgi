@@ -1,0 +1,43 @@
+rrtm : rrtm.o rrtatm.o setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o \
+	           util_sgi.o rtrcld.o rtregcld.o cldprop.o
+#
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -o  rrtm  rrtm.o rrtatm.o \
+	           setcoef.o rtr.o rtreg.o k_g.o taumol.o extra.o util_sgi.o \
+                   rtrcld.o rtregcld.o cldprop.o
+#
+rrtm.o: rrtm.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rrtm.f
+#
+rrtatm.o: rrtatm.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rrtatm.f
+#
+setcoef.o: setcoef.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  setcoef.f
+#
+rtr.o: rtr.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rtr.f
+#
+rtreg.o: rtreg.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rtreg.f
+#
+taumol.o: taumol.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  taumol.f
+#
+k_g.o: k_g.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  k_g.f
+#
+extra.o: extra.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  extra.f
+#
+util_sgi.o: util_sgi.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  util_sgi.f
+#
+rtrcld.o: rtrcld.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rtrcld.f
+#
+rtregcld.o: rtregcld.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  rtregcld.f
+#
+cldprop.o: cldprop.f
+	f90 -mips4 -r10000 -lfastm -O3 -64 -TENV:X=0 -c  cldprop.f
+#
