@@ -33,7 +33,7 @@ C     presently: %H%  %T%
 *                                                                          *
 ****************************************************************************
 
-      PROGRAM RRTM
+       PROGRAM RRTM
                     
 C *** This program is the driver for RRTM, the AER rapid model.  
 C     For each atmosphere the user wishes to analyze, this routine
@@ -54,7 +54,7 @@ C        level and the heating rate for each layer
       CHARACTER*8 HVRKG
 
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
-      COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
+      COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PRECISE/   ONEMINUS
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
@@ -66,6 +66,8 @@ C        level and the heating rate for each layer
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                   HVDUM1(4),HVRUTL,HVREXT
       COMMON /HVRSNB/    HVRKG(NBANDS)
+
+      CHARACTER PAGE
 
       DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
       DATA WAVENUM1(2) /250./, WAVENUM2(2) /500./, DELWAVE(2) /250./
@@ -84,9 +86,9 @@ C        level and the heating rate for each layer
       DATA WAVENUM1(15) /2380./,WAVENUM2(15) /2600./,DELWAVE(15) /220./
       DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3000./,DELWAVE(16) /400./
 
-      DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
-      DATA NSPA /1,1,10,9,9,1,9,1,11,1,1,9,9,1,9,9/
-      DATA NSPB /1,1, 5,6,5,0,1,1, 1,1,1,0,0,1,0,0/
+      DATA NG  /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
+      DATA NSPA /1, 1,10, 9, 9, 1, 9, 1,11, 1, 1, 9, 9, 1, 9, 9/
+      DATA NSPB /1, 1, 5, 6, 5, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0/
 
 C     HEATFAC is the factor by which one must multiply delta-flux/ 
 C     delta-pressure, with flux in w/m-2 and pressure in mbar, to get 
@@ -94,7 +96,6 @@ C     the heating rate in units of degrees/day.  It is equal to
 C           (g)x(#sec/day)x(1e-5)/(specific heat of air at const. p)
 C        =  (9.8066)(3600)(1e-5)/(1.004)
       DATA HEATFAC /8.4391/
-      CHARACTER PAGE
 
       ONEMINUS = 1. - 1.E-6
       PI = 2.*ASIN(1.)
@@ -102,7 +103,7 @@ C        =  (9.8066)(3600)(1e-5)/(1.004)
 
       IWR = 10
       PAGE = CHAR(12)
-
+      
 C     Multiple atmospheres not yet implemented. 
       NUMATMOS = 1
       DO 4000 IATMOS = 1, NUMATMOS
@@ -115,7 +116,7 @@ C ***    Input atmospheric profile from INPUT_RRTM.
          IFLAG = IOUT
 
  1000    CONTINUE
-         IF (IFLAG .GT. 0 .AND. IFLAG .LE. 16) THEN
+         IF (IFLAG .GT. 0 .AND. IFLAG .LE. 40) THEN
             ISTART = IFLAG
             IEND = IFLAG
          ENDIF
@@ -129,7 +130,7 @@ C        by interpolating data from stored reference atmospheres.
 
 C ***    Call the radiative transfer routine.
          IF (NUMANGS .EQ. 0) THEN
-            CALL RTR
+               CALL RTR
          ELSE
             CALL RTREG
          ENDIF
@@ -168,7 +169,7 @@ C
  3000    CONTINUE
          WRITE(IWR,9903)PAGE
          
-         IF (IOUT .LE. 16 .OR. IFLAG .EQ. 16) GO TO 3500
+         IF (IOUT .LE. 40 .OR. IFLAG .EQ. 16) GO TO 3500
          IF (IFLAG .EQ. 99) THEN
             IFLAG = 1
          ELSEIF (IOUT .EQ. 99) THEN
@@ -226,20 +227,29 @@ C     Read in atmospheric profile.
       IMPLICIT DOUBLE PRECISION (V)                                      
                                                                          
       PARAMETER (MXLAY=203)
-      DIMENSION ALTZ(0:MXLAY), SUMMOL(MXLAY)
+      PARAMETER (MAXINPX=35)
+      PARAMETER (MAXXSEC=4)
+      PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
+      DIMENSION ALTZ(0:MXLAY),IXTRANS(14)
 
-      COMMON /CONTROL/ NUMANGS, IOUT, ISTART, IEND
-      COMMON /PROFILE/ NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                 PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
-      COMMON /SPECIES/ COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
-     &                 NMOL
-      COMMON /IFIL/    IRD,IPR,IPU,DUM(15)
+      COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND
+      COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
+     &                  NMOL
+      COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
+      COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
+      COMMON /XSEC/     WX(MAXXSEC,MXLAY)
+      COMMON /PATHX/    IXMAX,NXMOL0,IXINDX0(MAXINPX),WX0(MAXINPX,MXLAY)    
+      COMMON /XRRTATM/  IXSECT
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
-      CHARACTER*1 CTEST, CDOLLAR
+      CHARACTER*1 CTEST, CDOLLAR, CDUM
 
       DATA CDOLLAR /'$'/
+      DATA IXTRANS /0,0,0,1,2,3,0,0,0,0,0,4,0,0/
+      DATA WX /MAXPROD*0.0/
 
       FORM1(0) = '(3F10.4,A3,I2,1X,2(F7.2,F8.3,F7.2))'
       FORM2(0) = '(3F10.4,A3,I2,23X,(F7.2,F8.3,F7.2))'
@@ -248,6 +258,7 @@ C     Read in atmospheric profile.
       FORM2(1) = '(G15.7,G10.4,G10.4,A3,I2,23X,(G7.2,G8.3,G7.2))'
       FORM3(1) = '(8G15.7)'
 
+      IXMAX = MAXINPX
       IRD = 9
       OPEN (IRD,FILE='INPUT_RRTM',FORM='FORMATTED')
 
@@ -255,7 +266,7 @@ C     Read in atmospheric profile.
       READ (IRD,9010,END=8800) CTEST
       IF (CTEST .NE. CDOLLAR) GO TO 1000
 
-      READ (IRD,9011) IATM, NUMANGS, IOUT
+      READ (IRD,9011) IATM, IXSECT, NUMANGS, IOUT
       READ (IRD,9012) TBOUND
 
       IF (IATM .EQ. 0) THEN
@@ -266,36 +277,76 @@ C     Read in atmospheric profile.
          READ (IRD,FORM3(IFORM)) (WKL(M,1),M=1,7), WBRODL(1)
          IF(NMOL .GT. 7) READ (IRD,FORM3(IFORM)) (WKL(M,1),M=8,NMOL)
 
-         DO 4000 L = 2, NLAYERS
+         DO 2000 L = 2, NLAYERS
             READ (IRD,FORM2(IFORM)) PAVEL(L),TAVEL(L),SECNTK,CINP,
      &           IPTHRK,ALTZ(L),PZ(L),TZ(L)
             READ (IRD,FORM3(IFORM)) (WKL(M,L),M=1,7), WBRODL(L)
             IF(NMOL .GT. 7) READ (IRD,FORM3(IFORM)) (WKL(M,L),M=8,NMOL)
- 4000    CONTINUE                                                            
+ 2000    CONTINUE                                                            
            
+         IF (IXSECT .EQ. 1) THEN                                 
+            READ (IRD,9300) NXMOL0
+            NXMOL = NXMOL0
+
+            CALL XSIDENT(IRD)
+            READ (IRD,9301) IFORMX
+C     
+            DO 3000 L = 1, NLAYERS       
+               READ (IRD,9010) CDUM
+               READ (IRD, FORM3(IFORMX)) (WX0(M,L),M=1,7),WBRODX    
+               IF (NXMOL0 .GT. 7) READ (IRD,FORM3(IFORMX)) 
+     &              (WX0(M,L),M=8,NXMOL0)
+ 3000       CONTINUE
+         ENDIF
       ELSE
          IPU = 7
          IPR = 66
          OPEN(UNIT=IPR,FILE='TAPE6',STATUS='UNKNOWN')
          CALL RRTATM
+         IF (IXSECT .EQ. 1) THEN
+            DO 3300 MX = 1, NXMOL0
+               IXINDX(MX) = IXTRANS(IXINDX0(MX))
+ 3300       CONTINUE
+         ENDIF
       ENDIF
 
 C     Test for mixing ratio input.
-      IMIX = 0
-      IF (WKL(2,1) .LE. 1.0) IMIX = 1
+      IMIX = 1
+      DO 3500 M = 1, NMOL
+         IF (WKL(M,1) .GT. 1.0) THEN
+            IMIX = 0
+            GO TO 3600
+         ENDIF
+ 3500 CONTINUE
+ 3600 CONTINUE
 
+      IF (IXSECT .EQ. 1) THEN
+         IMIXX = 0
+         IF (WX0(1,1) .LE. 1.0) IMIXX = 1
+      ENDIF
       DO 5000 L = 1, NLAYERS
-         SUMMOL(L) = 0.0
+         SUMMOL = 0.0
          DO 4100 IMOL = 2, NMOL
-            SUMMOL(L) = SUMMOL(L) + WKL(IMOL,L)
+            SUMMOL = SUMMOL + WKL(IMOL,L)
  4100    CONTINUE
          IF (IMIX .EQ. 1) THEN
-            COLDRY(L) = WBRODL(L) / (1. - SUMMOL(L))
+            COLDRY(L) = WBRODL(L) / (1. - SUMMOL)
             DO 4200 IMOL = 1, NMOL
                WKL(IMOL,L) = COLDRY(L) * WKL(IMOL,L)
  4200       CONTINUE
          ELSE
-            COLDRY(L) = WBRODL(L) + SUMMOL(L)
+            COLDRY(L) = WBRODL(L) + SUMMOL
+         ENDIF
+         IF (IXSECT .EQ. 1) THEN
+            DO 4400 IX = 1, NXMOL0
+               IF (IXINDX(IX) .NE. 0) THEN
+                  IF (IMIXX .EQ. 1) THEN
+                     WX(IXINDX(IX),L) = COLDRY(L) * WX0(IX,L) * 1.E-20
+                  ELSE
+                     WX(IXINDX(IX),L) = WX0(IX,L) * 1.E-20
+                  ENDIF
+               ENDIF
+ 4400       CONTINUE
          ENDIF
  5000 CONTINUE
 
@@ -308,12 +359,84 @@ C     Test for mixing ratio input.
  9000 CONTINUE
 
  9010 FORMAT (A1)
- 9011 FORMAT (49X,I1,34X,I1,2X,I3)
+ 9011 FORMAT (49X,I1,19X,I1,14X,I1,2X,I3)
  9012 FORMAT (E10.3)
  9013 FORMAT (1X,I1,I3,I5)                                     
+ 9300 FORMAT (I5)
+ 9301 FORMAT (1X,I1)
 
       RETURN
       END 
+
+C************************  SUBROUTINE XSIDENT  *****************************C
+
+      SUBROUTINE XSIDENT(IRD)
+C                                                                         
+C     This subroutine identifies which cross-sections are to be used.
+
+      PARAMETER (MAXINPX=35)
+      PARAMETER (MAXXSEC=4)
+
+      IMPLICIT DOUBLE PRECISION (V)                                     ! 
+C                                                                         
+      COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
+C                                                                         
+C     NXMOL     - number of cross-sections input by user
+C     IXINDX(I) - index of cross-section molecule corresponding to Ith
+C                 cross-section specified by user
+C                 = 0 -- not allowed in RRTM
+C                 = 1 -- CCL4
+C                 = 2 -- CFC11
+C                 = 3 -- CFC12
+C                 = 4 -- CFC22
+C                                                                         
+C     XSNAME=NAMES, ALIAS=ALIASES OF THE CROSS-SECTION MOLECULES          
+C                                                                         
+      CHARACTER*10 XSNAME(MAXINPX),ALIAS(MAXXSEC,4),BLANK               
+C                                                                         
+      DATA (ALIAS(1,I),I=1,4)/                                           
+     *    'CCL4      ', 'CCL3F     ', 'CCL2F2    ', 'CHCLF2    '/ 
+      DATA (ALIAS(2,I),I=1,4)/                                           
+     *    ' ZZZZZZZZ ', 'CFCL3     ', 'CF2CL2    ', 'CHF2CL    '/         
+      DATA (ALIAS(3,I),I=1,4)/                                           
+     *    ' ZZZZZZZZ ', 'CFC11     ', 'CFC12     ', 'CFC22     '/         
+      DATA (ALIAS(4,I),I=1,4)/                                           
+     *    ' ZZZZZZZZ ', 'F11       ', 'F12       ', 'F22       '/        
+
+      DATA BLANK / '          '/                                          
+C                                                                         
+      DO 10 I = 1, NXMOL                                                 
+         XSNAME(I) = BLANK                                                
+   10 CONTINUE                                                            
+C                                                                         
+C     READ IN THE NAMES OF THE MOLECULES                                  
+C                                                                         
+      IF (NXMOL.GT.7) THEN                                               
+         READ (IRD,'(7A10)') (XSNAME(I),I=1,7)                            
+         READ (IRD,'(8A10)') (XSNAME(I),I=8,NXMOL)                       
+      ELSE                                                                
+         READ (IRD,'(7A10)') (XSNAME(I),I=1,NXMOL)                       
+      ENDIF                                                               
+C                                                                         
+C     MATCH THE NAMES READ IN AGAINST THE NAMES STORED IN ALIAS           
+C     AND DETERMINE THE INDEX VALUE.  
+      IXMAX = 4                                                          
+      DO 40 I = 1, NXMOL                                                 
+C        Left-justify all inputed names.                                      
+         CALL CLJUST (XSNAME(I),10)
+         IXINDX(I) = 0
+         DO 20 J = 1, IXMAX
+            IF ((XSNAME(I).EQ.ALIAS(1,J)) .OR.                            
+     *          (XSNAME(I).EQ.ALIAS(2,J)) .OR.                            
+     *          (XSNAME(I).EQ.ALIAS(3,J)) .OR.                            
+     *          (XSNAME(I).EQ.ALIAS(4,J))) THEN                           
+               IXINDX(I) = J                                              
+            ENDIF                                                         
+   20    CONTINUE
+   40 CONTINUE                                                            
+
+      RETURN
+      END
 
       BLOCK DATA
 
@@ -331,6 +454,4 @@ C     Test for mixing ratio input.
 
 
       END
-
-
 
