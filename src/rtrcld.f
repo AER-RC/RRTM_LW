@@ -14,7 +14,6 @@ C     only one exponential is computed per layer per g-value per band.
       PARAMETER (MG=16)
       PARAMETER (MXLAY=203)
       PARAMETER (NBANDS = 16)
-      PARAMETER (MXCBANDS = 5)
 
       IMPLICIT DOUBLE PRECISION (V)                                     
 
@@ -26,7 +25,7 @@ C     only one exponential is computed per layer per g-value per band.
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
-      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,MXCBANDS)
+      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,NBANDS)
       COMMON /PLNKDAT/   PLANKLAY(MXLAY,NBANDS),
      &                   PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
       COMMON /PLANKG/    FRACS(MXLAY,MG)
@@ -46,18 +45,19 @@ C     only one exponential is computed per layer per g-value per band.
       DIMENSION DRAD1(0:MXLAY),URAD1(0:MXLAY)
       DIMENSION DRAD2(0:MXLAY),URAD2(0:MXLAY)
       DIMENSION DRAD3(0:MXLAY),URAD3(0:MXLAY)
-      DIMENSION WTNUM(3), ODCLD(MXLAY,MXCBANDS)
+      DIMENSION WTNUM(3), ODCLD(MXLAY,NBANDS)
       DIMENSION ATOT1(MXLAY),ATOT2(MXLAY),ATOT3(MXLAY)
-      DIMENSION ABSCLD1(MXLAY,MXCBANDS),ABSCLD2(MXLAY,MXCBANDS)
-      DIMENSION EFCLFRAC1(MXLAY,MXCBANDS),ABSCLD3(MXLAY,MXCBANDS)
-      DIMENSION EFCLFRAC2(MXLAY,MXCBANDS),EFCLFRAC3(MXLAY,MXCBANDS)
-      DIMENSION ICEBNDA(NBANDS),ICEBNDB(NBANDS)
+      DIMENSION ABSCLD1(MXLAY,NBANDS),ABSCLD2(MXLAY,NBANDS)
+      DIMENSION EFCLFRAC1(MXLAY,NBANDS),ABSCLD3(MXLAY,NBANDS)
+      DIMENSION EFCLFRAC2(MXLAY,NBANDS),EFCLFRAC3(MXLAY,NBANDS)
+      DIMENSION IPAT(16,0:2)
 
 C     These arrays indicate the spectral 'region' (used in the 
 C     calculation of ice cloud optical depths) corresponding
 C     to each spectral band.  See cldprop.f for more details.
-      DATA ICEBNDA /1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1/
-      DATA ICEBNDB /1,2,3,3,3,4,4,4,5,5,5,5,5,5,5,5/
+      DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1,
+     &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5,
+     &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16/
 
 C *** These weights correspond to angles of 34.9, 65.8, and 74.1
 C     degrees, resp.  (They are used when "numerical" Gaussian
@@ -114,10 +114,13 @@ C *** SECANG is equal to the secant of the first angle.
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
          IF (NCBANDS .EQ. 1) THEN
-            IB = ICEBNDA(IBAND)
-         ELSE
-            IB = ICEBNDB(IBAND)
+            IB = IPAT(IBAND,0)
+         ELSEIF (NCBANDS .EQ.  5) THEN
+            IB = IPAT(IBAND,1)
+         ELSEIF (NCBANDS .EQ. 16) THEN
+            IB = IPAT(IBAND,2)
          ENDIF
+
          IF (IBAND .EQ. 1) THEN
             CALL TAUGB1
          ELSEIF (IBAND .EQ. 2) THEN
