@@ -145,6 +145,7 @@ C  Input
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY)
       COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
       COMMON /HVERSN/   HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                  HVDUM1(4),HVRUTL,HVREXT
@@ -152,7 +153,7 @@ C  Input
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
 
-      DIMENSION ABSA(65,MG),ABSB(235,MG)
+      DIMENSION ABSA(65,MG),ABSB(235,MG),FORREF(MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
 
       DATA FRACREFA/
@@ -165,6 +166,11 @@ C  Input
      &    0.10986247,0.09006091,0.07584465,0.05990077,
      &    0.04113461,0.00438638,0.00374754,0.00313924,
      &    0.00234381,0.00167167,0.00062744,0.00010889/
+      DATA FORREF/
+     &     -4.50470E-02,-1.18908E-01,-7.21730E-02,-2.83862E-02,
+     &     -3.01961E-02,-1.56877E-02,-1.53684E-02,-1.29135E-02,
+     &     -1.27963E-02,-1.81742E-03, 4.40008E-05, 1.05260E-02,
+     &      2.17290E-02, 1.65571E-02, 7.60751E-02, 1.47405E-01/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
@@ -186,7 +192,8 @@ C     is interpolated (in temperature) separately.
      &           FAC11(LAY) * ABSA(IND1+1,IG) +
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
+     &           FORFAC(LAY) * FORREF(IG))
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -199,7 +206,8 @@ C     is interpolated (in temperature) separately.
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
-     &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           FAC11(LAY) * ABSB(IND1+1,IG) + 
+     &           FORFAC(LAY) * FORREF(IG))
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -226,7 +234,7 @@ C  Input
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
-     &                  COLMOL(MXLAY),NMOL
+     &                  NMOL
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
      &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
@@ -235,9 +243,10 @@ C  Input
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY)
       COMMON /K2/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
 
-      DIMENSION ABSA(65,MG),ABSB(235,MG)
+      DIMENSION ABSA(65,MG),ABSB(235,MG),FORREF(MG)
       DIMENSION FC00(MXLAY),FC01(MXLAY),FC10(MXLAY),FC11(MXLAY)
       DIMENSION FRACREFA(MG,13),FRACREFB(MG), REFPARAM(13)
 
@@ -317,6 +326,12 @@ C     From P = 0.432 mb.
      &    0.10400643,0.09481928,0.07590704,0.05752856,
      &    0.03931715,0.00428572,0.00349352,0.00278938,
      &    0.00203448,0.00130037,0.00051560,0.00006255/
+      DATA FORREF/
+     &     -2.34550E-03,-8.42698E-03,-2.01816E-02,-5.66701E-02,
+     &     -8.93189E-02,-6.37487E-02,-4.56455E-02,-4.41417E-02,
+     &     -4.48605E-02,-4.74696E-02,-5.16648E-02,-5.63099E-02,
+     &     -4.74781E-02,-3.84704E-02,-2.49905E-02, 2.02114E-03/
+
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
@@ -357,7 +372,8 @@ C     interpolated (in temperature) separately.
      &           FC11(LAY) * ABSA(IND1+1,IG) + 
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
+     &           FORFAC(LAY) * FORREF(IG))
             FRACS(LAY,IG) = FRACREFA(IG,IFRAC) + FRACINT * 
      &           (FRACREFA(IG,IFRAC-1)-FRACREFA(IG,IFRAC))
  2000    CONTINUE
@@ -379,7 +395,8 @@ C     interpolated (in temperature) separately.
      &          (FC00(LAY) * ABSB(IND0,IG) +
      &           FC10(LAY) * ABSB(IND0+1,IG) +
      &           FC01(LAY) * ABSB(IND1,IG) + 
-     &           FC11(LAY) * ABSB(IND1+1,IG))  
+     &           FC11(LAY) * ABSB(IND1+1,IG) +  
+     &           FORFAC(LAY) * FORREF(IG))
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -414,9 +431,10 @@ C  Input
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY)
       COMMON /K3/       KA(10,5,13,MG), KB(5,5,13:59,MG), SELFREF(10,MG)
 
-      DIMENSION ABSA(650,MG),ABSB(1175,MG)
+      DIMENSION ABSA(650,MG),ABSB(1175,MG),FORREF(MG)
       DIMENSION ABSN2OA(MG),ABSN2OB(MG)
       DIMENSION FRACREFA(MG,10), FRACREFB(MG,5)
       DIMENSION N2OREF(59),H2OREF(59),CO2REF(59), ETAREF(10)
@@ -526,6 +544,12 @@ C     From P = 64.1 mb.
       DATA CO2REF/
      &     53*3.55E-04, 3.5470873E-04, 3.5427220E-04, 3.5383567E-04,
      &     3.5339911E-04, 3.5282588E-04, 3.5079606E-04/  
+      DATA FORREF/
+     &      1.76842E-04, 1.77913E-04, 1.25186E-04, 1.07912E-04,
+     &      1.05217E-04, 7.48726E-05, 1.11701E-04, 7.68921E-05,
+     &      9.87242E-05, 9.85711E-05, 6.16557E-05,-1.61291E-05,
+     &     -1.26794E-04,-1.19011E-04,-2.67814E-04, 6.95005E-05/
+
   
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB,N2OMULT,N2OREF
@@ -585,9 +609,10 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           FAC011 * ABSA(IND1+10,IG) +
      &           FAC111 * ABSA(IND1+11,IG)) +
      &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           (SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
+     &           FORFAC(LAY) * FORREF(IG))
      &           + N2OMULT * ABSN2OA(IG)
             FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
      &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
@@ -634,7 +659,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           FAC001 * ABSB(IND1,IG) + 
      &           FAC101 * ABSB(IND1+1,IG) +
      &           FAC011 * ABSB(IND1+5,IG) +
-     &           FAC111 * ABSB(IND1+6,IG))
+     &           FAC111 * ABSB(IND1+6,IG)) +
+     &           COLH2O(LAY) * FORFAC(LAY) * FORREF(IG) 
      &           + N2OMULT * ABSN2OB(IG)
             FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
      &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
