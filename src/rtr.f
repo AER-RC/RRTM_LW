@@ -19,7 +19,7 @@ C     per g-value per band.
       IMPLICIT DOUBLE PRECISION (V)                                     
 
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
-      COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
+      COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
@@ -46,14 +46,13 @@ C     per g-value per band.
       DIMENSION DRAD2(0:MXLAY),URAD2(0:MXLAY)
       DIMENSION DRAD3(0:MXLAY),URAD3(0:MXLAY)
       DIMENSION WTNUM(MXANG)
+      HVRRTR = '$Revision$'
 
 C *** These weights correspond to angles of 34.9, 65.8, and 74.1
 C     degrees, resp.  They are used when "numerical" Gaussian
 C     quadrature is chosen.
       DATA WTNUM(3) /0.1084176674/, WTNUM(2) /0.0424353369/
       DATA WTNUM(1) /0.3491473794/
-
-      HVRRTR = '$Revision$'
 
 C *** SECANG is equal to the secant of the first angle.
       SECANG = 1.219512195
@@ -71,7 +70,7 @@ C *** SECANG is equal to the secant of the first angle.
 
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
-         IF (IBAND .EQ. 1) THEN
+        IF (IBAND .EQ. 1) THEN
             CALL TAUGB1
          ELSEIF (IBAND .EQ. 2) THEN
             CALL TAUGB2
@@ -101,14 +100,13 @@ C *** Loop over frequency bands.
             CALL TAUGB14
          ELSEIF (IBAND .EQ. 15) THEN
             CALL TAUGB15
-         ELSE
+         ELSEIF (IBAND .EQ. 16) THEN
             CALL TAUGB16
          ENDIF
         
 C ***    Loop over g-channels.
          IG = 1
  1000    CONTINUE
-
 C ***    Radiative transfer starts here.
          RADLU1 = FRACS(1,IG) * PLANKBND(IBAND)
          RADLU2 = RADLU1
@@ -180,7 +178,6 @@ C              the Planck function.
                RADLU3 = RADLU3 + (BBU-RADLU3)*ATRANS3(LEV)
                BBD3(LEV) = BGLAY + TAUSFAC * DELBGDN
             ENDIF
-
             URAD1(LEV) = URAD1(LEV) + RADLU1
             URAD2(LEV) = URAD2(LEV) + RADLU2
             URAD3(LEV) = URAD3(LEV) + RADLU3
@@ -195,10 +192,11 @@ C ***    Downward radiative transfer.
             DRAD2(LEV) = DRAD2(LEV) + RADLD2
             DRAD3(LEV) = DRAD3(LEV) + RADLD3
  2600    CONTINUE
-
+ 4000    CONTINUE
          IG = IG + 1
-         IF (IG .LE. 16) GO TO 1000
-
+         IF (IG .LE. NG(IBAND)) GO TO 1000
+         
+C ***    Process longwave output from band.
 C ***    First level radiance is independent of angle.
          URAD2(0) = URAD1(0)
          URAD3(0) = URAD1(0)
@@ -231,8 +229,9 @@ C ***    Calculate upward, downward, and net flux.
 C        Calculate Heating Rates.
          HTR(L)=HEATFAC*(FNET(L)-FNET(LEV))/(PZ(L)-PZ(LEV)) 
  7000 CONTINUE
-
       HTR(NLAYERS) = 0.0
+
+ 9000 CONTINUE
 
       RETURN
       END   
