@@ -55,6 +55,7 @@ C        level and the heating rate for each layer
 
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
       COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
+      COMMON /PRECISE/   ONEMINUS
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
@@ -95,6 +96,7 @@ C        =  (9.8066)(3600)(1e-5)/(1.004)
       DATA HEATFAC /8.4391/
       CHARACTER PAGE
 
+      ONEMINUS = 1. - 1.E-6
       PI = 2.*ASIN(1.)
       FLUXFAC = PI * 2.D4  
 
