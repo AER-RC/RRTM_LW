@@ -1,9 +1,7 @@
-C     path:      /stormrc1/aer_rrtm/SCCS/s.rrtm_instructions
-C     revision:  2.10
-C     created:   12/16/98  09:19:00
-C     presently: 12/16/98  09:19:09
-
- 
+C     path:      $Source$
+C     author:    $Author$
+C     revision:  $Revision$
+C     created:   $Date$
  
 
 
@@ -14,7 +12,7 @@ C     presently: 12/16/98  09:19:09
 
                            USER INSTRUCTIONS FOR RRTM
  
-                                13 July 1997
+                                    JUNE 2002
 
 
 
@@ -52,28 +50,30 @@ C     presently: 12/16/98  09:19:09
                   = 0  no cross-sections included in calculation
                   = 1  cross-sections included in calculation
 
-          NUMANGS = 0  if the radiances are to be calculated at 3 angles 
-	               chosen such that only one exponential is needed to 
-	               compute the absorptance at all 3 angles.  
+          NUMANGS = 0  if the radiance is to be computed at 1 angle, the cosine of
+                       which equals 1/1.66 (standard angle in diffusivity approximation)
                   = n  (1-4) if the radiances are to be computed at n angles 
 	               chosen such that their cosines have the standard x-axis 
 	               values in first-moment Gaussian quadrature.  This requires 
 	               the computation of one exponential for each angle.
-                  = -1 if the radiance is to be computed at 1 angle, the cosine of
-                       which equals 1/1.66 (standard angle in diffusivity approximation)
 
 	  IOUT = -1 if no output is to be printed out.
-	       =  0 if the only output is for 10-3000 cm-1.
+	       =  0 if the only output is for 10-3250 cm-1.
 	       =  n (n = 1-16) if the only output is from band n.
 		    For the wavenumbers for each band, see Table I.
 	       = 99 if output is generated for 17 spectral intervals, one
-		    for the full longwave spectrum (10-3000 cm-1), and one 
+		    for the full longwave spectrum (10-3250 cm-1), and one 
 		    for each of the 16 bands.
  
-	  ICLD   (0,1) flag for clouds
+	  ICLD   (0,1,2) flag for clouds
                   = 0  no cloudy layers in atmosphere
-                  = 1  one or more cloudy layers present in atmosphere
+                  = 1  one or more cloudy layers present in atmosphere.  Cloud layers
+		       are treated using a random overlap assmption.
                        (requires the presence of file IN_CLD_RRTM)
+                  = 2  one or more cloudy layers present in atmosphere.  Cloud layers
+		       are treated using a maximum/random overlap assmption.
+                       (requires the presence of file IN_CLD_RRTM)
+		  
 
  
 
@@ -299,7 +299,9 @@ C     presently: 12/16/98  09:19:09
                      = 0  RRTM layers are generated internally (default)
                      > 0  IBMAX is the number of layer boundaries read in on Record 3.3B which are
                                  used to define the layers used in RRTM calculation
- 
+		          If IBMAX is set to a negative value, the layer boundaries are
+			  specified in PRESSURE (mbars).  
+
            NOPRNT    = 0  full printout
                      = 1  selects short printout
  
@@ -319,6 +321,11 @@ C     presently: 12/16/98  09:19:09
  
            CO2MX     mixing ratio for CO2 (ppm).  Default is 330 ppm.
  
+	 REF_LAT     latitude of location of calculation (degrees)
+		     defaults for REF_LAT = 0:
+		     a) MODEL 0,2,3,6    REF_LAT = 45.0 degrees
+		     b) MODEL 1          REF_LAT = 15.0
+		     c) MODEL 4,5        REF_LAT = 60.0
  
 
  -----------------------------------------------------------------------------
@@ -334,8 +341,10 @@ C     presently: 12/16/98  09:19:09
   
  
           HBOUND     altitude of the surface (km)
- 
+		     If IBMAX is negative, H1 is provided in pressure units (mbars)
+
           HTOA       altitude of the top of the atmosphere (km)
+		     If IBMAX is negative, H2 is provided in pressure units (mbars)
  
  
                 RECORD 3.3  options
@@ -371,7 +380,13 @@ C     presently: 12/16/98  09:19:09
                 ZBND(I), I=1, IBMAX   altitudes of RRTM layer boundaries
  
                (8F10.3)
- 
+	
+	            If IBMAX < 0 
+
+		PBND(I), I=1, ABS(IBMAX) pressures of LBLRTM layer boundaries
+
+               (8F10.3)
+  
  --------------------------------------------------------------------------------
 
  -----------------------------------------------------------------------------
@@ -392,6 +407,9 @@ C     presently: 12/16/98  09:19:09
  
            IMMAX    number of atmospheric profile boundaries
  
+                    If IMMAX is set to a negative value, the level boundaries are
+                    specified in PRESSURE (mbars).
+
             HMOD    24 character description of profile
  
  RECORD 3.5
@@ -404,7 +422,12 @@ C     presently: 12/16/98  09:19:09
     E10.3, E10.3, E10.3,   5x,  A1,     A1,    3X,    28A1
  
  
-          ZM       boundary altitude (km)
+          ZM       boundary altitude (km). If IMMAX < 0, altitude levels are 
+		   computed from pressure levels PM. If any altitude levels are
+		   provided, they are ignored if  IMMAX < 0 (exception: The
+		   first input level must have an accompanying ZM for input
+	 	   into the hydrostatic equation)
+ 
  
           PM       pressure (units and input options set by JCHARP)
  
@@ -529,28 +552,27 @@ C     presently: 12/16/98  09:19:09
 
 		
 
- Wavenumber Range (cm-1)       1050 - 96 mb      96 - 0.01 mb    Halocarbons  
-			
+Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbons  
+       Range (cm-1)			
 
-       10 -  250		          H2O              H2O		   ----
-      250 -  500		          H2O              H2O		   ----
-      500 -  630		      H2O,CO2,N2O~     H2O,CO2,N2O~	   ----
-      630 -  700		        H2O,CO2          CO2,O3	 	   ----
-      700 -  820		        H2O,CO2          CO2,O3		   CCL4
-      820 -  980		        H2O,CO2~           --- 	        CFC11^,CFC12
-      980 - 1080		      H2O,O3,CO2~          O3		   ----
-     1080 - 1180*             H2O,CO2~,N2O~       O3,N2O~        CFC12,CFC22^
-     1180 - 1390		      H2O,CH4,N2O~         CH4		   ----
-     1390 - 1480		          H2O              H2O	           ----
-     1480 - 1800		          H2O              H2O		   ----
-     1800 - 2080		        H2O,CO2            ---		   ----
-     2080 - 2250		        H2O,N2O            ---		   ----
-     2250 - 2380		          CO2              CO2		   ----
-     2380 - 2600		        N2O,CO2            ---		   ----
-     2600 - 3000		        H2O,CH4            ---		   ----
+1       10 -  350		         H2O,N2~              H2O,N2~	   ----
+2      350 -  500		          H2O              H2O		   ----
+3      500 -  630		      H2O,CO2,N2O~     H2O,CO2,N2O~	   ----
+4      630 -  700		        H2O,CO2          CO2,O3 	   ----
+5      700 -  820		        H2O,CO2,O3~      CO2,O3		   CCL4
+6      820 -  980		        H2O,CO2~           --- 	        CFC11^,CFC12
+7      980 - 1080		      H2O,O3,CO2~          O3,CO2	   ----
+8     1080 - 1180               H2O,CO2~,O3~,N2O~  O3,CO2~,N2O~        CFC12,CFC22^
+9     1180 - 1390		      H2O,CH4,N2O~         CH4,N2O	   ----
+10    1390 - 1480		          H2O              H2O	           ----
+11    1480 - 1800		        H2O,O2~          H2O,O2~	   ----
+12    1800 - 2080		        H2O,CO2            ---		   ----
+13    2080 - 2250		        H2O,N2O            O3~		   ----
+14    2250 - 2380		          CO2              CO2		   ----
+15    2380 - 2600		      N2O,CO2,N2~          ---		   ----
+16    2600 - 3250		        H2O,CH4            CH4		   ----
 
 
-*  In this band, the break between the two altitude regimes is placed at 300mb.
 ~  Included by less rigorous method.
 ^  The optical depths of these halocarbons are increased to account for other absorption 
     bands of these species that are not implemented.
@@ -668,6 +690,8 @@ C     presently: 12/16/98  09:19:09
                         (reference: J. Key, Streamer User's Guide, Technical Report 96-01, Boston
                         University, 85 pp. (1996)), which is closely related to the parameterization
                         of water clouds due to Hu and Stamnes (see below).
+		    = 3 the optical depths (non-gray) due to ice clouds are computed by a method
+	 	 	based on the parameterization given in Fu et al., J. Clim.,11,2223-2237 (1998).
 
             LIQFLAG = 0 the optical depths (gray) due to water clouds are computed as in CCM3.
                     = 1 the optical depths (non-gray) due to water clouds are computed by a method
@@ -710,7 +734,14 @@ C     presently: 12/16/98  09:19:09
             FRACICE    (INFLAG = 2) fraction of the layer's cloud water path in the form
                        of ice particles  
 
-            EFFRADICE  (INFLAG = 2) ice particle effective radius (microns) 
+            EFFRADICE  (INFLAG = 2) Size description of ice particles
+		
+		       ICEFLAG = 2 ice particle effective radius (microns) 
+
+		       ICEFLAG = 3 generalized effective size (microns)
+
+			NOTE: The size descriptions for the two iceflag options are NOT
+			equivalent.  See the particular references for the appropriate definition.
 
             EFFRADLIQ  (INFLAG = 2 and LIQFLAG = 1) liquid droplet effective radius (microns) 
 
