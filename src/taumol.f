@@ -50,7 +50,7 @@ C     presently: %H%  %T%
 *     COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,                              *
 *    &                  COLH2O(MXLAY),COLCO2(MXLAY),                          *
 *    &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),             *
-*    &                  COLO2(MXLAY),CO2MULT(MXLAY)            *
+*    &                  COLO2(MXLAY),CO2MULT(MXLAY)                           *
 *     COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            *
 *    &                  FAC10(MXLAY),FAC11(MXLAY)                             *
 *     COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)                        *
@@ -146,13 +146,11 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
-      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVDUM1(4),HVRUTL,HVREXT
-      COMMON /HVRSNB/    HVRKG(NBANDS)
+      COMMON /HVERSN/   HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                  HVDUM1(4),HVRUTL,HVREXT
 
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
-      CHARACTER*8 HVRKG
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -336,9 +334,14 @@ C     interpolated (in temperature) separately.
      &        (REFPARAM(IFRAC-1)-REFPARAM(IFRAC))
 
          FP = FAC11(LAY) + FAC01(LAY)
-         RTFP = SQRT(FP)
-         CORR1 = RTFP/FP
-         CORR2 = (1.-RTFP)/(1.-FP)
+         IF (FP .EQ. 1. .OR. FP .LE. 0. ) THEN
+            CORR1 = 1
+            CORR2 = 1
+         ELSE
+            RTFP = SQRT(FP)
+            CORR1 = RTFP/FP
+            CORR2 = (1.-RTFP)/(1.-FP)
+         ENDIF
          FC00(LAY) = FAC00(LAY) * CORR2 
          FC10(LAY) = FAC10(LAY) * CORR2 
          FC01(LAY) = FAC01(LAY) * CORR1 
@@ -525,7 +528,7 @@ C     From P = 64.1 mb.
      &     3.5339911E-04, 3.5282588E-04, 3.5079606E-04/  
   
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL N2OMULT,KA,KB,N2OREF
+      REAL KA,KB,N2OMULT,N2OREF
       STRRAT = 1.19268
 
 C     Compute the optical depth by interpolating in ln(pressure), 
@@ -546,8 +549,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
                FS = FS/0.9
             ENDIF
          ENDIF
-         FP = FAC01(LAY) + FAC11(LAY)
          NS = JS + INT(FS + 0.5)
+         FP = FAC01(LAY) + FAC11(LAY)
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
@@ -598,8 +601,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
 	 FS = AMOD(SPECMULT,1.0)
-         FP = FAC01(LAY) + FAC11(LAY)
          NS = JS + INT(FS + 0.5)
+         FP = FAC01(LAY) + FAC11(LAY)
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
@@ -652,7 +655,7 @@ C     BAND 4:  630-700 cm-1 (low - H2O,CO2; high - O3,CO2)
 C  Output
 
       COMMON /TAUGCOM/  TAUG(MXLAY,MG)
-      COMMON /PLANKG/   FRACS(MXLAY,MG)                                       
+      COMMON /PLANKG/   FRACS(MXLAY,MG)
 
 C  Input
 
@@ -1375,7 +1378,7 @@ C     and 1290-1335 cm-1 bands.
      &     1.95821E-07,1.98004E-07,2.06442E-07,2.81546E-07/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL N2OMULT,KA,KB, N2OREF
+      REAL KA,KB,N2OMULT,N2OREF
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  
@@ -1548,7 +1551,7 @@ C     From P=313.
      &     4.31888E-01,4.82523E-06,5.74747E-11,0./
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL N2OREF,N2OMULT,KA, KB
+      REAL KA,KB,N2OREF,N2OMULT
       STRRAT = 21.6282
       IOFF = 0
 
