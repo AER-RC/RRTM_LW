@@ -1,6 +1,29 @@
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
 
+July 29, 2004
+
+	Release_3_1
+
+	Archiving numerous changes to the code.  Not publicly released at this time. 
+
+	- Fixed bug in the digits of PI in rrtm.f
+	- Created rtrdis to call DISORT v2 to do scattering calculations
+	- Modified disort v2 to do double precision, and change sgi makefile to compile in double
+	- Modified cldprop to do scattering.  
+		* Updated the cldprop spheres to use latest streamer version 3.0. 
+		* Remade Fu properties on finer grid.  
+		* Modified documentation. 
+		* Now output a file called OUT_CLD_RRTM with the cloud optical properties.  
+	- Added patent statement
+	- Changed number of digits printed out in net flux in rrtm.f
+	- Added new rrtatm.f made from lblatm.f v8.1 and updated extra.f to be compatible
+	- Removed numatmos option in rrtm.f
+	- Removed NUMATMOS option 
+	- Updated pressure level formatting to be consistent with RRMT_SW
+	- Updated revision number format to be consistent with RRTM_SW/LBLRTM	
+	- Updated rrtm_instructions
+
 September 16 Archive Note:  
 	Removed all utilities from the RRTM CVS repository.  Now using CVS utility repository.
 	Note that the utilities in the release 3.0 and 3.01 were also from the CVS
