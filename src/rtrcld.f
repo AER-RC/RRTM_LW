@@ -24,7 +24,8 @@ C     only one exponential is computed per layer per g-value per band.
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                   PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,MXCBANDS)
       COMMON /PLNKDAT/   PLANKLAY(MXLAY,NBANDS),
      &                   PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
@@ -38,8 +39,8 @@ C     only one exponential is computed per layer per g-value per band.
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
                                        
-      DIMENSION BBDGAS1(MXLAY),BBDGAS2(MXLAY),BBDGAS3(MXLAY)
-      DIMENSION BBDTOT1(MXLAY),BBDTOT2(MXLAY),BBDTOT3(MXLAY)
+      DIMENSION BBUGAS1(MXLAY),BBUGAS2(MXLAY),BBUGAS3(MXLAY)
+      DIMENSION BBUTOT1(MXLAY),BBUTOT2(MXLAY),BBUTOT3(MXLAY)
       DIMENSION ATRANS1(MXLAY),ATRANS2(MXLAY),ATRANS3(MXLAY)
       DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)
       DIMENSION DRAD1(0:MXLAY),URAD1(0:MXLAY)
@@ -155,30 +156,24 @@ C ***    Loop over g-channels.
          IG = 1
  1000    CONTINUE
 C ***    Radiative transfer starts here.
-         RADLU1 = FRACS(1,IG) * PLANKBND(IBAND)
-         RADLU2 = RADLU1
-         RADLU3 = RADLU1
-         URAD1(0) = URAD1(0) + RADLU1
-         URAD2(0) = URAD2(0) + RADLU1
-         URAD3(0) = URAD3(0) + RADLU1
          RADLD1 = 0.
          RADLD2 = 0.
          RADLD3 = 0.
-C ***    Upward radiative transfer loop.  Due to the simple form taken
+C ***    Downward radiative transfer loop.  Due to the simple form taken
 C        by certain equations when the optical depth is small, this 
 C        condition is tested for.  In all cases, the labels 1, 2, and
 C        3 refer to the three angles.
-         BGLEV = FRACS(1,IG) * PLANKLEV(0,IBAND)
-         DO 2500 LEV = 1, NLAYERS
+         BGLEV = FRACS(NLAYERS,IG) * PLANKLEV(NLAYERS,IBAND)
+         DO 2500 LEV = NLAYERS, 1, -1
             BLAY = PLANKLAY(LEV,IBAND)
             PLFRAC = FRACS(LEV,IG)
             BGLAY = PLFRAC * BLAY
             ODEPTH = SECANG * TAUG(LEV,IG) 
-            DELBGDN = BGLEV - BGLAY
+            DELBGUP = BGLEV - BGLAY
 
 C           Here are some variable definitions:
 C             ODTOT      optical depth of gas and cloud
-C             ATRANS     absorptivity for only gas
+C             ATRANS     absorptivity for gas only
 C             ATOT       absorptivity for gas and cloud
 C             TFACGAS    gas-only Pade factor, used for Planck fn
 C             TFACTOT    gas and cloud Pade factor, used for Planck fn
@@ -191,16 +186,16 @@ C             GASSRC     source radiance due to gas only
                ATRANS1(LEV) = ODEPTH
                ATRANS2(LEV) = ODEPTH + ODEPTH
                ATRANS3(LEV) = ATRANS2(LEV) + ODEPTH
-               BBDGAS1(LEV) = BGLAY
-               BBDGAS2(LEV) = BGLAY
-               BBDGAS3(LEV) = BGLAY
-               BBDTOT1(LEV) = BGLAY
-               BBDTOT2(LEV) = BGLAY
-               BBDTOT3(LEV) = BGLAY
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
-               BBUTOT1 = BGLAY
-               BBUTOT2 = BGLAY
-               BBUTOT3 = BGLAY
+               BBUGAS1(LEV) = BGLAY
+               BBUGAS2(LEV) = BGLAY
+               BBUGAS3(LEV) = BGLAY
+               BBUTOT1(LEV) = BGLAY
+               BBUTOT2(LEV) = BGLAY
+               BBUTOT3(LEV) = BGLAY
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               BBDTOT1 = BGLAY
+               BBDTOT2 = BGLAY
+               BBDTOT3 = BGLAY
                ATOT1(LEV) = ATRANS1(LEV) + ABSCLD1(LEV,IB)
                ATOT2(LEV) = ATRANS2(LEV) + ABSCLD2(LEV,IB)
                ATOT3(LEV) = ATRANS3(LEV) + ABSCLD3(LEV,IB)
@@ -212,20 +207,20 @@ C             GASSRC     source radiance due to gas only
                ATRANS1(LEV) = ODEPTH
                ATRANS2(LEV) = ODEPTH + ODEPTH
                ATRANS3(LEV) = ATRANS2(LEV) + ODEPTH
-               BBDGAS1(LEV) = BGLAY
-               BBDGAS2(LEV) = BGLAY
-               BBDGAS3(LEV) = BGLAY
+               BBUGAS1(LEV) = BGLAY
+               BBUGAS2(LEV) = BGLAY
+               BBUGAS3(LEV) = BGLAY
                TFACTOT1 = ODTOT/(5.+ODTOT)
-               BBDTOT1(LEV) = BGLAY + TFACTOT1*DELBGDN
+               BBUTOT1(LEV) = BGLAY + TFACTOT1*DELBGUP
                TFACTOT2 = ODTOT/(2.5+ODTOT)
-               BBDTOT2(LEV) = BGLAY + TFACTOT2*DELBGDN
+               BBUTOT2(LEV) = BGLAY + TFACTOT2*DELBGUP
                TFACTOT3 = ODTOT/(1.666667+ODTOT)
-               BBDTOT3(LEV) = BGLAY + TFACTOT3*DELBGDN
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
-               DELBGUP = BGLEV - BGLAY
-               BBUTOT1 = BGLAY + TFACTOT1*DELBGUP
-               BBUTOT2 = BGLAY + TFACTOT2*DELBGUP
-               BBUTOT3 = BGLAY + TFACTOT3*DELBGUP
+               BBUTOT3(LEV) = BGLAY + TFACTOT3*DELBGUP
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
+               BBDTOT1 = BGLAY + TFACTOT1*DELBGDN
+               BBDTOT2 = BGLAY + TFACTOT2*DELBGDN
+               BBDTOT3 = BGLAY + TFACTOT3*DELBGDN
                ATOT1(LEV) = ATRANS1(LEV) + ABSCLD1(LEV,IB)
                ATOT2(LEV) = ATRANS2(LEV) + ABSCLD2(LEV,IB)
                ATOT3(LEV) = ATRANS3(LEV) + ABSCLD3(LEV,IB)
@@ -238,28 +233,28 @@ C             GASSRC     source radiance due to gas only
                ATRANS2(LEV) = 1.
                ATRANS3(LEV) = 1.
                TFACGAS1 = ODEPTH/(5.+ODEPTH)
-               BBDGAS1(LEV) = BGLAY + TFACGAS1*DELBGDN
+               BBUGAS1(LEV) = BGLAY + TFACGAS1*DELBGUP
                TFACGAS2 = ODEPTH/(2.5+ODEPTH)
-               BBDGAS2(LEV) = BGLAY + TFACGAS2*DELBGDN
+               BBUGAS2(LEV) = BGLAY + TFACGAS2*DELBGUP
                TFACGAS3 = ODEPTH/(1.666667+ODEPTH)
-               BBDGAS3(LEV) = BGLAY + TFACGAS3*DELBGDN
+               BBUGAS3(LEV) = BGLAY + TFACGAS3*DELBGUP
                TFACTOT1 = ODTOT/(5.+ODTOT)
-               BBDTOT1(LEV) = BGLAY + TFACTOT1*DELBGDN
+               BBUTOT1(LEV) = BGLAY + TFACTOT1*DELBGUP
                TFACTOT2 = ODTOT/(2.5+ODTOT)
-               BBDTOT2(LEV) = BGLAY + TFACTOT2*DELBGDN
+               BBUTOT2(LEV) = BGLAY + TFACTOT2*DELBGUP
                TFACTOT3 = ODTOT/(1.666667+ODTOT)
-               BBDTOT3(LEV) = BGLAY + TFACTOT3*DELBGDN
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
-               DELBGUP = BGLEV - BGLAY
-               BBUTOT1 = BGLAY + TFACTOT1*DELBGUP
-               BBUTOT2 = BGLAY + TFACTOT2*DELBGUP
-               BBUTOT3 = BGLAY + TFACTOT3*DELBGUP
+               BBUTOT3(LEV) = BGLAY + TFACTOT3*DELBGUP
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
+               BBDTOT1 = BGLAY + TFACTOT1*DELBGDN
+               BBDTOT2 = BGLAY + TFACTOT2*DELBGDN
+               BBDTOT3 = BGLAY + TFACTOT3*DELBGDN
                ATOT1(LEV) = 1.
                ATOT2(LEV) = 1.
                ATOT3(LEV) = 1.
-               GASSRC1 = BGLAY + TFACGAS1*DELBGUP
-               GASSRC2 = BGLAY + TFACGAS2*DELBGUP
-               GASSRC3 = BGLAY + TFACGAS3*DELBGUP
+               GASSRC1 = BGLAY + TFACGAS1*DELBGDN
+               GASSRC2 = BGLAY + TFACGAS2*DELBGDN
+               GASSRC3 = BGLAY + TFACGAS3*DELBGDN
             ELSEIF (ODCLD(LEV,IB) .GE. 10.) THEN
                ODTOT = ODEPTH + ODCLD(LEV,IB)
                TRANS1 = EXP(-ODEPTH)
@@ -267,28 +262,28 @@ C             GASSRC     source radiance due to gas only
                ATRANS2(LEV) = 1. - TRANS1*TRANS1
                ATRANS3(LEV) = ATRANS1(LEV) + TRANS1 * ATRANS2(LEV)
                TFACGAS1 = ODEPTH/(5.+ODEPTH)
-               BBDGAS1(LEV) = BGLAY + TFACGAS1*DELBGDN
+               BBUGAS1(LEV) = BGLAY + TFACGAS1*DELBGUP
                TFACGAS2 = ODEPTH/(2.5+ODEPTH)
-               BBDGAS2(LEV) = BGLAY + TFACGAS2*DELBGDN
+               BBUGAS2(LEV) = BGLAY + TFACGAS2*DELBGUP
                TFACGAS3 = ODEPTH/(1.666667+ODEPTH)
-               BBDGAS3(LEV) = BGLAY + TFACGAS3*DELBGDN
+               BBUGAS3(LEV) = BGLAY + TFACGAS3*DELBGUP
                TFACTOT1 = ODTOT/(5.+ODTOT)
-               BBDTOT1(LEV) = BGLAY + TFACTOT1*DELBGDN
+               BBUTOT1(LEV) = BGLAY + TFACTOT1*DELBGUP
                TFACTOT2 = ODTOT/(2.5+ODTOT)
-               BBDTOT2(LEV) = BGLAY + TFACTOT2*DELBGDN
+               BBUTOT2(LEV) = BGLAY + TFACTOT2*DELBGUP
                TFACTOT3 = ODTOT/(1.666667+ODTOT)
-               BBDTOT3(LEV) = BGLAY + TFACTOT3*DELBGDN
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
-               DELBGUP = BGLEV - BGLAY
-               BBUTOT1 = BGLAY + TFACTOT1*DELBGUP
-               BBUTOT2 = BGLAY + TFACTOT2*DELBGUP
-               BBUTOT3 = BGLAY + TFACTOT3*DELBGUP
+               BBUTOT3(LEV) = BGLAY + TFACTOT3*DELBGUP
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
+               BBDTOT1 = BGLAY + TFACTOT1*DELBGDN
+               BBDTOT2 = BGLAY + TFACTOT2*DELBGDN
+               BBDTOT3 = BGLAY + TFACTOT3*DELBGDN
                ATOT1(LEV) = 1.
                ATOT2(LEV) = 1.
                ATOT3(LEV) = 1.
-               GASSRC1 = (BGLAY + TFACGAS1*DELBGUP) * ATRANS1(LEV)
-               GASSRC2 = (BGLAY + TFACGAS2*DELBGUP) * ATRANS2(LEV)
-               GASSRC3 = (BGLAY + TFACGAS3*DELBGUP) * ATRANS3(LEV)
+               GASSRC1 = (BGLAY + TFACGAS1*DELBGDN) * ATRANS1(LEV)
+               GASSRC2 = (BGLAY + TFACGAS2*DELBGDN) * ATRANS2(LEV)
+               GASSRC3 = (BGLAY + TFACGAS3*DELBGDN) * ATRANS3(LEV)
             ELSE
                ODTOT = ODEPTH + ODCLD(LEV,IB)
                TRANS1 = EXP(-ODEPTH)
@@ -296,71 +291,90 @@ C             GASSRC     source radiance due to gas only
                ATRANS2(LEV) = 1. - TRANS1*TRANS1
                ATRANS3(LEV) = ATRANS1(LEV) + TRANS1 * ATRANS2(LEV)
                TFACGAS1 = ODEPTH/(5.+ODEPTH)
-               BBDGAS1(LEV) = BGLAY + TFACGAS1*DELBGDN
+               BBUGAS1(LEV) = BGLAY + TFACGAS1*DELBGUP
                TFACGAS2 = ODEPTH/(2.5+ODEPTH)
-               BBDGAS2(LEV) = BGLAY + TFACGAS2*DELBGDN
+               BBUGAS2(LEV) = BGLAY + TFACGAS2*DELBGUP
                TFACGAS3 = ODEPTH/(1.666667+ODEPTH)
-               BBDGAS3(LEV) = BGLAY + TFACGAS3*DELBGDN
+               BBUGAS3(LEV) = BGLAY + TFACGAS3*DELBGUP
                TFACTOT1 = ODTOT/(5.+ODTOT)
-               BBDTOT1(LEV) = BGLAY + TFACTOT1*DELBGDN
+               BBUTOT1(LEV) = BGLAY + TFACTOT1*DELBGUP
                TFACTOT2 = ODTOT/(2.5+ODTOT)
-               BBDTOT2(LEV) = BGLAY + TFACTOT2*DELBGDN
+               BBUTOT2(LEV) = BGLAY + TFACTOT2*DELBGUP
                TFACTOT3 = ODTOT/(1.666667+ODTOT)
-               BBDTOT3(LEV) = BGLAY + TFACTOT3*DELBGDN
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
-               DELBGUP = BGLEV - BGLAY
-               BBUTOT1 = BGLAY + TFACTOT1*DELBGUP
-               BBUTOT2 = BGLAY + TFACTOT2*DELBGUP
-               BBUTOT3 = BGLAY + TFACTOT3*DELBGUP
+               BBUTOT3(LEV) = BGLAY + TFACTOT3*DELBGUP
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
+               BBDTOT1 = BGLAY + TFACTOT1*DELBGDN
+               BBDTOT2 = BGLAY + TFACTOT2*DELBGDN
+               BBDTOT3 = BGLAY + TFACTOT3*DELBGDN
                ATOT1(LEV) = ATRANS1(LEV) + ABSCLD1(LEV,IB) -
      &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
                ATOT2(LEV) = ATRANS2(LEV) + ABSCLD2(LEV,IB) -
      &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
                ATOT3(LEV) = ATRANS3(LEV) + ABSCLD3(LEV,IB) -
      &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
-               GASSRC1 = (BGLAY + TFACGAS1*DELBGUP) * ATRANS1(LEV)
-               GASSRC2 = (BGLAY + TFACGAS2*DELBGUP) * ATRANS2(LEV)
-               GASSRC3 = (BGLAY + TFACGAS3*DELBGUP) * ATRANS3(LEV)
+               GASSRC1 = (BGLAY + TFACGAS1*DELBGDN) * ATRANS1(LEV)
+               GASSRC2 = (BGLAY + TFACGAS2*DELBGDN) * ATRANS2(LEV)
+               GASSRC3 = (BGLAY + TFACGAS3*DELBGDN) * ATRANS3(LEV)
             ENDIF
-C           Upward radiative transfer occurs here.
+C           Downward radiative transfer occurs here.
+            RADLD1 = RADLD1 - RADLD1 * (ATRANS1(LEV) +
+     &           EFCLFRAC1(LEV,IB) * (1. - ATRANS1(LEV))) +
+     &           GASSRC1 + CLDFRAC(LEV) * 
+     &           (BBDTOT1 * ATOT1(LEV) - GASSRC1)
+            RADLD2 = RADLD2 - RADLD2 * (ATRANS2(LEV) +
+     &           EFCLFRAC2(LEV,IB) * (1. - ATRANS2(LEV))) +
+     &           GASSRC2 + CLDFRAC(LEV) * 
+     &           (BBDTOT2 * ATOT2(LEV) - GASSRC2)
+            RADLD3 = RADLD3 - RADLD3 * (ATRANS3(LEV) +
+     &           EFCLFRAC3(LEV,IB) * (1. - ATRANS3(LEV))) +
+     &           GASSRC3 + CLDFRAC(LEV) * 
+     &           (BBDTOT3 * ATOT3(LEV) - GASSRC3)
+C           Keep running total (over all IG) for each level.
+            DRAD1(LEV-1) = DRAD1(LEV-1) + RADLD1
+            DRAD2(LEV-1) = DRAD2(LEV-1) + RADLD2
+            DRAD3(LEV-1) = DRAD3(LEV-1) + RADLD3
+ 2500    CONTINUE
+
+C ***    Upward radiative transfer.
+         RAD0 = FRACS(1,IG) * PLANKBND(IBAND)
+C        Add in reflection of surface downward radiance.
+         REFLECT = 1. - SEMISS(IBAND)
+         IF (IREFLECT .EQ. 1) THEN
+C           Specular reflection.
+            RADLU1 = RAD0 + REFLECT * RADLD1
+            RADLU2 = RAD0 + REFLECT * RADLD2
+            RADLU3 = RAD0 + REFLECT * RADLD3
+         ELSE
+C           Lambertian reflection.
+            RAD = 2. * (RADLD1*WTNUM(1) + RADLD2*WTNUM(2) + 
+     &           RADLD3*WTNUM(3))
+            RADLU1 = RAD0 + REFLECT * RAD
+            RADLU2 = RADLU1
+            RADLU3 = RADLU1
+         ENDIF
+         URAD1(0) = URAD1(0) + RADLU1
+         URAD2(0) = URAD2(0) + RADLU2
+         URAD3(0) = URAD3(0) + RADLU3
+         DO 2600 LEV = 1, NLAYERS
+            GASSRC1 = BBUGAS1(LEV) * ATRANS1(LEV)
             RADLU1 = RADLU1 - RADLU1 * (ATRANS1(LEV) +
      &           EFCLFRAC1(LEV,IB) * (1. - ATRANS1(LEV))) +
      &           GASSRC1 + CLDFRAC(LEV) * 
-     &           (BBUTOT1 * ATOT1(LEV) - GASSRC1)
+     &           (BBUTOT1(LEV) * ATOT1(LEV) - GASSRC1)
+            GASSRC2 = BBUGAS2(LEV) * ATRANS2(LEV)
             RADLU2 = RADLU2 - RADLU2 * (ATRANS2(LEV) +
      &           EFCLFRAC2(LEV,IB) * (1. - ATRANS2(LEV))) +
      &           GASSRC2 + CLDFRAC(LEV) * 
-     &           (BBUTOT2 * ATOT2(LEV) - GASSRC2)
+     &           (BBUTOT2(LEV) * ATOT2(LEV) - GASSRC2)
+            GASSRC3 = BBUGAS3(LEV) * ATRANS3(LEV)
             RADLU3 = RADLU3 - RADLU3 * (ATRANS3(LEV) +
      &           EFCLFRAC3(LEV,IB) * (1. - ATRANS3(LEV))) +
      &           GASSRC3 + CLDFRAC(LEV) * 
-     &           (BBUTOT3 * ATOT3(LEV) - GASSRC3)
-C           Keep running total (over all IG) for each level.
+     &           (BBUTOT3(LEV) * ATOT3(LEV) - GASSRC3)
             URAD1(LEV) = URAD1(LEV) + RADLU1
             URAD2(LEV) = URAD2(LEV) + RADLU2
             URAD3(LEV) = URAD3(LEV) + RADLU3
- 2500    CONTINUE
-
-C ***    Downward radiative transfer.
-         DO 2600 LEV = NLAYERS-1, 0, -1
-            GASSRC1 = BBDGAS1(LEV+1) * ATRANS1(LEV+1)
-            RADLD1 = RADLD1 - RADLD1 * (ATRANS1(LEV+1) +
-     &           EFCLFRAC1(LEV+1,IB) * (1. - ATRANS1(LEV+1))) +
-     &           GASSRC1 + CLDFRAC(LEV+1) * 
-     &           (BBDTOT1(LEV+1) * ATOT1(LEV+1) - GASSRC1)
-            GASSRC2 = BBDGAS2(LEV+1) * ATRANS2(LEV+1)
-            RADLD2 = RADLD2 - RADLD2 * (ATRANS2(LEV+1) +
-     &           EFCLFRAC2(LEV+1,IB) * (1. - ATRANS2(LEV+1))) +
-     &           GASSRC2 + CLDFRAC(LEV+1) * 
-     &           (BBDTOT2(LEV+1) * ATOT2(LEV+1) - GASSRC2)
-            GASSRC3 = BBDGAS3(LEV+1) * ATRANS3(LEV+1)
-            RADLD3 = RADLD3 - RADLD3 * (ATRANS3(LEV+1) +
-     &           EFCLFRAC3(LEV+1,IB) * (1. - ATRANS3(LEV+1))) +
-     &           GASSRC3 + CLDFRAC(LEV+1) * 
-     &           (BBDTOT3(LEV+1) * ATOT3(LEV+1) - GASSRC3)
-            DRAD1(LEV) = DRAD1(LEV) + RADLD1
-            DRAD2(LEV) = DRAD2(LEV) + RADLD2
-            DRAD3(LEV) = DRAD3(LEV) + RADLD3
  2600    CONTINUE
 
          IG = IG + 1

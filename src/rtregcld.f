@@ -25,7 +25,8 @@ C     integration.
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                   PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,MXCBANDS)
       COMMON /PLNKDAT/   PLANKLAY(MXLAY,NBANDS),
      &                   PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
@@ -39,11 +40,11 @@ C     integration.
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
 
-      DIMENSION ATRANS(MXLAY),BBDGAS(MXLAY),BBDTOT(MXLAY)
-      DIMENSION ATOT(MXLAY),ODCLD(MXLAY,MXCBANDS,MXANG)
-      DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)
+      DIMENSION ATRANS(MXLAY,MXANG),BBUGAS(MXLAY,MXANG)
+      DIMENSION ATOT(MXLAY,MXANG),ODCLD(MXLAY,MXCBANDS,MXANG)
+      DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY),BBUTOT(MXLAY,MXANG)
       DIMENSION DRAD(0:MXLAY-1,MXANG),URAD(0:MXLAY,MXANG)
-      DIMENSION SECANG(MXANG),ANGWEIGH(MXANG)
+      DIMENSION SECANG(MXANG),ANGWEIGH(MXANG),RAD(MXANG)
       DIMENSION SECREG(MXANG,MXANG),WTREG(MXANG,MXANG)
       DIMENSION EFCLFRAC(MXLAY,MXCBANDS,MXANG)
       DIMENSION ABSCLD(MXLAY,MXCBANDS,MXANG)
@@ -76,6 +77,7 @@ C     weight.
 
       HVRRGC = '$Revision$'
       
+      RADSUM = 0.
       NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
       DO 100 IANG = 1, NUMANG
@@ -160,48 +162,63 @@ C ***    Loop over g-channels.
 C ***    Loop over each angle for which the radiance is to be computed.
          DO 3000 IANG = 1, NUMANG
 C ***       Radiative transfer starts here.
-            RADLU = FRACS(1,IG) * PLANKBND(IBAND)
-            URAD(0,IANG) = URAD(0,IANG) + RADLU
             RADLD = 0.
 
-C ***       Upward radiative transfer.  
-            DO 2500 LEV = 1, NLAYERS
+C ***       Downward radiative transfer.  
+            DO 2500 LEV = NLAYERS, 1, -1
                PLFRAC = FRACS(LEV,IG)
                BLAY = PLANKLAY(LEV,IBAND)
                DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
                DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
 
                ODEPTH = SECANG(IANG) * TAUG(LEV,IG)
-               ATRANS(LEV) = 1. - EXP(-ODEPTH)
+               ATRANS(LEV,IANG) = 1. - EXP(-ODEPTH)
                TFACGAS = ODEPTH/(5.+ODEPTH)
-               GASSRC = ATRANS(LEV) * PLFRAC * (BLAY + TFACGAS*DPLANKUP)
+               GASSRC = ATRANS(LEV,IANG) * PLFRAC * 
+     &              (BLAY + TFACGAS*DPLANKDN)
 
                ODTOT = ODEPTH + ODCLD(LEV,IB,IANG)
                TFACTOT = ODTOT/(5.+ODTOT)
-               BBUTOT = PLFRAC * (BLAY + TFACTOT*DPLANKUP)
-               ATOT(LEV) = ATRANS(LEV) + ABSCLD(LEV,IB,IANG) -
-     &              ATRANS(LEV) * ABSCLD(LEV,IB,IANG)
+               BBDTOT = PLFRAC * (BLAY + TFACTOT*DPLANKDN)
+               ATOT(LEV,IANG) = ATRANS(LEV,IANG) + ABSCLD(LEV,IB,IANG) -
+     &              ATRANS(LEV,IANG) * ABSCLD(LEV,IB,IANG)
 
-               RADLU = RADLU - RADLU * (ATRANS(LEV) +
-     &              EFCLFRAC(LEV,IB,IANG) * (1. - ATRANS(LEV))) +
+               RADLD = RADLD - RADLD * (ATRANS(LEV,IANG) +
+     &              EFCLFRAC(LEV,IB,IANG) * (1. - ATRANS(LEV,IANG))) +
      &              GASSRC + CLDFRAC(LEV) * 
-     &              (BBUTOT * ATOT(LEV) - GASSRC)
-               URAD(LEV,IANG) = URAD(LEV,IANG) + RADLU
+     &              (BBDTOT * ATOT(LEV,IANG) - GASSRC)
+               DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
 
-               BBDGAS(LEV) = PLFRAC * (BLAY + TFACGAS * DPLANKDN)
-               BBDTOT(LEV) = PLFRAC * (BLAY + TFACTOT * DPLANKDN)
+               BBUGAS(LEV,IANG) = PLFRAC * (BLAY + TFACGAS * DPLANKUP)
+               BBUTOT(LEV,IANG) = PLFRAC * (BLAY + TFACTOT * DPLANKUP)
  2500       CONTINUE
-
-C ***       Downward radiative transfer.
-            DO 2600 LEV = NLAYERS-1, 0, -1
-               GASSRC = BBDGAS(LEV+1) * ATRANS(LEV+1)
-               RADLD = RADLD - RADLD * (ATRANS(LEV+1) +
-     &              EFCLFRAC(LEV+1,IB,IANG) * (1. - ATRANS(LEV+1))) +
-     &              GASSRC + CLDFRAC(LEV+1) * 
-     &              (BBDTOT(LEV+1) * ATOT(LEV+1) - GASSRC)
-               DRAD(LEV,IANG) = DRAD(LEV,IANG) + RADLD
- 2600       CONTINUE
+            RAD(IANG) = RADLD
+            RADSUM = RADSUM + ANGWEIGH(IANG) * RADLD
  3000    CONTINUE 
+
+         RAD0 = FRACS(1,IG) * PLANKBND(IBAND)
+         REFLECT = 1. - SEMISS(IBAND)
+         DO 4000 IANG = 1, NUMANG
+C           Add in reflection of surface downward radiance.
+            IF (IREFLECT .EQ. 1) THEN
+C              Specular reflection.
+               RADLU = RAD0 + REFLECT * RAD(IANG)
+            ELSE
+C              Lambertian reflection.
+               RADLU = RAD0 + 2. * REFLECT * RADSUM
+            ENDIF
+            URAD(0,IANG) = URAD(0,IANG) + RADLU
+C ***       Upward radiative transfer.
+            DO 2600 LEV = 1, NLAYERS
+               GASSRC = BBUGAS(LEV,IANG) * ATRANS(LEV,IANG)
+               RADLU = RADLU - RADLU * (ATRANS(LEV,IANG) +
+     &              EFCLFRAC(LEV,IB,IANG) * (1. - ATRANS(LEV,IANG))) +
+     &              GASSRC + CLDFRAC(LEV) * 
+     &              (BBUTOT(LEV,IANG) * ATOT(LEV,IANG) - GASSRC)
+               URAD(LEV,IANG) = URAD(LEV,IANG) + RADLU
+ 2600       CONTINUE
+ 4000    CONTINUE 
+         RADSUM = 0.
 
          IG = IG + 1
          IF (IG .LE. 16) GO TO 1000
