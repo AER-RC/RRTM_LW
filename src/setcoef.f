@@ -7,11 +7,11 @@ C     presently: %H%  %T%
 C     Purpose:  For a given atmosphere, calculate the indices and
 C     fractions related to the pressure and temperature interpolations.
 C     Also calculate the values of the integrated Planck functions 
-C     for each band at the level and layer temperatures.  Compute
-C     the column amounts of the major species.
+C     for each band at the level and layer temperatures.
 
       PARAMETER (MXLAY = 203)
       PARAMETER (NBANDS = 16)
+      PARAMETER (NBANDSLG = 16)
       PARAMETER (MG =16)
 
 C  Input      
@@ -24,7 +24,7 @@ C  Input
 C  Output
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),
      &                  COLCO2(MXLAY),COLO3(MXLAY),COLN2O(MXLAY),
-     &                  COLCH4(MXLAY),CO2MULT(MXLAY)
+     &                  COLCH4(MXLAY),COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
      &                  FAC10(MXLAY),FAC11(MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -33,7 +33,7 @@ C  Output
      &                  PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
 
 C  Internal
-      COMMON /AVGPLNK/  TOTPLNK(141,NBANDS), TOTPLK16(141)
+      COMMON /AVGPLNK/  TOTPLNK(141,NBANDSLG), TOTPLK16(141)
 C  --------
 
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
@@ -205,19 +205,20 @@ C        layer temperature falls.
          ENDIF
          FT1 = ((TAVEL(LAY)-TREF(JP1))/15.) - FLOAT(JT1(LAY)-3)
 
+         WATER = WKL(1,LAY)/COLDRY(LAY)
+         SCALEFAC = PAVEL(LAY) * STPFAC / TAVEL(LAY)
+
 C        If the pressure is less than ~100mb, perform a different
 C        set of species interpolations.
          IF (PLOG .LE. 4.56) GO TO 5300
          LAYTROP =  LAYTROP + 1
 C        For one band, the "switch" occurs at ~300 mb. 
          IF (PLOG .GE. 5.76) LAYSWTCH = LAYSWTCH + 1
-
+C
 C        Set up factors needed to separately include the water vapor
 C        self-continuum in the calculation of absorption coefficient.
-         WATER = WKL(1,LAY)/COLDRY(LAY)
-         SCALEFAC = PAVEL(LAY) * STPFAC / TAVEL(LAY)
-         SELFFAC(LAY) = SCALEFAC * WATER / (1.+WATER)
-         FACTOR = (TAVEL(LAY)-188.0) / 7.2
+         SELFFAC(LAY) = WATER * SCALEFAC / (1.+WATER)
+         FACTOR = (TAVEL(LAY)-188.0)/7.2
          INDSELF(LAY) = MIN(9, MAX(1, INT(FACTOR)-7))
          SELFFRAC(LAY) = FACTOR - FLOAT(INDSELF(LAY) + 7)
 
@@ -227,18 +228,28 @@ C        Calculate needed column amounts.
          COLO3(LAY) = 1.E-20 * WKL(3,LAY)
          COLN2O(LAY) = 1.E-20 * WKL(4,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
+         COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-12 * COLDRY(LAY)
+         IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-12 * COLDRY(LAY)
+         IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-12 * COLDRY(LAY)
          CO2REG = 3.55E-24 * COLDRY(LAY)
          CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
-     &        EXP(-1919.4/TAVEL(LAY))/1.527E-3
+     &        272.63*EXP(-1919.4/TAVEL(LAY))/(8.7604E-4*TAVEL(LAY))
          GO TO 5400
 
 C        Above LAYTROP.
  5300    CONTINUE
+
 C        Calculate needed column amounts.
          COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
          COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
          COLO3(LAY) = 1.E-20 * WKL(3,LAY)
+         COLO2(LAY) = 1.E-20 * WKL(7,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
+         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-12 * COLDRY(LAY)
+         CO2REG = 3.55E-24 * COLDRY(LAY)
+         CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
+     &        272.63*EXP(-1919.4/TAVEL(LAY))/(8.7604E-4*TAVEL(LAY))
 
  5400    CONTINUE
 
@@ -263,9 +274,9 @@ C        the optical depths (performed in routines TAUGBn for band n).
 
       BLOCK DATA AVPLANK
 
-      PARAMETER (NBANDS = 16)
+      PARAMETER (NBANDSLG = 16)
 
-      COMMON /AVGPLNK/  TOTPLNK(141,NBANDS), TOTPLK16(141)
+      COMMON /AVGPLNK/  TOTPLNK(141,NBANDSLG), TOTPLK16(141)
 
       DATA (TOTPLNK(I, 1),I=1,47)/
      &1.42732E-06,1.44217E-06,1.45704E-06,1.47195E-06,1.48689E-06,
