@@ -1,17 +1,21 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE SETCOEF
 
 C     Purpose:  For a given atmosphere, calculate the indices and
 C     fractions needed to interpolate between absorption coefficients 
 C     stored for a variety of reference atmospheres.
 
-      PARAMETER (MXLAY = 200)
+      PARAMETER (MXLAY = 203)
       PARAMETER (NBANDS = 16)
       PARAMETER (MG =16)
 
 C  Input      
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /SPECIES/  COLDRY(MXLAY),WATER(MXLAY),CO2(MXLAY),
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
+      COMMON /MOLAMNT/  COLDRY(MXLAY),WATER(MXLAY),CO2(MXLAY),
      &                  OZ(MXLAY)
 
 C  Output
@@ -521,8 +525,8 @@ C        either be linear in FP or go as the square root of FP.
 C     Find out between what two degrees the level and layer 
 C     temperatures fall.  This is needed for the interpolation
 C     that calculates the Planck functions.
-      TLEVFRAC(0) = TZ(0) - INT(TZ(0))
-      INDLEV(0) =  TZ(0) - 179.
+      TLEVFRAC(0) = TSFC - INT(TSFC)
+      INDLEV(0) =  TSFC - 179.
       DO 7000 LEV = 1, NLAYERS
          TLEVFRAC(LEV) = TZ(LEV) - INT(TZ(LEV))
          TLAYFRAC(LEV) = TAVEL(LEV) - INT(TAVEL(LEV))

@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE RT
 
 C *** This program calculates the upward fluxes, downward fluxes,
@@ -10,7 +14,7 @@ C     integration, i.e. only one exponential is computed per layer
 C     per g-value per band.
 
       PARAMETER (MG=16)
-      PARAMETER (MXLAY=200)
+      PARAMETER (MXLAY=203)
       PARAMETER (MXANG = 4)
       PARAMETER (NBANDS = 16)
 
@@ -19,7 +23,7 @@ C     per g-value per band.
       COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
       COMMON /CONTROL/   NUMANGS
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY)
+     &                   PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
@@ -65,7 +69,7 @@ C *** SECANG is equal to the secant of the first angle.
 
 C *** Loop over frequency bands.
  500  CONTINUE
-      DO 6000 IBAND = 1, 6
+      DO 6000 IBAND = 1, 2
 
 C *** Compute the Planck function at the surface for the frequency
 C     chosen as the representative frequency for each IG.

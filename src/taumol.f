@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
 *******************************************************************************
 *                                                                             *
 *                  Optical depths developed for the                           *
@@ -110,6 +114,14 @@
 *                                                                             *
 *******************************************************************************
 
+      INCLUDE 'k_gB1.f'
+      INCLUDE 'k_gB2.f'
+      INCLUDE 'k_gB3.f'
+      INCLUDE 'k_gB4.f'
+      INCLUDE 'k_gB5.f'
+      INCLUDE 'k_gB6.f'
+
+*******************************************************************************
 
       SUBROUTINE TAUGB1
 
@@ -117,7 +129,7 @@ C     Written by Eli J. Mlawer, Atmospheric & Environmental Research.
 
 C     BAND 1:  10-250 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -127,7 +139,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
@@ -182,7 +194,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 2:  250-500 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -192,7 +204,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
@@ -247,7 +259,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 3:  500-630 cm-1 (low - H2O,CO2; high - H2O,CO2)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -257,7 +269,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
@@ -323,7 +335,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 4:  630-700 cm-1 (low - H2O,CO2; high - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -333,7 +345,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
@@ -399,7 +411,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 5:  700-820 cm-1 (low - H2O,CO2; high - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -409,7 +421,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
@@ -475,7 +487,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 6:  820-980 cm-1 (low - H2O; high - nothing)
 
-      PARAMETER (MG=16, MXLAY=200, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
 C  Output
 
@@ -485,7 +497,7 @@ C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
       COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY)
       COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
