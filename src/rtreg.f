@@ -137,12 +137,12 @@ C ***       Downward radiative transfer.
             DO 2500 LEV = NLAYERS, 1, -1
                BLAY = PLANKLAY(LEV,IBAND)
                PLFRAC = FRACS(LEV,IG)
+               DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
+               DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
                ODEPTH = SECANG(IANG) * TAUG(LEV,IG)
                IF (ODEPTH .LE. 0.06) THEN
                   IF (ODEPTH .LT. 0.0) ODEPTH = 0.0
                   ATRANS(LEV,IANG) = ODEPTH - 0.5*ODEPTH*ODEPTH
-                  DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
-                  DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
                   ODEPTH = REC_6*ODEPTH
                   BBD = PLFRAC*(BLAY+DPLANKDN*ODEPTH)
                   RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
@@ -152,8 +152,6 @@ C ***       Downward radiative transfer.
                   TBLIND =  ODEPTH/(BPADE+ODEPTH)
                   ITR = TBLINT*TBLIND + 0.5
                   ATRANS(LEV,IANG) = 1. - TRANS(ITR)
-                  DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
-                  DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
                   TAUSFAC = TF(ITR)
                   BBD = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
                   RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
