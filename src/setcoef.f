@@ -111,8 +111,16 @@ C        Calculate the integrated Planck functions for each band at the
 C        surface, level, and layer temperatures.
          INDLAY = TAVEL(LAY) - 179.
          TLAYFRAC = TAVEL(LAY) - INT(TAVEL(LAY))
+         IF (INDLAY .LE. 0) THEN
+            TLAYFRAC = INDLAY - 2. + TLAYFRAC
+            INDLAY = 1
+         ENDIF
          INDLEV = TZ(LAY) - 179.
-         TLEVFRAC = TZ(LAY) - INT(TZ(LAY))
+         TLEVFRAC = TZ(LAY) - INT(TZ(LAY))         
+         IF (INDLEV .LE. 0) THEN
+            TLEVFRAC = INDLEV - 2. + TLEVFRAC
+            INDLEV = 1
+         ENDIF
          DO 3500 IBAND = 1, 15
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
@@ -229,9 +237,9 @@ C        Calculate needed column amounts.
          COLN2O(LAY) = 1.E-20 * WKL(4,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
          COLO2(LAY) = 1.E-20 * WKL(7,LAY)
-         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-12 * COLDRY(LAY)
-         IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-12 * COLDRY(LAY)
-         IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-12 * COLDRY(LAY)
+         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
          CO2REG = 3.55E-24 * COLDRY(LAY)
          CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
      &        272.63*EXP(-1919.4/TAVEL(LAY))/(8.7604E-4*TAVEL(LAY))
