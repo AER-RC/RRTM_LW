@@ -1,0 +1,17 @@
+NOTE:
+** CVS rtags can't accept "." in strings, substitute "_"
+
+June 10, 2002:
+
+	Release_3_0_beta_a
+		This is the first archived version in CVS of the new (3.0) release
+		RRTM.  It is being sent to Tim Shippert at PNL for testing in the BBHRP.
+		(Note: For the ARM 2002 STM, Tim received an unarchived version which
+		was called release_3_0_beta).
+
+1998:
+
+	Release 2.3
+		This was the last version archived in SCCS, and pulled into CVS.  It
+		is currently (as of June 2002) been place on the RT web-site 
+		(rtweb.aer.com).
