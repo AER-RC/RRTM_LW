@@ -1,50 +1,42 @@
-C     path:      %P%
-C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
       SUBROUTINE SETCOEF
 
 C     Purpose:  For a given atmosphere, calculate the indices and
-C     fractions needed to interpolate between absorption coefficients 
-C     stored for a variety of reference atmospheres.
+C     fractions related to the pressure and temperature interpolations.
+C     Also calculate the values of the integrated Planck functions 
+C     for each band at the level and layer temperatures.
+
+C     Note:  Uncomment all lines marked with 'CX' if you want 
+C     extrapolation warnings.
 
       PARAMETER (MXLAY = 203)
       PARAMETER (NBANDS = 16)
       PARAMETER (MG =16)
 
 C  Input      
+      COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY),TSFC
-      COMMON /MOLAMNT/  COLDRY(MXLAY),WATER(MXLAY),CO2(MXLAY),
-     &                  OZ(MXLAY)
+     &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  NMOL
 
 C  Output
-      COMMON /PROFDATA/ LAYTROP,COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY)
-      COMMON /FRACS/    TLEVFRAC(0:MXLAY),TLAYFRAC(MXLAY)
-      COMMON /MISC/     INDLEV(0:MXLAY),INDLAY(MXLAY)
-      COMMON /INTFAC/   FAC000(MXLAY,NBANDS),FAC001(MXLAY,NBANDS),
-     &                  FAC010(MXLAY,NBANDS),FAC011(MXLAY,NBANDS),
-     &                  FAC100(MXLAY,NBANDS),FAC101(MXLAY,NBANDS),
-     &                  FAC110(MXLAY,NBANDS),FAC111(MXLAY,NBANDS)
-      COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY),
-     &                  JS(MXLAY,NBANDS),JS1(MXLAY,NBANDS)
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),
+     &                  COLCO2(MXLAY),COLO3(MXLAY),COLN2O(MXLAY),
+     &                  COLCH4(MXLAY)
+      COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
+     &                  FAC10(MXLAY),FAC11(MXLAY)
+      COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC, SELFFRAC, INDSELF
+      COMMON /PLNKDAT/  PLANKLAY(MXLAY,NBANDS),
+     &                  PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
 
-      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
-     *                HVDUM1(4),HVRUTL,HVREXT
-
-      CHARACTER*30 A1
-      CHARACTER*10 A2
-
-      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
+C  Internal
+      COMMON /AVGPLNK/  TOTPLNK(141,NBANDS), TOTPLK16(141)
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       DIMENSION PREF(59),PREFLOG(59),TREF(59)
-      DIMENSION SPARM31(7,13),SPARM32(3,13:59)
-      DIMENSION SPARM41(7,13),SPARM42(3,13:59)
-      DIMENSION SPARM51(7,13),SPARM52(3,13:59)
+CX      CHARACTER*30 A1
+CX      CHARACTER*10 A2
 
 C     These pressures are chosen such that the ln of the first pressure
 C     has only a few non-zero digits (i.e. ln(PREF(1)) = 6.96000) and
@@ -91,199 +83,89 @@ C     pressures for the MLS standard atmosphere.
      &     2.0887E+02, 2.0340E+02, 1.9792E+02, 1.9290E+02, 1.8809E+02,
      &     1.8329E+02, 1.7849E+02, 1.7394E+02, 1.7212E+02/
 
-C     BAND 1 (10-250 cm-1):
-C     Since there is only one key specie in this band (H2O), there is 
-C     no need for a binary species parameter as in other bands.
-
-C     BAND 2 (250-500 cm-1):
-C     Since there is only one key specie in this band (H2O), there is 
-C     no need for a binary species parameter as in other bands.
-
-C     BAND 3 (500-630 cm-1):
-C     These are the 7 values of the binary species parameter for each
-C     reference layer in the lower atmosphere.  The parameter is 
-C     defined by H2O/(H2O + STRRAT31*CO2).  
-      DATA SPARM31 / 
-     &0.0,.92399E+0,.96050E+0,.97331E+0,.97985E+0,.98381E+0,.98648E+0,
-     &0.0,.90909E+0,.95238E+0,.96774E+0,.97561E+0,.98039E+0,.98361E+0,
-     &0.0,.86888E+0,.92984E+0,.95211E+0,.96364E+0,.97070E+0,.97547E+0,
-     &0.0,.80014E+0,.88898E+0,.92314E+0,.94122E+0,.95242E+0,.96003E+0,
-     &0.0,.70018E+0,.82365E+0,.87509E+0,.90330E+0,.92111E+0,.93339E+0,
-     &0.0,.55649E+0,.71505E+0,.79010E+0,.83386E+0,.86252E+0,.88274E+0,
-     &0.0,.39084E+0,.56202E+0,.65810E+0,.71961E+0,.76236E+0,.79380E+0,
-     &0.0,.24065E+0,.38794E+0,.48737E+0,.55901E+0,.61309E+0,.65535E+0,
-     &0.0,.12898E+0,.22849E+0,.30760E+0,.37199E+0,.42542E+0,.47048E+0,
-     &0.0,.54244E-1,.10291E+0,.14681E+0,.18661E+0,.22286E+0,.25603E+0,
-     &0.0,.34384E-1,.66482E-1,.96514E-1,.12467E+0,.15113E+0,.17604E+0,
-     &0.0,.87717E-2,.17391E-1,.25861E-1,.34187E-1,.42372E-1,.50419E-1,
-     &0.0,.63879E-2,.12695E-1,.18922E-1,.25071E-1,.31144E-1,.37141E-1/
-C     &0.0,.37805E+0,.54867E+0,.64583E+0,.70857E+0,.75242E+0,.78481E+0,
-C     &0.0,.33334E+0,.50001E+0,.60001E+0,.66668E+0,.71429E+0,.75001E+0,
-C     &0.0,.24887E+0,.39855E+0,.49849E+0,.56995E+0,.62358E+0,.66532E+0,
-C     &0.0,.16679E+0,.28589E+0,.37521E+0,.44466E+0,.50022E+0,.54567E+0,
-C     &0.0,.10456E+0,.18932E+0,.25942E+0,.31837E+0,.36862E+0,.41197E+0,
-C     &0.0,.59032E-1,.11148E+0,.15840E+0,.20060E+0,.23878E+0,.27348E+0,
-C     &0.0,.31083E-1,.60292E-1,.87791E-1,.11373E+0,.13823E+0,.16141E+0,
-C     &0.0,.15598E-1,.30718E-1,.45379E-1,.59604E-1,.73411E-1,.86819E-1,
-C     &0.0,.73497E-2,.14592E-1,.21730E-1,.28764E-1,.35699E-1,.42535E-1,
-C     &0.0,.28596E-2,.57028E-2,.85299E-2,.11341E-1,.14136E-1,.16916E-1,
-C     &0.0,.17772E-2,.35482E-2,.53129E-2,.70713E-2,.88235E-2,.10570E-1,
-C     &0.0,.44227E-3,.88415E-3,.13256E-2,.17667E-2,.22074E-2,.26478E-2,
-C     &0.0,.32135E-3,.64248E-3,.96342E-3,.12841E-2,.16047E-2,.19250E-2/
-
-C     These are the 3 values of the binary species parameter for each
-C     reference layer in the upper atmosphere.  The parameter is defined 
-C     by H2O/(H2O + STRRAT32*CO2).  
-      DATA SPARM32 / 
-     &0.0,.63879E-02,.12695E-01,0.0,.63045E-02,.12530E-01,
-     &0.0,.64838E-02,.12884E-01,0.0,.68209E-02,.13549E-01,
-     &0.0,.72289E-02,.14354E-01,0.0,.77942E-02,.15468E-01,
-     &0.0,.82561E-02,.16377E-01,0.0,.85705E-02,.16995E-01,
-     &0.0,.88346E-02,.17514E-01,0.0,.91022E-02,.18040E-01,
-     &0.0,.93599E-02,.18546E-01,0.0,.95285E-02,.18877E-01,
-     &0.0,.96769E-02,.19168E-01,0.0,.97877E-02,.19386E-01,
-     &0.0,.98681E-02,.19543E-01,0.0,.99259E-02,.19657E-01,
-     &0.0,.10037E-01,.19874E-01,0.0,.10182E-01,.20159E-01,
-     &0.0,.10425E-01,.20635E-01,0.0,.10635E-01,.21046E-01,
-     &0.0,.10819E-01,.21407E-01,0.0,.10882E-01,.21531E-01,
-     &0.0,.10916E-01,.21596E-01,0.0,.10916E-01,.21596E-01,
-     &0.0,.10825E-01,.21417E-01,0.0,.10729E-01,.21229E-01,
-     &0.0,.10633E-01,.21041E-01,0.0,.10431E-01,.20647E-01,
-     &0.0,.10216E-01,.20225E-01,0.0,.10000E-01,.19802E-01,
-     &0.0,.96906E-02,.19195E-01,0.0,.93386E-02,.18504E-01,
-     &0.0,.89865E-02,.17813E-01,0.0,.86255E-02,.17104E-01,
-     &0.0,.82470E-02,.16359E-01,0.0,.78683E-02,.15614E-01,
-     &0.0,.74892E-02,.14867E-01,0.0,.71169E-02,.14133E-01,
-     &0.0,.67474E-02,.13404E-01,0.0,.63778E-02,.12675E-01,
-     &0.0,.60078E-02,.11944E-01,0.0,.56437E-02,.11224E-01,
-     &0.0,.52816E-02,.10508E-01,0.0,.49184E-02,.97886E-02,
-     &0.0,.45540E-02,.90667E-02,0.0,.41951E-02,.83551E-02,
-     &0.0,.39044E-02,.77785E-02/
-
-C     BAND 4 (630-700 cm-1):
-C     These are the 7 values of the binary species parameter for each
-C     reference layer in the lower atmosphere.  The parameter is defined 
-C     by H2O/(H2O + STRRAT41*CO2).  
-      DATA SPARM41 / 
-     &0.0,.19305E-1,.37879E-1,.55762E-1,.72993E-1,.89606E-1,.10563E+0,
-     &0.0,.15935E-1,.31371E-1,.46330E-1,.60833E-1,.74903E-1,.88557E-1,
-     &0.0,.10616E-1,.21010E-1,.31187E-1,.41155E-1,.50919E-1,.60487E-1,
-     &0.0,.64410E-2,.12800E-1,.19077E-1,.25276E-1,.31396E-1,.37440E-1,
-     &0.0,.37673E-2,.75062E-2,.11217E-1,.14901E-1,.18557E-1,.22186E-1,
-     &0.0,.20276E-2,.40470E-2,.60583E-2,.80614E-2,.10057E-1,.12044E-1,
-     &0.0,.10379E-2,.20735E-2,.31071E-2,.41385E-2,.51678E-2,.61950E-2,
-     &0.0,.51290E-3,.10253E-2,.15371E-2,.20485E-2,.25593E-2,.30695E-2,
-     &0.0,.23973E-3,.47934E-3,.71884E-3,.95822E-3,.11975E-2,.14366E-2,
-     &0.0,.92865E-4,.18571E-3,.27854E-3,.37136E-3,.46415E-3,.55693E-3,
-     &0.0,.57656E-4,.11531E-3,.17295E-3,.23058E-3,.28821E-3,.34584E-3,
-     &0.0,.14329E-4,.28658E-4,.42987E-4,.57315E-4,.71642E-4,.85969E-4,
-     &0.0,.10410E-4,.20820E-4,.31230E-4,.41639E-4,.52049E-4,.62458E-4/
-
-C     These are the 3 values of the binary species parameter for each
-C     reference layer in the upper atmosphere.  The parameter is defined 
-C     by O3/(O3 + STRRAT42*CO2).  
-      DATA SPARM42 / 
-     &0.0,.59487E-04,.11897E-03,0.0,.95597E-04,.19118E-03,
-     &0.0,.15055E-03,.30105E-03,0.0,.19883E-03,.39759E-03,
-     &0.0,.25272E-03,.50531E-03,0.0,.31265E-03,.62511E-03,
-     &0.0,.39257E-03,.78483E-03,0.0,.45439E-03,.90836E-03,
-     &0.0,.50928E-03,.10180E-02,0.0,.55619E-03,.11118E-02,
-     &0.0,.60333E-03,.12059E-02,0.0,.65695E-03,.13130E-02,
-     &0.0,.70526E-03,.14095E-02,0.0,.74371E-03,.14863E-02,
-     &0.0,.75431E-03,.15075E-02,0.0,.74428E-03,.14874E-02,
-     &0.0,.69132E-03,.13817E-02,0.0,.62614E-03,.12515E-02,
-     &0.0,.53902E-03,.10775E-02,0.0,.45851E-03,.91659E-03,
-     &0.0,.38299E-03,.76569E-03,0.0,.32801E-03,.65581E-03,
-     &0.0,.28048E-03,.56081E-03,0.0,.24126E-03,.48240E-03,
-     &0.0,.21282E-03,.42555E-03,0.0,.18496E-03,.36986E-03,
-     &0.0,.15710E-03,.31416E-03,0.0,.14201E-03,.28398E-03,
-     &0.0,.12863E-03,.25722E-03,0.0,.11524E-03,.23046E-03,
-     &0.0,.10231E-03,.20460E-03,0.0,.89581E-04,.17915E-03,
-     &0.0,.76851E-04,.15369E-03,0.0,.65244E-04,.13048E-03,
-     &0.0,.55876E-04,.11175E-03,0.0,.46508E-04,.93011E-04,
-     &0.0,.37140E-04,.74276E-04,0.0,.31127E-04,.62252E-04,
-     &0.0,.26660E-04,.53318E-04,0.0,.22192E-04,.44384E-04,
-     &0.0,.17725E-04,.35450E-04,0.0,.16376E-04,.32752E-04,
-     &0.0,.16583E-04,.33166E-04,0.0,.16791E-04,.33582E-04,
-     &0.0,.16999E-04,.33998E-04,0.0,.17752E-04,.35504E-04,
-     &0.0,.24351E-04,.48700E-04/
-
-C     BAND 5 (700-820cm-1):
-C     These are the 7 values of the binary species parameter for each
-C     reference layer in the lower atmosphere.  The parameter is defined 
-C     by H2O/(H2O + STRRAT51*CO2).  
-      DATA SPARM51 / 
-     &0.0,.16414E+0,.28200E+0,.37073E+0,.43994E+0,.49543E+0,.54092E+0,
-     &0.0,.13908E+0,.24420E+0,.32644E+0,.39254E+0,.44682E+0,.49220E+0,
-     &0.0,.96695E-1,.17634E+0,.24308E+0,.29981E+0,.34863E+0,.39109E+0,
-     &0.0,.60744E-1,.11453E+0,.16249E+0,.20552E+0,.24435E+0,.27956E+0,
-     &0.0,.36353E-1,.70156E-1,.10167E+0,.13111E+0,.15869E+0,.18457E+0,
-     &0.0,.19866E-1,.38958E-1,.57321E-1,.74995E-1,.92018E-1,.10843E+0,
-     &0.0,.10258E-1,.20308E-1,.30156E-1,.39807E-1,.49269E-1,.58546E-1,
-     &0.0,.50933E-2,.10135E-1,.15126E-1,.20067E-1,.24958E-1,.29801E-1,
-     &0.0,.23864E-2,.47614E-2,.71252E-2,.94777E-2,.11819E-1,.14150E-1,
-     &0.0,.92566E-3,.18496E-2,.27718E-2,.36924E-2,.46112E-2,.55284E-2,
-     &0.0,.57488E-3,.11491E-2,.17227E-2,.22956E-2,.28678E-2,.34394E-2,
-     &0.0,.14293E-3,.28582E-3,.42867E-3,.57148E-3,.71425E-3,.85697E-3,
-     &0.0,.10384E-3,.20766E-3,.31146E-3,.41524E-3,.51900E-3,.62273E-3/
-
-C     These are the 3 values of the binary species parameter for each
-C     reference layer in the upper atmosphere.  The parameter is defined 
-C     by O3/(O3 + STRRAT52*CO2).  
-      DATA SPARM52 / 
-     &0.0,.23834E-02,.47556E-02,0.0,.38249E-02,.76206E-02,
-     &0.0,.60106E-02,.11949E-01,0.0,.79234E-02,.15722E-01,
-     &0.0,.10050E-01,.19900E-01,0.0,.12404E-01,.24504E-01,
-     &0.0,.15527E-01,.30579E-01,0.0,.17929E-01,.35227E-01,
-     &0.0,.20053E-01,.39317E-01,0.0,.21861E-01,.42786E-01,
-     &0.0,.23671E-01,.46246E-01,0.0,.25721E-01,.50153E-01,
-     &0.0,.27562E-01,.53646E-01,0.0,.29022E-01,.56408E-01,
-     &0.0,.29424E-01,.57166E-01,0.0,.29044E-01,.56448E-01,
-     &0.0,.27032E-01,.52640E-01,0.0,.24544E-01,.47912E-01,
-     &0.0,.21200E-01,.41519E-01,0.0,.18089E-01,.35535E-01,
-     &0.0,.15154E-01,.29855E-01,0.0,.13006E-01,.25678E-01,
-     &0.0,.11142E-01,.22038E-01,0.0,.95983E-02,.19014E-01,
-     &0.0,.84762E-02,.16810E-01,0.0,.73747E-02,.14641E-01,
-     &0.0,.62707E-02,.12463E-01,0.0,.56716E-02,.11279E-01,
-     &0.0,.51397E-02,.10227E-01,0.0,.46073E-02,.91723E-02,
-     &0.0,.40923E-02,.81513E-02,0.0,.35850E-02,.71443E-02,
-     &0.0,.30771E-02,.61353E-02,0.0,.26135E-02,.52134E-02,
-     &0.0,.22391E-02,.44681E-02,0.0,.18644E-02,.37218E-02,
-     &0.0,.14894E-02,.29743E-02,0.0,.12485E-02,.24939E-02,
-     &0.0,.10695E-02,.21368E-02,0.0,.89047E-03,.17794E-02,
-     &0.0,.71135E-03,.14217E-02,0.0,.65725E-03,.13136E-02,
-     &0.0,.66556E-03,.13302E-02,0.0,.67389E-03,.13469E-02,
-     &0.0,.68223E-03,.13635E-02,0.0,.71244E-03,.14239E-02,
-     &0.0,.97699E-03,.19521E-02/
-
-C     BAND 6 (820-980 cm-1):
-C     Since there is at most one key specie in this band, there is no
-C     need for for a ratio between two key species as in other bands.
 
 C ****************** START OF EXECUTABLE CODE ***************************
 
-      HVRSET = '$Revision$'
-
       STPFAC = 296./1013.
 
-C     The following are the ratios of the line strengths in the 
-C     respective bands of that band's two key species.
-      STRRAT31 = 1.403829 
-      STRRAT32 = 1.403829
-      STRRAT41 = 866.9486
-      STRRAT42 = 32.959
-      STRRAT51 = 86.9028
-      STRRAT52 = 0.820692
+      INDBOUND = TBOUND - 179.
+      TBNDFRAC = TBOUND - INT(TBOUND)
+      INDLEV0 = TZ(0) - 179.
+      T0FRAC = TZ(0) - INT(TZ(0))
 
 C     Since the output absorption coefficient might not be too accurate
 C     if it resulted from extrapolation (in any of the variables) rather
 C     than interpolation, print out a message warning the user that this
 C     has occurred.
-      IERR = 13
-      OPEN(IERR,FILE='EXTRAP.WARNINGS',FORM='FORMATTED')
+CX      IERR = 13
+CX      OPEN(IERR,FILE='EXTRAP.WARNINGS',FORM='FORMATTED')
 
       LAYTROP = 0
-      DO 6000 LAY = 1, NLAYERS
+      LAYSWTCH = 0
+      DO 7000 LAY = 1, NLAYERS
+
+C        Calculate the integrated Planck functions for each band at the
+C        surface, level, and layer temperatures.
+         INDLAY = TAVEL(LAY) - 179.
+         TLAYFRAC = TAVEL(LAY) - INT(TAVEL(LAY))
+         INDLEV = TZ(LAY) - 179.
+         TLEVFRAC = TZ(LAY) - INT(TZ(LAY))
+         DO 3500 IBAND = 1, 15
+            IF (LAY.EQ.1) THEN
+               DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
+     &              - TOTPLNK(INDBOUND,IBAND)
+               PLANKBND(IBAND) = TOTPLNK(INDBOUND,IBAND) + 
+     &              TBNDFRAC * DBDTLEV
+               DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
+               PLANKLEV(0,IBAND) = TOTPLNK(INDLEV0,IBAND) + 
+     &              T0FRAC * DBDTLEV
+            ENDIF
+            DBDTLEV = TOTPLNK(INDLEV+1,IBAND) - TOTPLNK(INDLEV,IBAND)
+            DBDTLAY = TOTPLNK(INDLAY+1,IBAND) - TOTPLNK(INDLAY,IBAND)
+            PLANKLAY(LAY,IBAND) = TOTPLNK(INDLAY,IBAND) + 
+     &           TLAYFRAC * DBDTLAY
+            PLANKLEV(LAY,IBAND) = TOTPLNK(INDLEV,IBAND) + 
+     &           TLEVFRAC * DBDTLEV
+ 3500    CONTINUE
+
+C        For band 16, if radiative transfer will be performed on just
+C        this band, use integrated Planck values up to 3000 cm-1.  
+C        If radiative transfer will be performed across all 16 bands,
+C        then include in the integrated Planck values for this band
+C        contributions from 2600 cm-1 to infinity.
+         IF (ISTART .EQ. 16) THEN
+            IF (LAY.EQ.1) THEN
+               DBDTLEV = TOTPLK16(INDBOUND+1) - TOTPLK16(INDBOUND)
+               PLANKBND(IBAND) = TOTPLK16(INDBOUND) + 
+     &              TBNDFRAC * DBDTLEV
+               DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
+               PLANKLEV(0,IBAND) = TOTPLK16(INDLEV0) + 
+     &              T0FRAC * DBDTLEV
+            ENDIF
+            DBDTLEV = TOTPLK16(INDLEV+1) - TOTPLK16(INDLEV)
+            DBDTLAY = TOTPLK16(INDLAY+1) - TOTPLK16(INDLAY)
+            PLANKLAY(LAY,IBAND) = TOTPLK16(INDLAY) + 
+     &           TLAYFRAC * DBDTLAY
+            PLANKLEV(LAY,IBAND) = TOTPLK16(INDLEV) + 
+     &           TLEVFRAC * DBDTLEV
+         ELSE
+            IF (LAY.EQ.1) THEN
+               DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
+     &              - TOTPLNK(INDBOUND,IBAND)
+               PLANKBND(IBAND) = TOTPLNK(INDBOUND,IBAND) + 
+     &              TBNDFRAC * DBDTLEV
+               DBDTLEV = TOTPLNK(INDLEV0+1,IBAND)-TOTPLNK(INDLEV0,IBAND)
+               PLANKLEV(0,IBAND) = TOTPLNK(INDLEV0,IBAND) + 
+     &              T0FRAC * DBDTLEV
+            ENDIF
+            DBDTLEV = TOTPLNK(INDLEV+1,IBAND) - TOTPLNK(INDLEV,IBAND)
+            DBDTLAY = TOTPLNK(INDLAY+1,IBAND) - TOTPLNK(INDLAY,IBAND)
+            PLANKLAY(LAY,IBAND) = TOTPLNK(INDLAY,IBAND) + 
+     &           TLAYFRAC * DBDTLAY
+            PLANKLEV(LAY,IBAND) = TOTPLNK(INDLEV,IBAND) + 
+     &           TLEVFRAC * DBDTLEV
+         ENDIF
+
 C        Find the two reference pressures on either side of the
 C        layer pressure.  Store them in JP and JP1.  Store in FP the
 C        fraction of the difference (in ln(pressure)) between these
@@ -292,18 +174,18 @@ C        two values that the layer pressure lies.
          JP(LAY) = INT(36. - 5*(PLOG+0.04))
          IF (JP(LAY) .LT. 1) THEN
             JP(LAY) = 1
-            A1 = 'PRESSURE'
-            A2 = 'HIGH'
-            WRITE(IERR,9810)A1,PAVEL(LAY)
-            WRITE(IERR,9811)LAY,A2
-            WRITE(IERR,9812)
+CX            A1 = 'PRESSURE'
+CX            A2 = 'HIGH'
+CX            WRITE(IERR,9810)A1,PAVEL(LAY)
+CX            WRITE(IERR,9811)LAY,A2
+CX            WRITE(IERR,9812)
          ELSEIF (JP(LAY) .GT. 58) THEN
             JP(LAY) = 58
-            A1 = 'PRESSURE'
-            A2 = 'LOW'
-            WRITE(IERR,9810)A1,PAVEL(LAY)
-            WRITE(IERR,9811)LAY,A2
-            WRITE(IERR,9812)
+CX            A1 = 'PRESSURE'
+CX            A2 = 'LOW'
+CX            WRITE(IERR,9810)A1,PAVEL(LAY)
+CX            WRITE(IERR,9811)LAY,A2
+CX            WRITE(IERR,9812)
          ENDIF
          JP1 = JP(LAY) + 1
          FP = 5. * (PREFLOG(JP(LAY)) - PLOG)
@@ -317,11 +199,11 @@ C        layer temperature falls.
          JT(LAY) = INT(3. + (TAVEL(LAY)-TREF(JP(LAY)))/15.)
          IF (JT(LAY) .LT. 1) THEN
             JT(LAY) = 1
-            A1 = 'TEMPERATURE'
-            A2 = 'LOW'
-            WRITE(IERR,9810)A1,TAVEL(LAY)
-            WRITE(IERR,9811)LAY,A2
-            WRITE(IERR,9812)
+CX            A1 = 'TEMPERATURE'
+CX            A2 = 'LOW'
+CX            WRITE(IERR,9810)A1,TAVEL(LAY)
+CX            WRITE(IERR,9811)LAY,A2
+CX            WRITE(IERR,9812)
          ELSEIF(JT(LAY) .GT. 4) THEN
             JT(LAY) = 4
          ENDIF
@@ -331,216 +213,64 @@ C        layer temperature falls.
             JT1(LAY) = 1
          ELSEIF(JT1(LAY) .GT. 4) THEN
             JT1(LAY) = 4
-            A1 = 'TEMPERATURE'
-            A2 = 'HIGH'
-            WRITE(IERR,9810)A1,TAVEL(LAY)
-            WRITE(IERR,9811)LAY,A2
-            WRITE(IERR,9812)
+CX            A1 = 'TEMPERATURE'
+CX            A2 = 'HIGH'
+CX            WRITE(IERR,9810)A1,TAVEL(LAY)
+CX            WRITE(IERR,9811)LAY,A2
+CX            WRITE(IERR,9812)
          ENDIF
          FT1 = ((TAVEL(LAY)-TREF(JP1))/15.) - FLOAT(JT1(LAY)-3)
-
-C        Calculate needed column amounts.
-         COLH2O(LAY) = 1.E-20 * COLDRY(LAY) * WATER(LAY)
-         COLCO2(LAY) = 1.E-20 * COLDRY(LAY) * CO2(LAY)
-         COLO3(LAY) = 1.E-20 * COLDRY(LAY) * OZ(LAY)
 
 C        If the pressure is less than ~100mb, perform a different
 C        set of species interpolations.
          IF (PLOG .LE. 4.56) GO TO 5300
          LAYTROP =  LAYTROP + 1
+C        For one band, the "switch" occurs at ~300 mb. 
+         IF (PLOG .GE. 5.76) LAYSWTCH = LAYSWTCH + 1
 
 C        Set up factors needed to separately include the water vapor
 C        self-continuum in the calculation of absorption coefficient.
+         WATER = WKL(1,LAY)/COLDRY(LAY)
          SCALEFAC = PAVEL(LAY) * STPFAC / TAVEL(LAY)
-         SELFFAC(LAY) = SCALEFAC * WATER(LAY)/(1.+WATER(LAY))
+         SELFFAC(LAY) = SCALEFAC * WATER / (1.+WATER)
          FACTOR = (TAVEL(LAY)-188.0)/7.2
          INDSELF(LAY) = MIN(9, MAX(1, INT(FACTOR)-7))
          SELFFRAC(LAY) = FACTOR - FLOAT(INDSELF(LAY) + 7)
 
-C        Determine, for reference pressures JP and JP1, which
-C        reference species ratio is just smaller than the actual
-C        species ratio.  Store these in JS and JS1, respectively.
-C        If there is no binary species parameter for a band, then
-C        JS is set to 1.  Also, store the respective fractions 
-C        in F*S and F*S1.
-
-         JS(LAY,1) = 1
-         JS1(LAY,1) = 1
-
-         JS(LAY,2) = 1
-         JS1(LAY,2) = 1
-
-         SPECPARM = WATER(LAY)/(WATER(LAY) + STRRAT31*CO2(LAY))
-         DO 3310 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM31(IREF,JP(LAY))) GO TO 3320
- 3310    CONTINUE
- 3320    CONTINUE
-         JS(LAY,3) = IREF - 1
-	 F3S = (SPECPARM - SPARM31(IREF-1,JP(LAY))) /
-     &        (SPARM31(IREF,JP(LAY)) - SPARM31(IREF-1,JP(LAY)))
-         DO 3350 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM31(IREF,JP1)) GO TO 3360
- 3350    CONTINUE
- 3360    CONTINUE
-         JS1(LAY,3) = IREF - 1
-	 F3S1 = (SPECPARM - SPARM31(IREF-1,JP1)) /
-     &        (SPARM31(IREF,JP1) - SPARM31(IREF-1,JP1))
-
-         SPECPARM = WATER(LAY)/(WATER(LAY) + STRRAT41*CO2(LAY))
-         DO 3410 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM41(IREF,JP(LAY))) GO TO 3420
- 3410    CONTINUE
- 3420    CONTINUE
-         JS(LAY,4) = IREF - 1
-	 F4S = (SPECPARM - SPARM41(IREF-1,JP(LAY))) /
-     &        (SPARM41(IREF,JP(LAY)) - SPARM41(IREF-1,JP(LAY)))
-         DO 3450 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM41(IREF,JP1)) GO TO 3460
- 3450    CONTINUE
- 3460    CONTINUE
-         JS1(LAY,4) = IREF - 1
-	 F4S1 = (SPECPARM - SPARM41(IREF-1,JP1)) /
-     &        (SPARM41(IREF,JP1) - SPARM41(IREF-1,JP1))
-
-         SPECPARM = WATER(LAY)/(WATER(LAY) + STRRAT51*CO2(LAY))
-         DO 3510 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM51(IREF,JP(LAY))) GO TO 3520
- 3510    CONTINUE
- 3520    CONTINUE
-         JS(LAY,5) = IREF - 1
-	 F5S = (SPECPARM - SPARM51(IREF-1,JP(LAY))) /
-     &        (SPARM51(IREF,JP(LAY)) - SPARM51(IREF-1,JP(LAY)))
-         DO 3550 IREF = 2, 6
-            IF(SPECPARM .LE. SPARM51(IREF,JP1)) GO TO 3560
- 3550    CONTINUE
- 3560    CONTINUE
-         JS1(LAY,5) = IREF - 1
-	 F5S1 = (SPECPARM - SPARM51(IREF-1,JP1)) /
-     &        (SPARM51(IREF,JP1) - SPARM51(IREF-1,JP1))
-
-         JS(LAY,6) = 1
-         JS1(LAY,6) = 1
+C        Calculate needed column amounts.
+         COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
+         COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
+         COLO3(LAY) = 1.E-20 * WKL(3,LAY)
+         COLN2O(LAY) = 1.E-20 * WKL(4,LAY)
+         COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
 
          GO TO 5400
 
 C        Above LAYTROP.
  5300    CONTINUE
-
-         JS(LAY,1) = 1
-         JS1(LAY,1) = 1
-
-         JS(LAY,2) = 1
-         JS1(LAY,2) = 1
-
-         SPECPARM = WATER(LAY)/(WATER(LAY) + STRRAT32*CO2(LAY))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM32(2,JP(LAY))) IREF = 2
-         JS(LAY,3) = IREF - 1
-	 F3S = (SPECPARM - SPARM32(IREF-1,JP(LAY))) /
-     &        (SPARM32(IREF,JP(LAY)) - SPARM32(IREF-1,JP(LAY)))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM32(2,JP1)) IREF = 2
-         JS1(LAY,3) = IREF - 1
-	 F3S1 = (SPECPARM - SPARM32(IREF-1,JP1)) /
-     &        (SPARM32(IREF,JP1) - SPARM32(IREF-1,JP1))
-
-         SPECPARM = OZ(LAY)/(OZ(LAY) + STRRAT42*CO2(LAY))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM42(2,JP(LAY))) IREF = 2
-         JS(LAY,4) = IREF - 1
-	 F4S = (SPECPARM - SPARM42(IREF-1,JP(LAY))) /
-     &        (SPARM42(IREF,JP(LAY)) - SPARM42(IREF-1,JP(LAY)))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM42(2,JP1)) IREF = 2
-         JS1(LAY,4) = IREF - 1
-	 F4S1 = (SPECPARM - SPARM42(IREF-1,JP1)) /
-     &        (SPARM42(IREF,JP1) - SPARM42(IREF-1,JP1))
-
-         SPECPARM = OZ(LAY)/(OZ(LAY) + STRRAT52*CO2(LAY))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM52(2,JP(LAY))) IREF = 2
-         JS(LAY,5) = IREF - 1
-	 F5S = (SPECPARM - SPARM52(IREF-1,JP(LAY))) /
-     &        (SPARM52(IREF,JP(LAY)) - SPARM52(IREF-1,JP(LAY)))
-         IREF = 3
-         IF(SPECPARM .LE. SPARM52(2,JP1)) IREF = 2
-         JS1(LAY,5) = IREF - 1
-	 F5S1 = (SPECPARM - SPARM52(IREF-1,JP1)) /
-     &        (SPARM52(IREF,JP1) - SPARM52(IREF-1,JP1))
+C        Calculate needed column amounts.
+         COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
+         COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
+         COLO3(LAY) = 1.E-20 * WKL(3,LAY)
+         COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
 
  5400    CONTINUE
 C
-C        We have now isolated the layer ln pressure, temperature,
-C        and binary species parameter between two reference pressures, 
-C        two reference temperatures (for each reference pressure), and
-C        two reference binary species parameters (for each reference 
-C        pressure).  We multiply the pressure fraction FP (and 1 - FP) 
-C        with the appropriate temperature and species fractions to get 
-C        the combined factors needed for the interpolation that yields
+C        We have now isolated the layer ln pressure and temperature,
+C        between two reference pressures and two reference temperatures 
+C        (for each reference pressure).  We multiply the pressure 
+C        fraction FP with the appropriate temperature fractions to get 
+C        the factors that will be needed for the interpolation that yields
 C        the optical depths (performed in routines TAUGBn for band n).
-C        Depending on the band (due to differing pressure dependence
-C        of the reference data), the ln(pressure) interpolation can 
-C        either be linear in FP or go as the square root of FP. 
 
-         RTFP = SQRT(FP)
          COMPFP = 1. - FP
-
-         FAC010(LAY,1) = (1.-RTFP) * FT
-         FAC000(LAY,1) = (1.-RTFP) * (1. - FT)
-         FAC011(LAY,1) = RTFP * FT1
-         FAC001(LAY,1) = RTFP * (1. - FT1)
-         FAC010(LAY,2) = (1.-RTFP) * FT
-         FAC000(LAY,2) = (1.-RTFP) * (1. - FT)
-         FAC011(LAY,2) = RTFP * FT1
-         FAC001(LAY,2) = RTFP * (1. - FT1)
-         FAC = FT * F3S
-         FAC110(LAY,3) = COMPFP * FAC
-         FAC100(LAY,3) = COMPFP * (F3S - FAC)
-         FAC010(LAY,3) = COMPFP * (FT - FAC)
-         FAC000(LAY,3) = COMPFP * (1. - FT - F3S + FAC)
-         FAC1 = FT1 * F3S1
-         FAC111(LAY,3) = FP * FAC1
-         FAC101(LAY,3) = FP * (F3S1 - FAC1)
-         FAC011(LAY,3) = FP * (FT1 - FAC1)
-         FAC001(LAY,3) = FP * (1. - FT1 - F3S1 + FAC1)
-         FAC = FT * F4S
-         FAC110(LAY,4) = COMPFP * FAC
-         FAC100(LAY,4) = COMPFP * (F4S - FAC)
-         FAC010(LAY,4) = COMPFP * (FT - FAC)
-         FAC000(LAY,4) = COMPFP * (1. - FT - F4S + FAC)
-         FAC1 = FT1 * F4S1
-         FAC111(LAY,4) = FP * FAC1
-         FAC101(LAY,4) = FP * (F4S1 - FAC1)
-         FAC011(LAY,4) = FP * (FT1 - FAC1)
-         FAC001(LAY,4) = FP * (1. - FT1 - F4S1 + FAC1)
-         FAC = FT * F5S
-         FAC110(LAY,5) = COMPFP * FAC
-         FAC100(LAY,5) = COMPFP * (F5S - FAC)
-         FAC010(LAY,5) = COMPFP * (FT - FAC)
-         FAC000(LAY,5) = COMPFP * (1. - FT - F5S + FAC)
-         FAC1 = FT1 * F5S1
-         FAC111(LAY,5) = FP * FAC1
-         FAC101(LAY,5) = FP * (F5S1 - FAC1)
-         FAC011(LAY,5) = FP * (FT1 - FAC1)
-         FAC001(LAY,5) = FP * (1. - FT1 - F5S1 + FAC1)
-         FAC010(LAY,6) = COMPFP * FT
-         FAC000(LAY,6) = COMPFP * (1. - FT)
-         FAC011(LAY,6) = FP * FT1
-         FAC001(LAY,6) = FP * (1. - FT1)
- 6000 CONTINUE
-      CLOSE(IERR)
-
-C     Find out between what two degrees the level and layer 
-C     temperatures fall.  This is needed for the interpolation
-C     that calculates the Planck functions.
-      TLEVFRAC(0) = TSFC - INT(TSFC)
-      INDLEV(0) =  TSFC - 179.
-      DO 7000 LEV = 1, NLAYERS
-         TLEVFRAC(LEV) = TZ(LEV) - INT(TZ(LEV))
-         TLAYFRAC(LEV) = TAVEL(LEV) - INT(TAVEL(LEV))
-         INDLEV(LEV) = TZ(LEV) - 179.
-         INDLAY(LEV) = TAVEL(LEV) - 179.
+         FAC10(LAY) = COMPFP * FT
+         FAC00(LAY) = COMPFP * (1. - FT)
+         FAC11(LAY) = FP * FT1
+         FAC01(LAY) = FP * (1. - FT1)
  7000 CONTINUE
+
+CX      CLOSE(IERR)
 
  9810 FORMAT(' EXTRAPOLATION WARNING:  YOUR ',A11,' OF ',1P,G13.7,0P)
  9811 FORMAT(' FROM LAYER ',I3,' IS TOO ',A4,' FOR INTERPOLATION.')
@@ -550,6 +280,573 @@ C     that calculates the Planck functions.
       END
 
 
+      BLOCK DATA AVPLANK
 
+      PARAMETER (NBANDS = 16)
 
+      COMMON /AVGPLNK/  TOTPLNK(141,NBANDS), TOTPLK16(141)
 
+      DATA (TOTPLNK(I, 1),I=1,47)/
+     &1.42732E-06,1.44217E-06,1.45704E-06,1.47195E-06,1.48689E-06,
+     &1.50185E-06,1.51684E-06,1.53186E-06,1.54691E-06,1.56198E-06,
+     &1.57709E-06,1.59222E-06,1.60737E-06,1.62255E-06,1.63776E-06,
+     &1.65299E-06,1.66825E-06,1.68352E-06,1.69883E-06,1.71416E-06,
+     &1.72951E-06,1.74488E-06,1.76028E-06,1.77570E-06,1.79114E-06,
+     &1.80661E-06,1.82210E-06,1.83760E-06,1.85313E-06,1.86868E-06,
+     &1.88425E-06,1.89985E-06,1.91546E-06,1.93109E-06,1.94674E-06,
+     &1.96241E-06,1.97811E-06,1.99381E-06,2.00954E-06,2.02529E-06,
+     &2.04105E-06,2.05684E-06,2.07264E-06,2.08846E-06,2.10429E-06,
+     &2.12015E-06,2.13602E-06/
+      DATA (TOTPLNK(I, 1),I=48,94)/
+     &2.15190E-06,2.16781E-06,2.18373E-06,2.19966E-06,2.21562E-06,
+     &2.23159E-06,2.24758E-06,2.26358E-06,2.27959E-06,2.29562E-06,
+     &2.31167E-06,2.32773E-06,2.34381E-06,2.35990E-06,2.37601E-06,
+     &2.39212E-06,2.40825E-06,2.42440E-06,2.44056E-06,2.45673E-06,
+     &2.47292E-06,2.48912E-06,2.50533E-06,2.52157E-06,2.53781E-06,
+     &2.55406E-06,2.57032E-06,2.58660E-06,2.60289E-06,2.61919E-06,
+     &2.63550E-06,2.65183E-06,2.66817E-06,2.68452E-06,2.70088E-06,
+     &2.71726E-06,2.73364E-06,2.75003E-06,2.76644E-06,2.78286E-06,
+     &2.79929E-06,2.81572E-06,2.83218E-06,2.84864E-06,2.86510E-06,
+     &2.88159E-06,2.89807E-06/
+      DATA (TOTPLNK(I, 1),I=95,141)/
+     &2.91458E-06,2.93109E-06,2.94762E-06,2.96415E-06,2.98068E-06,
+     &2.99724E-06,3.01379E-06,3.03036E-06,3.04693E-06,3.06353E-06,
+     &3.08013E-06,3.09674E-06,3.11335E-06,3.12998E-06,3.14661E-06,
+     &3.16324E-06,3.17989E-06,3.19656E-06,3.21323E-06,3.22991E-06,
+     &3.24658E-06,3.26328E-06,3.27998E-06,3.29669E-06,3.31341E-06,
+     &3.33013E-06,3.34686E-06,3.36360E-06,3.38034E-06,3.39709E-06,
+     &3.41387E-06,3.43063E-06,3.44742E-06,3.46420E-06,3.48099E-06,
+     &3.49779E-06,3.51461E-06,3.53141E-06,3.54824E-06,3.56506E-06,
+     &3.58191E-06,3.59875E-06,3.61559E-06,3.63244E-06,3.64931E-06,
+     &3.66617E-06,3.68305E-06/
+      DATA (TOTPLNK(I, 2),I=1,47)/
+     &3.14970E-06,3.20515E-06,3.26103E-06,3.31732E-06,3.37404E-06,
+     &3.43118E-06,3.48873E-06,3.54669E-06,3.60506E-06,3.66383E-06,
+     &3.72301E-06,3.78259E-06,3.84256E-06,3.90293E-06,3.96368E-06,
+     &4.02483E-06,4.08636E-06,4.14828E-06,4.21057E-06,4.27324E-06,
+     &4.33629E-06,4.39971E-06,4.46350E-06,4.52765E-06,4.59217E-06,
+     &4.65705E-06,4.72228E-06,4.78787E-06,4.85382E-06,4.92011E-06,
+     &4.98675E-06,5.05374E-06,5.12106E-06,5.18873E-06,5.25674E-06,
+     &5.32507E-06,5.39374E-06,5.46274E-06,5.53207E-06,5.60172E-06,
+     &5.67169E-06,5.74198E-06,5.81259E-06,5.88352E-06,5.95475E-06,
+     &6.02629E-06,6.09815E-06/
+      DATA (TOTPLNK(I, 2),I=48,94)/
+     &6.17030E-06,6.24276E-06,6.31552E-06,6.38858E-06,6.46192E-06,
+     &6.53557E-06,6.60950E-06,6.68373E-06,6.75824E-06,6.83303E-06,
+     &6.90810E-06,6.98346E-06,7.05909E-06,7.13500E-06,7.21117E-06,
+     &7.28763E-06,7.36435E-06,7.44134E-06,7.51859E-06,7.59611E-06,
+     &7.67388E-06,7.75192E-06,7.83021E-06,7.90875E-06,7.98755E-06,
+     &8.06660E-06,8.14589E-06,8.22544E-06,8.30522E-06,8.38526E-06,
+     &8.46553E-06,8.54604E-06,8.62679E-06,8.70777E-06,8.78899E-06,
+     &8.87043E-06,8.95211E-06,9.03402E-06,9.11616E-06,9.19852E-06,
+     &9.28109E-06,9.36390E-06,9.44692E-06,9.53015E-06,9.61361E-06,
+     &9.69729E-06,9.78117E-06/
+      DATA (TOTPLNK(I, 2),I=95,141)/
+     &9.86526E-06,9.94957E-06,1.00341E-05,1.01188E-05,1.02037E-05,
+     &1.02888E-05,1.03742E-05,1.04597E-05,1.05454E-05,1.06313E-05,
+     &1.07175E-05,1.08038E-05,1.08903E-05,1.09770E-05,1.10639E-05,
+     &1.11509E-05,1.12382E-05,1.13257E-05,1.14133E-05,1.15011E-05,
+     &1.15891E-05,1.16773E-05,1.17656E-05,1.18542E-05,1.19429E-05,
+     &1.20317E-05,1.21208E-05,1.22100E-05,1.22994E-05,1.23890E-05,
+     &1.24787E-05,1.25686E-05,1.26587E-05,1.27489E-05,1.28393E-05,
+     &1.29299E-05,1.30206E-05,1.31115E-05,1.32025E-05,1.32937E-05,
+     &1.33850E-05,1.34765E-05,1.35682E-05,1.36600E-05,1.37520E-05,
+     &1.38441E-05,1.39364E-05/
+      DATA (TOTPLNK(I, 3),I=1,47)/
+     &2.37222E-06,2.43246E-06,2.49356E-06,2.55553E-06,2.61837E-06,
+     &2.68207E-06,2.74664E-06,2.81207E-06,2.87837E-06,2.94554E-06,
+     &3.01356E-06,3.08245E-06,3.15221E-06,3.22282E-06,3.29429E-06,
+     &3.36662E-06,3.43982E-06,3.51386E-06,3.58876E-06,3.66451E-06,
+     &3.74112E-06,3.81857E-06,3.89688E-06,3.97602E-06,4.05601E-06,
+     &4.13685E-06,4.21852E-06,4.30104E-06,4.38438E-06,4.46857E-06,
+     &4.55358E-06,4.63943E-06,4.72610E-06,4.81359E-06,4.90191E-06,
+     &4.99105E-06,5.08100E-06,5.17176E-06,5.26335E-06,5.35573E-06,
+     &5.44892E-06,5.54292E-06,5.63772E-06,5.73331E-06,5.82970E-06,
+     &5.92688E-06,6.02485E-06/
+      DATA (TOTPLNK(I, 3),I=48,94)/
+     &6.12360E-06,6.22314E-06,6.32346E-06,6.42455E-06,6.52641E-06,
+     &6.62906E-06,6.73247E-06,6.83664E-06,6.94156E-06,7.04725E-06,
+     &7.15370E-06,7.26089E-06,7.36883E-06,7.47752E-06,7.58695E-06,
+     &7.69712E-06,7.80801E-06,7.91965E-06,8.03201E-06,8.14510E-06,
+     &8.25891E-06,8.37343E-06,8.48867E-06,8.60463E-06,8.72128E-06,
+     &8.83865E-06,8.95672E-06,9.07548E-06,9.19495E-06,9.31510E-06,
+     &9.43594E-06,9.55745E-06,9.67966E-06,9.80254E-06,9.92609E-06,
+     &1.00503E-05,1.01752E-05,1.03008E-05,1.04270E-05,1.05539E-05,
+     &1.06814E-05,1.08096E-05,1.09384E-05,1.10679E-05,1.11980E-05,
+     &1.13288E-05,1.14601E-05/
+      DATA (TOTPLNK(I, 3),I=95,141)/
+     &1.15922E-05,1.17248E-05,1.18581E-05,1.19920E-05,1.21265E-05,
+     &1.22616E-05,1.23973E-05,1.25337E-05,1.26706E-05,1.28081E-05,
+     &1.29463E-05,1.30850E-05,1.32243E-05,1.33642E-05,1.35047E-05,
+     &1.36458E-05,1.37875E-05,1.39297E-05,1.40725E-05,1.42159E-05,
+     &1.43598E-05,1.45044E-05,1.46494E-05,1.47950E-05,1.49412E-05,
+     &1.50879E-05,1.52352E-05,1.53830E-05,1.55314E-05,1.56803E-05,
+     &1.58297E-05,1.59797E-05,1.61302E-05,1.62812E-05,1.64327E-05,
+     &1.65848E-05,1.67374E-05,1.68904E-05,1.70441E-05,1.71982E-05,
+     &1.73528E-05,1.75079E-05,1.76635E-05,1.78197E-05,1.79763E-05,
+     &1.81334E-05,1.82910E-05/
+      DATA (TOTPLNK(I, 4),I=1,47)/
+     &1.73206E-06,1.78383E-06,1.83657E-06,1.89028E-06,1.94495E-06,
+     &2.00060E-06,2.05724E-06,2.11485E-06,2.17344E-06,2.23303E-06,
+     &2.29361E-06,2.35519E-06,2.41777E-06,2.48134E-06,2.54592E-06,
+     &2.61151E-06,2.67810E-06,2.74571E-06,2.81433E-06,2.88396E-06,
+     &2.95461E-06,3.02628E-06,3.09896E-06,3.17267E-06,3.24741E-06,
+     &3.32316E-06,3.39994E-06,3.47774E-06,3.55657E-06,3.63642E-06,
+     &3.71731E-06,3.79922E-06,3.88216E-06,3.96612E-06,4.05112E-06,
+     &4.13714E-06,4.22419E-06,4.31227E-06,4.40137E-06,4.49151E-06,
+     &4.58266E-06,4.67485E-06,4.76806E-06,4.86229E-06,4.95754E-06,
+     &5.05383E-06,5.15113E-06/
+      DATA (TOTPLNK(I, 4),I=48,94)/
+     &5.24946E-06,5.34879E-06,5.44916E-06,5.55053E-06,5.65292E-06,
+     &5.75632E-06,5.86073E-06,5.96616E-06,6.07260E-06,6.18003E-06,
+     &6.28848E-06,6.39794E-06,6.50838E-06,6.61983E-06,6.73229E-06,
+     &6.84573E-06,6.96016E-06,7.07559E-06,7.19200E-06,7.30940E-06,
+     &7.42779E-06,7.54715E-06,7.66749E-06,7.78882E-06,7.91110E-06,
+     &8.03436E-06,8.15859E-06,8.28379E-06,8.40994E-06,8.53706E-06,
+     &8.66515E-06,8.79418E-06,8.92416E-06,9.05510E-06,9.18697E-06,
+     &9.31979E-06,9.45356E-06,9.58826E-06,9.72389E-06,9.86046E-06,
+     &9.99793E-06,1.01364E-05,1.02757E-05,1.04159E-05,1.05571E-05,
+     &1.06992E-05,1.08422E-05/
+      DATA (TOTPLNK(I, 4),I=95,141)/
+     &1.09861E-05,1.11309E-05,1.12766E-05,1.14232E-05,1.15707E-05,
+     &1.17190E-05,1.18683E-05,1.20184E-05,1.21695E-05,1.23214E-05,
+     &1.24741E-05,1.26277E-05,1.27822E-05,1.29376E-05,1.30939E-05,
+     &1.32509E-05,1.34088E-05,1.35676E-05,1.37273E-05,1.38877E-05,
+     &1.40490E-05,1.42112E-05,1.43742E-05,1.45380E-05,1.47026E-05,
+     &1.48680E-05,1.50343E-05,1.52014E-05,1.53692E-05,1.55379E-05,
+     &1.57074E-05,1.58778E-05,1.60488E-05,1.62207E-05,1.63934E-05,
+     &1.65669E-05,1.67411E-05,1.69162E-05,1.70920E-05,1.72685E-05,
+     &1.74459E-05,1.76240E-05,1.78029E-05,1.79825E-05,1.81629E-05,
+     &1.83440E-05,1.85259E-05/
+      DATA (TOTPLNK(I, 5),I=1,47)/
+     &1.21353E-06,1.25479E-06,1.29698E-06,1.34011E-06,1.38419E-06,
+     &1.42923E-06,1.47523E-06,1.52221E-06,1.57016E-06,1.61910E-06,
+     &1.66904E-06,1.71997E-06,1.77192E-06,1.82488E-06,1.87886E-06,
+     &1.93387E-06,1.98991E-06,2.04699E-06,2.10512E-06,2.16430E-06,
+     &2.22454E-06,2.28584E-06,2.34821E-06,2.41166E-06,2.47618E-06,
+     &2.54178E-06,2.60847E-06,2.67626E-06,2.74514E-06,2.81512E-06,
+     &2.88621E-06,2.95841E-06,3.03172E-06,3.10615E-06,3.18170E-06,
+     &3.25838E-06,3.33618E-06,3.41511E-06,3.49518E-06,3.57639E-06,
+     &3.65873E-06,3.74221E-06,3.82684E-06,3.91262E-06,3.99955E-06,
+     &4.08763E-06,4.17686E-06/
+      DATA (TOTPLNK(I, 5),I=48,94)/
+     &4.26725E-06,4.35880E-06,4.45150E-06,4.54537E-06,4.64039E-06,
+     &4.73659E-06,4.83394E-06,4.93246E-06,5.03215E-06,5.13301E-06,
+     &5.23504E-06,5.33823E-06,5.44260E-06,5.54814E-06,5.65484E-06,
+     &5.76272E-06,5.87177E-06,5.98199E-06,6.09339E-06,6.20596E-06,
+     &6.31969E-06,6.43460E-06,6.55068E-06,6.66793E-06,6.78636E-06,
+     &6.90595E-06,7.02670E-06,7.14863E-06,7.27173E-06,7.39599E-06,
+     &7.52142E-06,7.64802E-06,7.77577E-06,7.90469E-06,8.03477E-06,
+     &8.16601E-06,8.29841E-06,8.43198E-06,8.56669E-06,8.70256E-06,
+     &8.83957E-06,8.97775E-06,9.11706E-06,9.25753E-06,9.39915E-06,
+     &9.54190E-06,9.68580E-06/
+      DATA (TOTPLNK(I, 5),I=95,141)/
+     &9.83085E-06,9.97704E-06,1.01243E-05,1.02728E-05,1.04224E-05,
+     &1.05731E-05,1.07249E-05,1.08779E-05,1.10320E-05,1.11872E-05,
+     &1.13435E-05,1.15009E-05,1.16595E-05,1.18191E-05,1.19799E-05,
+     &1.21418E-05,1.23048E-05,1.24688E-05,1.26340E-05,1.28003E-05,
+     &1.29676E-05,1.31361E-05,1.33056E-05,1.34762E-05,1.36479E-05,
+     &1.38207E-05,1.39945E-05,1.41694E-05,1.43454E-05,1.45225E-05,
+     &1.47006E-05,1.48797E-05,1.50600E-05,1.52413E-05,1.54236E-05,
+     &1.56070E-05,1.57914E-05,1.59768E-05,1.61633E-05,1.63509E-05,
+     &1.65394E-05,1.67290E-05,1.69197E-05,1.71113E-05,1.73040E-05,
+     &1.74976E-05,1.76923E-05/
+      DATA (TOTPLNK(I, 6),I=1,47)/
+     &6.65266E-07,6.91965E-07,7.19427E-07,7.47666E-07,7.76691E-07,
+     &8.06516E-07,8.37151E-07,8.68607E-07,9.00896E-07,9.34029E-07,
+     &9.68018E-07,1.00287E-06,1.03860E-06,1.07522E-06,1.11274E-06,
+     &1.15117E-06,1.19052E-06,1.23079E-06,1.27201E-06,1.31418E-06,
+     &1.35731E-06,1.40141E-06,1.44650E-06,1.49257E-06,1.53965E-06,
+     &1.58773E-06,1.63684E-06,1.68697E-06,1.73815E-06,1.79037E-06,
+     &1.84365E-06,1.89799E-06,1.95341E-06,2.00991E-06,2.06750E-06,
+     &2.12619E-06,2.18599E-06,2.24691E-06,2.30895E-06,2.37212E-06,
+     &2.43643E-06,2.50189E-06,2.56851E-06,2.63628E-06,2.70523E-06,
+     &2.77536E-06,2.84666E-06/
+      DATA (TOTPLNK(I, 6),I=48,94)/
+     &2.91916E-06,2.99286E-06,3.06776E-06,3.14387E-06,3.22120E-06,
+     &3.29975E-06,3.37953E-06,3.46054E-06,3.54280E-06,3.62630E-06,
+     &3.71105E-06,3.79707E-06,3.88434E-06,3.97288E-06,4.06270E-06,
+     &4.15380E-06,4.24617E-06,4.33984E-06,4.43479E-06,4.53104E-06,
+     &4.62860E-06,4.72746E-06,4.82763E-06,4.92911E-06,5.03191E-06,
+     &5.13603E-06,5.24147E-06,5.34824E-06,5.45634E-06,5.56578E-06,
+     &5.67656E-06,5.78867E-06,5.90213E-06,6.01694E-06,6.13309E-06,
+     &6.25060E-06,6.36947E-06,6.48968E-06,6.61126E-06,6.73420E-06,
+     &6.85850E-06,6.98417E-06,7.11120E-06,7.23961E-06,7.36938E-06,
+     &7.50053E-06,7.63305E-06/
+      DATA (TOTPLNK(I, 6),I=95,141)/
+     &7.76694E-06,7.90221E-06,8.03887E-06,8.17690E-06,8.31632E-06,
+     &8.45710E-06,8.59928E-06,8.74282E-06,8.88776E-06,9.03409E-06,
+     &9.18179E-06,9.33088E-06,9.48136E-06,9.63323E-06,9.78648E-06,
+     &9.94111E-06,1.00971E-05,1.02545E-05,1.04133E-05,1.05735E-05,
+     &1.07351E-05,1.08980E-05,1.10624E-05,1.12281E-05,1.13952E-05,
+     &1.15637E-05,1.17335E-05,1.19048E-05,1.20774E-05,1.22514E-05,
+     &1.24268E-05,1.26036E-05,1.27817E-05,1.29612E-05,1.31421E-05,
+     &1.33244E-05,1.35080E-05,1.36930E-05,1.38794E-05,1.40672E-05,
+     &1.42563E-05,1.44468E-05,1.46386E-05,1.48318E-05,1.50264E-05,
+     &1.52223E-05,1.54196E-05/
+      DATA (TOTPLNK(I, 7),I=1,47)/
+     &3.49253E-07,3.65443E-07,3.82195E-07,3.99519E-07,4.17428E-07,
+     &4.35934E-07,4.55050E-07,4.74785E-07,4.95155E-07,5.16170E-07,
+     &5.37844E-07,5.60186E-07,5.83211E-07,6.06929E-07,6.31355E-07,
+     &6.56498E-07,6.82373E-07,7.08990E-07,7.36362E-07,7.64501E-07,
+     &7.93420E-07,8.23130E-07,8.53643E-07,8.84971E-07,9.17128E-07,
+     &9.50123E-07,9.83969E-07,1.01868E-06,1.05426E-06,1.09073E-06,
+     &1.12810E-06,1.16638E-06,1.20558E-06,1.24572E-06,1.28680E-06,
+     &1.32883E-06,1.37183E-06,1.41581E-06,1.46078E-06,1.50675E-06,
+     &1.55374E-06,1.60174E-06,1.65078E-06,1.70087E-06,1.75200E-06,
+     &1.80421E-06,1.85749E-06/
+      DATA (TOTPLNK(I, 7),I=48,94)/
+     &1.91186E-06,1.96732E-06,2.02389E-06,2.08159E-06,2.14040E-06,
+     &2.20035E-06,2.26146E-06,2.32372E-06,2.38714E-06,2.45174E-06,
+     &2.51753E-06,2.58451E-06,2.65270E-06,2.72210E-06,2.79272E-06,
+     &2.86457E-06,2.93767E-06,3.01201E-06,3.08761E-06,3.16448E-06,
+     &3.24261E-06,3.32204E-06,3.40275E-06,3.48476E-06,3.56808E-06,
+     &3.65271E-06,3.73866E-06,3.82595E-06,3.91456E-06,4.00453E-06,
+     &4.09584E-06,4.18851E-06,4.28254E-06,4.37796E-06,4.47475E-06,
+     &4.57293E-06,4.67249E-06,4.77346E-06,4.87583E-06,4.97961E-06,
+     &5.08481E-06,5.19143E-06,5.29948E-06,5.40896E-06,5.51989E-06,
+     &5.63226E-06,5.74608E-06/
+      DATA (TOTPLNK(I, 7),I=95,141)/
+     &5.86136E-06,5.97810E-06,6.09631E-06,6.21597E-06,6.33713E-06,
+     &6.45976E-06,6.58388E-06,6.70950E-06,6.83661E-06,6.96521E-06,
+     &7.09531E-06,7.22692E-06,7.36005E-06,7.49468E-06,7.63084E-06,
+     &7.76851E-06,7.90773E-06,8.04846E-06,8.19072E-06,8.33452E-06,
+     &8.47985E-06,8.62674E-06,8.77517E-06,8.92514E-06,9.07666E-06,
+     &9.22975E-06,9.38437E-06,9.54057E-06,9.69832E-06,9.85762E-06,
+     &1.00185E-05,1.01810E-05,1.03450E-05,1.05106E-05,1.06777E-05,
+     &1.08465E-05,1.10168E-05,1.11887E-05,1.13621E-05,1.15372E-05,
+     &1.17138E-05,1.18920E-05,1.20718E-05,1.22532E-05,1.24362E-05,
+     &1.26207E-05,1.28069E-05/
+      DATA (TOTPLNK(I, 8),I=1,47)/
+     &2.07599E-07,2.18181E-07,2.29177E-07,2.40598E-07,2.52456E-07,
+     &2.64761E-07,2.77523E-07,2.90755E-07,3.04468E-07,3.18673E-07,
+     &3.33381E-07,3.48603E-07,3.64352E-07,3.80638E-07,3.97474E-07,
+     &4.14871E-07,4.32841E-07,4.51395E-07,4.70547E-07,4.90306E-07,
+     &5.10687E-07,5.31699E-07,5.53357E-07,5.75670E-07,5.98652E-07,
+     &6.22315E-07,6.46672E-07,6.71731E-07,6.97511E-07,7.24018E-07,
+     &7.51266E-07,7.79269E-07,8.08038E-07,8.37584E-07,8.67922E-07,
+     &8.99061E-07,9.31016E-07,9.63797E-07,9.97417E-07,1.03189E-06,
+     &1.06722E-06,1.10343E-06,1.14053E-06,1.17853E-06,1.21743E-06,
+     &1.25726E-06,1.29803E-06/
+      DATA (TOTPLNK(I, 8),I=48,94)/
+     &1.33974E-06,1.38241E-06,1.42606E-06,1.47068E-06,1.51630E-06,
+     &1.56293E-06,1.61056E-06,1.65924E-06,1.70894E-06,1.75971E-06,
+     &1.81153E-06,1.86443E-06,1.91841E-06,1.97350E-06,2.02968E-06,
+     &2.08699E-06,2.14543E-06,2.20500E-06,2.26573E-06,2.32762E-06,
+     &2.39068E-06,2.45492E-06,2.52036E-06,2.58700E-06,2.65485E-06,
+     &2.72393E-06,2.79424E-06,2.86580E-06,2.93861E-06,3.01269E-06,
+     &3.08803E-06,3.16467E-06,3.24259E-06,3.32181E-06,3.40235E-06,
+     &3.48420E-06,3.56739E-06,3.65192E-06,3.73779E-06,3.82502E-06,
+     &3.91362E-06,4.00359E-06,4.09494E-06,4.18768E-06,4.28182E-06,
+     &4.37737E-06,4.47434E-06/
+      DATA (TOTPLNK(I, 8),I=95,141)/
+     &4.57273E-06,4.67254E-06,4.77380E-06,4.87651E-06,4.98067E-06,
+     &5.08630E-06,5.19339E-06,5.30196E-06,5.41201E-06,5.52356E-06,
+     &5.63660E-06,5.75116E-06,5.86722E-06,5.98479E-06,6.10390E-06,
+     &6.22453E-06,6.34669E-06,6.47042E-06,6.59569E-06,6.72252E-06,
+     &6.85090E-06,6.98085E-06,7.11238E-06,7.24549E-06,7.38019E-06,
+     &7.51646E-06,7.65434E-06,7.79382E-06,7.93490E-06,8.07760E-06,
+     &8.22192E-06,8.36784E-06,8.51540E-06,8.66459E-06,8.81542E-06,
+     &8.96786E-06,9.12197E-06,9.27772E-06,9.43513E-06,9.59419E-06,
+     &9.75490E-06,9.91728E-06,1.00813E-05,1.02471E-05,1.04144E-05,
+     &1.05835E-05,1.07543E-05/
+      DATA (TOTPLNK(I, 9),I=1,47)/
+     &9.23832E-08,9.76905E-08,1.03240E-07,1.09039E-07,1.15097E-07,
+     &1.21421E-07,1.28020E-07,1.34902E-07,1.42075E-07,1.49548E-07,
+     &1.57331E-07,1.65432E-07,1.73860E-07,1.82624E-07,1.91734E-07,
+     &2.01198E-07,2.11028E-07,2.21231E-07,2.31818E-07,2.42799E-07,
+     &2.54184E-07,2.65983E-07,2.78205E-07,2.90862E-07,3.03963E-07,
+     &3.17519E-07,3.31541E-07,3.46039E-07,3.61024E-07,3.76507E-07,
+     &3.92498E-07,4.09008E-07,4.26050E-07,4.43633E-07,4.61769E-07,
+     &4.80469E-07,4.99744E-07,5.19606E-07,5.40067E-07,5.61136E-07,
+     &5.82828E-07,6.05152E-07,6.28120E-07,6.51745E-07,6.76038E-07,
+     &7.01010E-07,7.26674E-07/
+      DATA (TOTPLNK(I, 9),I=48,94)/
+     &7.53041E-07,7.80124E-07,8.07933E-07,8.36482E-07,8.65781E-07,
+     &8.95845E-07,9.26683E-07,9.58308E-07,9.90732E-07,1.02397E-06,
+     &1.05803E-06,1.09292E-06,1.12866E-06,1.16526E-06,1.20274E-06,
+     &1.24109E-06,1.28034E-06,1.32050E-06,1.36158E-06,1.40359E-06,
+     &1.44655E-06,1.49046E-06,1.53534E-06,1.58120E-06,1.62805E-06,
+     &1.67591E-06,1.72478E-06,1.77468E-06,1.82561E-06,1.87760E-06,
+     &1.93066E-06,1.98479E-06,2.04000E-06,2.09631E-06,2.15373E-06,
+     &2.21228E-06,2.27196E-06,2.33278E-06,2.39475E-06,2.45790E-06,
+     &2.52222E-06,2.58773E-06,2.65445E-06,2.72238E-06,2.79152E-06,
+     &2.86191E-06,2.93354E-06/
+      DATA (TOTPLNK(I, 9),I=95,141)/
+     &3.00643E-06,3.08058E-06,3.15601E-06,3.23273E-06,3.31075E-06,
+     &3.39009E-06,3.47074E-06,3.55272E-06,3.63605E-06,3.72072E-06,
+     &3.80676E-06,3.89417E-06,3.98297E-06,4.07315E-06,4.16474E-06,
+     &4.25774E-06,4.35217E-06,4.44802E-06,4.54532E-06,4.64406E-06,
+     &4.74428E-06,4.84595E-06,4.94911E-06,5.05376E-06,5.15990E-06,
+     &5.26755E-06,5.37671E-06,5.48741E-06,5.59963E-06,5.71340E-06,
+     &5.82871E-06,5.94559E-06,6.06403E-06,6.18404E-06,6.30565E-06,
+     &6.42885E-06,6.55364E-06,6.68004E-06,6.80806E-06,6.93771E-06,
+     &7.06898E-06,7.20190E-06,7.33646E-06,7.47267E-06,7.61056E-06,
+     &7.75010E-06,7.89133E-06/
+      DATA (TOTPLNK(I,10),I=1,47)/
+     &3.71429E-08,3.95660E-08,4.21179E-08,4.48040E-08,4.76294E-08,
+     &5.05996E-08,5.37201E-08,5.69966E-08,6.04349E-08,6.40411E-08,
+     &6.78211E-08,7.17812E-08,7.59276E-08,8.02670E-08,8.48059E-08,
+     &8.95508E-08,9.45090E-08,9.96873E-08,1.05093E-07,1.10733E-07,
+     &1.16614E-07,1.22745E-07,1.29133E-07,1.35786E-07,1.42711E-07,
+     &1.49916E-07,1.57410E-07,1.65202E-07,1.73298E-07,1.81709E-07,
+     &1.90441E-07,1.99505E-07,2.08908E-07,2.18660E-07,2.28770E-07,
+     &2.39247E-07,2.50101E-07,2.61340E-07,2.72974E-07,2.85013E-07,
+     &2.97467E-07,3.10345E-07,3.23657E-07,3.37413E-07,3.51623E-07,
+     &3.66298E-07,3.81448E-07/
+      DATA (TOTPLNK(I,10),I=48,94)/
+     &3.97082E-07,4.13212E-07,4.29848E-07,4.47000E-07,4.64680E-07,
+     &4.82898E-07,5.01664E-07,5.20991E-07,5.40888E-07,5.61369E-07,
+     &5.82440E-07,6.04118E-07,6.26410E-07,6.49329E-07,6.72887E-07,
+     &6.97095E-07,7.21964E-07,7.47506E-07,7.73732E-07,8.00655E-07,
+     &8.28287E-07,8.56635E-07,8.85717E-07,9.15542E-07,9.46122E-07,
+     &9.77469E-07,1.00960E-06,1.04251E-06,1.07623E-06,1.11077E-06,
+     &1.14613E-06,1.18233E-06,1.21939E-06,1.25730E-06,1.29610E-06,
+     &1.33578E-06,1.37636E-06,1.41785E-06,1.46027E-06,1.50362E-06,
+     &1.54792E-06,1.59319E-06,1.63942E-06,1.68665E-06,1.73487E-06,
+     &1.78410E-06,1.83435E-06/
+      DATA (TOTPLNK(I,10),I=95,141)/
+     &1.88564E-06,1.93797E-06,1.99136E-06,2.04582E-06,2.10137E-06,
+     &2.15801E-06,2.21576E-06,2.27463E-06,2.33462E-06,2.39577E-06,
+     &2.45806E-06,2.52153E-06,2.58617E-06,2.65201E-06,2.71905E-06,
+     &2.78730E-06,2.85678E-06,2.92749E-06,2.99946E-06,3.07269E-06,
+     &3.14720E-06,3.22299E-06,3.30007E-06,3.37847E-06,3.45818E-06,
+     &3.53923E-06,3.62161E-06,3.70535E-06,3.79046E-06,3.87695E-06,
+     &3.96481E-06,4.05409E-06,4.14477E-06,4.23687E-06,4.33040E-06,
+     &4.42538E-06,4.52180E-06,4.61969E-06,4.71905E-06,4.81991E-06,
+     &4.92226E-06,5.02611E-06,5.13148E-06,5.23839E-06,5.34681E-06,
+     &5.45681E-06,5.56835E-06/
+      DATA (TOTPLNK(I,11),I=1,47)/
+     &1.23933E-08,1.32953E-08,1.42522E-08,1.52665E-08,1.63410E-08,
+     &1.74786E-08,1.86820E-08,1.99542E-08,2.12985E-08,2.27179E-08,
+     &2.42158E-08,2.57954E-08,2.74604E-08,2.92141E-08,3.10604E-08,
+     &3.30029E-08,3.50457E-08,3.71925E-08,3.94476E-08,4.18149E-08,
+     &4.42991E-08,4.69043E-08,4.96352E-08,5.24961E-08,5.54921E-08,
+     &5.86277E-08,6.19081E-08,6.53381E-08,6.89231E-08,7.26681E-08,
+     &7.65788E-08,8.06604E-08,8.49187E-08,8.93591E-08,9.39879E-08,
+     &9.88106E-08,1.03834E-07,1.09063E-07,1.14504E-07,1.20165E-07,
+     &1.26051E-07,1.32169E-07,1.38525E-07,1.45128E-07,1.51982E-07,
+     &1.59096E-07,1.66477E-07/
+      DATA (TOTPLNK(I,11),I=48,94)/
+     &1.74132E-07,1.82068E-07,1.90292E-07,1.98813E-07,2.07638E-07,
+     &2.16775E-07,2.26231E-07,2.36015E-07,2.46135E-07,2.56599E-07,
+     &2.67415E-07,2.78592E-07,2.90137E-07,3.02061E-07,3.14371E-07,
+     &3.27077E-07,3.40186E-07,3.53710E-07,3.67655E-07,3.82031E-07,
+     &3.96848E-07,4.12116E-07,4.27842E-07,4.44039E-07,4.60713E-07,
+     &4.77876E-07,4.95537E-07,5.13706E-07,5.32392E-07,5.51608E-07,
+     &5.71360E-07,5.91662E-07,6.12521E-07,6.33950E-07,6.55958E-07,
+     &6.78556E-07,7.01753E-07,7.25562E-07,7.49992E-07,7.75055E-07,
+     &8.00760E-07,8.27120E-07,8.54145E-07,8.81845E-07,9.10233E-07,
+     &9.39318E-07,9.69113E-07/
+      DATA (TOTPLNK(I,11),I=95,141)/
+     &9.99627E-07,1.03087E-06,1.06286E-06,1.09561E-06,1.12912E-06,
+     &1.16340E-06,1.19848E-06,1.23435E-06,1.27104E-06,1.30855E-06,
+     &1.34690E-06,1.38609E-06,1.42614E-06,1.46706E-06,1.50886E-06,
+     &1.55155E-06,1.59515E-06,1.63967E-06,1.68512E-06,1.73150E-06,
+     &1.77884E-06,1.82715E-06,1.87643E-06,1.92670E-06,1.97797E-06,
+     &2.03026E-06,2.08356E-06,2.13791E-06,2.19330E-06,2.24975E-06,
+     &2.30728E-06,2.36589E-06,2.42560E-06,2.48641E-06,2.54835E-06,
+     &2.61142E-06,2.67563E-06,2.74100E-06,2.80754E-06,2.87526E-06,
+     &2.94417E-06,3.01429E-06,3.08562E-06,3.15819E-06,3.23199E-06,
+     &3.30704E-06,3.38336E-06/
+      DATA (TOTPLNK(I,12),I=1,47)/
+     &1.82363E-09,1.98327E-09,2.15492E-09,2.33932E-09,2.53726E-09,
+     &2.74957E-09,2.97710E-09,3.22075E-09,3.48145E-09,3.76020E-09,
+     &4.05801E-09,4.37595E-09,4.71513E-09,5.07672E-09,5.46193E-09,
+     &5.87201E-09,6.30827E-09,6.77205E-09,7.26480E-09,7.78794E-09,
+     &8.34304E-09,8.93163E-09,9.55537E-09,1.02159E-08,1.09151E-08,
+     &1.16547E-08,1.24365E-08,1.32625E-08,1.41348E-08,1.50554E-08,
+     &1.60264E-08,1.70500E-08,1.81285E-08,1.92642E-08,2.04596E-08,
+     &2.17171E-08,2.30394E-08,2.44289E-08,2.58885E-08,2.74209E-08,
+     &2.90290E-08,3.07157E-08,3.24841E-08,3.43371E-08,3.62782E-08,
+     &3.83103E-08,4.04371E-08/
+      DATA (TOTPLNK(I,12),I=48,94)/
+     &4.26617E-08,4.49878E-08,4.74190E-08,4.99589E-08,5.26113E-08,
+     &5.53801E-08,5.82692E-08,6.12826E-08,6.44245E-08,6.76991E-08,
+     &7.11105E-08,7.46634E-08,7.83621E-08,8.22112E-08,8.62154E-08,
+     &9.03795E-08,9.47081E-08,9.92066E-08,1.03879E-07,1.08732E-07,
+     &1.13770E-07,1.18998E-07,1.24422E-07,1.30048E-07,1.35880E-07,
+     &1.41924E-07,1.48187E-07,1.54675E-07,1.61392E-07,1.68346E-07,
+     &1.75543E-07,1.82988E-07,1.90688E-07,1.98650E-07,2.06880E-07,
+     &2.15385E-07,2.24172E-07,2.33247E-07,2.42617E-07,2.52289E-07,
+     &2.62272E-07,2.72571E-07,2.83193E-07,2.94147E-07,3.05440E-07,
+     &3.17080E-07,3.29074E-07/
+      DATA (TOTPLNK(I,12),I=95,141)/
+     &3.41430E-07,3.54155E-07,3.67259E-07,3.80747E-07,3.94631E-07,
+     &4.08916E-07,4.23611E-07,4.38725E-07,4.54267E-07,4.70245E-07,
+     &4.86666E-07,5.03541E-07,5.20879E-07,5.38687E-07,5.56975E-07,
+     &5.75751E-07,5.95026E-07,6.14808E-07,6.35107E-07,6.55932E-07,
+     &6.77293E-07,6.99197E-07,7.21656E-07,7.44681E-07,7.68278E-07,
+     &7.92460E-07,8.17235E-07,8.42614E-07,8.68606E-07,8.95223E-07,
+     &9.22473E-07,9.50366E-07,9.78915E-07,1.00813E-06,1.03802E-06,
+     &1.06859E-06,1.09986E-06,1.13184E-06,1.16453E-06,1.19796E-06,
+     &1.23212E-06,1.26703E-06,1.30270E-06,1.33915E-06,1.37637E-06,
+     &1.41440E-06,1.45322E-06/
+      DATA (TOTPLNK(I,13),I=1,47)/
+     &3.88073E-10,4.26716E-10,4.68719E-10,5.14331E-10,5.63815E-10,
+     &6.17448E-10,6.75526E-10,7.38358E-10,8.06277E-10,8.79625E-10,
+     &9.58770E-10,1.04410E-09,1.13602E-09,1.23495E-09,1.34135E-09,
+     &1.45568E-09,1.57845E-09,1.71017E-09,1.85139E-09,2.00268E-09,
+     &2.16464E-09,2.33789E-09,2.52309E-09,2.72093E-09,2.93212E-09,
+     &3.15740E-09,3.39757E-09,3.65341E-09,3.92579E-09,4.21559E-09,
+     &4.52372E-09,4.85115E-09,5.19886E-09,5.56788E-09,5.95928E-09,
+     &6.37419E-09,6.81375E-09,7.27917E-09,7.77168E-09,8.29256E-09,
+     &8.84317E-09,9.42487E-09,1.00391E-08,1.06873E-08,1.13710E-08,
+     &1.20919E-08,1.28515E-08/
+      DATA (TOTPLNK(I,13),I=48,94)/
+     &1.36514E-08,1.44935E-08,1.53796E-08,1.63114E-08,1.72909E-08,
+     &1.83201E-08,1.94008E-08,2.05354E-08,2.17258E-08,2.29742E-08,
+     &2.42830E-08,2.56545E-08,2.70910E-08,2.85950E-08,3.01689E-08,
+     &3.18155E-08,3.35373E-08,3.53372E-08,3.72177E-08,3.91818E-08,
+     &4.12325E-08,4.33727E-08,4.56056E-08,4.79342E-08,5.03617E-08,
+     &5.28915E-08,5.55270E-08,5.82715E-08,6.11286E-08,6.41019E-08,
+     &6.71951E-08,7.04119E-08,7.37560E-08,7.72315E-08,8.08424E-08,
+     &8.45927E-08,8.84866E-08,9.25281E-08,9.67218E-08,1.01072E-07,
+     &1.05583E-07,1.10260E-07,1.15107E-07,1.20128E-07,1.25330E-07,
+     &1.30716E-07,1.36291E-07/
+      DATA (TOTPLNK(I,13),I=95,141)/
+     &1.42061E-07,1.48031E-07,1.54206E-07,1.60592E-07,1.67192E-07,
+     &1.74015E-07,1.81064E-07,1.88345E-07,1.95865E-07,2.03628E-07,
+     &2.11643E-07,2.19912E-07,2.28443E-07,2.37244E-07,2.46318E-07,
+     &2.55673E-07,2.65316E-07,2.75252E-07,2.85489E-07,2.96033E-07,
+     &3.06891E-07,3.18070E-07,3.29576E-07,3.41417E-07,3.53600E-07,
+     &3.66133E-07,3.79021E-07,3.92274E-07,4.05897E-07,4.19899E-07,
+     &4.34288E-07,4.49071E-07,4.64255E-07,4.79850E-07,4.95863E-07,
+     &5.12300E-07,5.29172E-07,5.46486E-07,5.64250E-07,5.82473E-07,
+     &6.01164E-07,6.20329E-07,6.39979E-07,6.60122E-07,6.80767E-07,
+     &7.01922E-07,7.23596E-07/
+      DATA (TOTPLNK(I,14),I=1,47)/
+     &1.40181E-10,1.55206E-10,1.71651E-10,1.89630E-10,2.09265E-10,
+     &2.30689E-10,2.54040E-10,2.79467E-10,3.07128E-10,3.37190E-10,
+     &3.69833E-10,4.05243E-10,4.43623E-10,4.85183E-10,5.30149E-10,
+     &5.78755E-10,6.31255E-10,6.87910E-10,7.49002E-10,8.14824E-10,
+     &8.85687E-10,9.61914E-10,1.04385E-09,1.13186E-09,1.22631E-09,
+     &1.32761E-09,1.43617E-09,1.55243E-09,1.67686E-09,1.80992E-09,
+     &1.95212E-09,2.10399E-09,2.26607E-09,2.43895E-09,2.62321E-09,
+     &2.81949E-09,3.02844E-09,3.25073E-09,3.48707E-09,3.73820E-09,
+     &4.00490E-09,4.28794E-09,4.58819E-09,4.90647E-09,5.24371E-09,
+     &5.60081E-09,5.97875E-09/
+      DATA (TOTPLNK(I,14),I=48,94)/
+     &6.37854E-09,6.80120E-09,7.24782E-09,7.71950E-09,8.21740E-09,
+     &8.74271E-09,9.29666E-09,9.88054E-09,1.04956E-08,1.11434E-08,
+     &1.18251E-08,1.25422E-08,1.32964E-08,1.40890E-08,1.49217E-08,
+     &1.57961E-08,1.67140E-08,1.76771E-08,1.86870E-08,1.97458E-08,
+     &2.08553E-08,2.20175E-08,2.32342E-08,2.45077E-08,2.58401E-08,
+     &2.72334E-08,2.86900E-08,3.02122E-08,3.18021E-08,3.34624E-08,
+     &3.51954E-08,3.70037E-08,3.88899E-08,4.08568E-08,4.29068E-08,
+     &4.50429E-08,4.72678E-08,4.95847E-08,5.19963E-08,5.45058E-08,
+     &5.71161E-08,5.98309E-08,6.26529E-08,6.55857E-08,6.86327E-08,
+     &7.17971E-08,7.50829E-08/
+      DATA (TOTPLNK(I,14),I=95,141)/
+     &7.84933E-08,8.20323E-08,8.57035E-08,8.95105E-08,9.34579E-08,
+     &9.75488E-08,1.01788E-07,1.06179E-07,1.10727E-07,1.15434E-07,
+     &1.20307E-07,1.25350E-07,1.30566E-07,1.35961E-07,1.41539E-07,
+     &1.47304E-07,1.53263E-07,1.59419E-07,1.65778E-07,1.72345E-07,
+     &1.79124E-07,1.86122E-07,1.93343E-07,2.00792E-07,2.08476E-07,
+     &2.16400E-07,2.24568E-07,2.32988E-07,2.41666E-07,2.50605E-07,
+     &2.59813E-07,2.69297E-07,2.79060E-07,2.89111E-07,2.99455E-07,
+     &3.10099E-07,3.21049E-07,3.32311E-07,3.43893E-07,3.55801E-07,
+     &3.68041E-07,3.80621E-07,3.93547E-07,4.06826E-07,4.20465E-07,
+     &4.34473E-07,4.48856E-07/
+      DATA (TOTPLNK(I,15),I=1,47)/
+     &4.56935E-11,5.09455E-11,5.67338E-11,6.31057E-11,7.01127E-11,
+     &7.78096E-11,8.62554E-11,9.55130E-11,1.05651E-10,1.16740E-10,
+     &1.28858E-10,1.42089E-10,1.56519E-10,1.72243E-10,1.89361E-10,
+     &2.07978E-10,2.28209E-10,2.50173E-10,2.73999E-10,2.99820E-10,
+     &3.27782E-10,3.58034E-10,3.90739E-10,4.26067E-10,4.64196E-10,
+     &5.05317E-10,5.49631E-10,5.97347E-10,6.48689E-10,7.03891E-10,
+     &7.63201E-10,8.26876E-10,8.95192E-10,9.68430E-10,1.04690E-09,
+     &1.13091E-09,1.22079E-09,1.31689E-09,1.41957E-09,1.52922E-09,
+     &1.64623E-09,1.77101E-09,1.90401E-09,2.04567E-09,2.19647E-09,
+     &2.35690E-09,2.52749E-09/
+      DATA (TOTPLNK(I,15),I=48,94)/
+     &2.70875E-09,2.90127E-09,3.10560E-09,3.32238E-09,3.55222E-09,
+     &3.79578E-09,4.05375E-09,4.32682E-09,4.61574E-09,4.92128E-09,
+     &5.24420E-09,5.58536E-09,5.94558E-09,6.32575E-09,6.72678E-09,
+     &7.14964E-09,7.59526E-09,8.06470E-09,8.55897E-09,9.07916E-09,
+     &9.62638E-09,1.02018E-08,1.08066E-08,1.14420E-08,1.21092E-08,
+     &1.28097E-08,1.35446E-08,1.43155E-08,1.51237E-08,1.59708E-08,
+     &1.68581E-08,1.77873E-08,1.87599E-08,1.97777E-08,2.08423E-08,
+     &2.19555E-08,2.31190E-08,2.43348E-08,2.56045E-08,2.69302E-08,
+     &2.83140E-08,2.97578E-08,3.12636E-08,3.28337E-08,3.44702E-08,
+     &3.61755E-08,3.79516E-08/
+      DATA (TOTPLNK(I,15),I=95,141)/
+     &3.98012E-08,4.17265E-08,4.37300E-08,4.58143E-08,4.79819E-08,
+     &5.02355E-08,5.25777E-08,5.50114E-08,5.75393E-08,6.01644E-08,
+     &6.28896E-08,6.57177E-08,6.86521E-08,7.16959E-08,7.48520E-08,
+     &7.81239E-08,8.15148E-08,8.50282E-08,8.86675E-08,9.24362E-08,
+     &9.63380E-08,1.00376E-07,1.04555E-07,1.08878E-07,1.13349E-07,
+     &1.17972E-07,1.22751E-07,1.27690E-07,1.32793E-07,1.38064E-07,
+     &1.43508E-07,1.49129E-07,1.54931E-07,1.60920E-07,1.67099E-07,
+     &1.73473E-07,1.80046E-07,1.86825E-07,1.93812E-07,2.01014E-07,
+     &2.08436E-07,2.16082E-07,2.23957E-07,2.32067E-07,2.40418E-07,
+     &2.49013E-07,2.57860E-07/
+      DATA (TOTPLNK(I,16),I=1,47)/
+     &7.15171E-12,8.07317E-12,9.10159E-12,1.02480E-11,1.15244E-11,
+     &1.29438E-11,1.45204E-11,1.62697E-11,1.82084E-11,2.03545E-11,
+     &2.27278E-11,2.53494E-11,2.82424E-11,3.14313E-11,3.49431E-11,
+     &3.88064E-11,4.30522E-11,4.77139E-11,5.28273E-11,5.84308E-11,
+     &6.45658E-11,7.12764E-11,7.86103E-11,8.66176E-11,9.53534E-11,
+     &1.04875E-10,1.15245E-10,1.26528E-10,1.38796E-10,1.52123E-10,
+     &1.66590E-10,1.82281E-10,1.99287E-10,2.17704E-10,2.37632E-10,
+     &2.59182E-10,2.82468E-10,3.07610E-10,3.34738E-10,3.63988E-10,
+     &3.95504E-10,4.29438E-10,4.65951E-10,5.05212E-10,5.47402E-10,
+     &5.92707E-10,6.41329E-10/
+      DATA (TOTPLNK(I,16),I=48,94)/
+     &6.93477E-10,7.49371E-10,8.09242E-10,8.73338E-10,9.41911E-10,
+     &1.01524E-09,1.09359E-09,1.17728E-09,1.26660E-09,1.36190E-09,
+     &1.46350E-09,1.57177E-09,1.68709E-09,1.80984E-09,1.94044E-09,
+     &2.07932E-09,2.22693E-09,2.38373E-09,2.55021E-09,2.72689E-09,
+     &2.91429E-09,3.11298E-09,3.32353E-09,3.54655E-09,3.78265E-09,
+     &4.03251E-09,4.29679E-09,4.57620E-09,4.87148E-09,5.18341E-09,
+     &5.51276E-09,5.86037E-09,6.22708E-09,6.61381E-09,7.02145E-09,
+     &7.45097E-09,7.90336E-09,8.37967E-09,8.88092E-09,9.40827E-09,
+     &9.96280E-09,1.05457E-08,1.11583E-08,1.18017E-08,1.24773E-08,
+     &1.31865E-08,1.39306E-08/
+      DATA (TOTPLNK(I,16),I=95,141)/
+     &1.47111E-08,1.55295E-08,1.63872E-08,1.72860E-08,1.82274E-08,
+     &1.92132E-08,2.02450E-08,2.13247E-08,2.24541E-08,2.36352E-08,
+     &2.48699E-08,2.61602E-08,2.75082E-08,2.89161E-08,3.03860E-08,
+     &3.19203E-08,3.35213E-08,3.51913E-08,3.69330E-08,3.87486E-08,
+     &4.06411E-08,4.26129E-08,4.46668E-08,4.68058E-08,4.90325E-08,
+     &5.13502E-08,5.37617E-08,5.62703E-08,5.88791E-08,6.15915E-08,
+     &6.44107E-08,6.73404E-08,7.03841E-08,7.35453E-08,7.68278E-08,
+     &8.02355E-08,8.37721E-08,8.74419E-08,9.12486E-08,9.51968E-08,
+     &9.92905E-08,1.03534E-07,1.07932E-07,1.12490E-07,1.17211E-07,
+     &1.22100E-07,1.27163E-07/
+
+      DATA (TOTPLK16(I),I=1,47)/
+     &6.71156E-12,7.56752E-12,8.52154E-12,9.58357E-12,1.07644E-11,
+     &1.20758E-11,1.35304E-11,1.51420E-11,1.69256E-11,1.88973E-11,
+     &2.10746E-11,2.34762E-11,2.61227E-11,2.90356E-11,3.22388E-11,
+     &3.57574E-11,3.96187E-11,4.38519E-11,4.84883E-11,5.35616E-11,
+     &5.91075E-11,6.51647E-11,7.17743E-11,7.89797E-11,8.68284E-11,
+     &9.53697E-11,1.04658E-10,1.14748E-10,1.25701E-10,1.37582E-10,
+     &1.50457E-10,1.64400E-10,1.79487E-10,1.95799E-10,2.13422E-10,
+     &2.32446E-10,2.52970E-10,2.75094E-10,2.98925E-10,3.24578E-10,
+     &3.52172E-10,3.81833E-10,4.13695E-10,4.47897E-10,4.84588E-10,
+     &5.23922E-10,5.66063E-10/
+      DATA (TOTPLK16(I),I=48,94)/
+     &6.11182E-10,6.59459E-10,7.11081E-10,7.66251E-10,8.25172E-10,
+     &8.88065E-10,9.55155E-10,1.02668E-09,1.10290E-09,1.18406E-09,
+     &1.27044E-09,1.36233E-09,1.46002E-09,1.56382E-09,1.67406E-09,
+     &1.79108E-09,1.91522E-09,2.04686E-09,2.18637E-09,2.33416E-09,
+     &2.49063E-09,2.65622E-09,2.83136E-09,3.01653E-09,3.21221E-09,
+     &3.41890E-09,3.63712E-09,3.86740E-09,4.11030E-09,4.36641E-09,
+     &4.63631E-09,4.92064E-09,5.22003E-09,5.53516E-09,5.86670E-09,
+     &6.21538E-09,6.58191E-09,6.96708E-09,7.37165E-09,7.79645E-09,
+     &8.24229E-09,8.71007E-09,9.20066E-09,9.71498E-09,1.02540E-08,
+     &1.08186E-08,1.14100E-08/
+      DATA (TOTPLK16(I),I=95,141)/
+     &1.20290E-08,1.26767E-08,1.33544E-08,1.40630E-08,1.48038E-08,
+     &1.55780E-08,1.63867E-08,1.72313E-08,1.81130E-08,1.90332E-08,
+     &1.99932E-08,2.09945E-08,2.20385E-08,2.31267E-08,2.42605E-08,
+     &2.54416E-08,2.66716E-08,2.79520E-08,2.92846E-08,3.06711E-08,
+     &3.21133E-08,3.36128E-08,3.51717E-08,3.67918E-08,3.84749E-08,
+     &4.02232E-08,4.20386E-08,4.39231E-08,4.58790E-08,4.79083E-08,
+     &5.00132E-08,5.21961E-08,5.44592E-08,5.68049E-08,5.92356E-08,
+     &6.17537E-08,6.43617E-08,6.70622E-08,6.98578E-08,7.27511E-08,
+     &7.57449E-08,7.88419E-08,8.20449E-08,8.53568E-08,8.87805E-08,
+     &9.23190E-08,9.59753E-08/
+
+      END
