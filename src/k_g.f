@@ -1,3 +1,9 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
+****************************************************************************
+
       INCLUDE 'k_gB01.f'
       INCLUDE 'k_gB02.f'
       INCLUDE 'k_gB03.f'
@@ -15,3 +21,4 @@
       INCLUDE 'k_gB15.f'
       INCLUDE 'k_gB16.f'
       
+****************************************************************************

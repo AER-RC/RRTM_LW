@@ -4,7 +4,12 @@
       REAL KA(7,5,13,MG),KB(3,5,13:59,MG)
       DIMENSION SELFREF(10,MG)
 
+      COMMON /HVRSNB/ HVRKG(16)
       COMMON /K3/ KA ,KB, SELFREF
+
+      CHARACTER*8 HVRKG
+
+      DATA HVRKG(3)  / '$Revision$' /
 
 C     The array KA contains absorption coef5s at the 16 chosen g-values 
 C     for a range of pressure levels> ~100mb, temperatures, and ratios
