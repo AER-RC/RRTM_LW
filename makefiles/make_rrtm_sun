@@ -1,42 +1,41 @@
 rrtm : rrtm.o rrtatm.o setcoef.o rtr.o rtreg.o taumol.o k_g.o extra.o\
 util_sun.o rtrcld.o rtregcld.o cldprop.o
-	pgf90 -fast -o  rrtm  rrtm.o rrtatm.o setcoef.o rtr.o\
+	f77 -fast -o  rrtm  rrtm.o rrtatm.o setcoef.o rtr.o\
   rtreg.o taumol.o k_g.o extra.o util_sun.o rtrcld.o rtregcld.o cldprop.o
 #
 rrtm.o: rrtm.f
-	pgf90  -fast    -c  rrtm.f
+	f77  -fast    -c  rrtm.f
 #
 rrtatm.o: rrtatm.f
-	pgf90 -fast    -c  rrtatm.f
+	f77 -fast    -c  rrtatm.f
 #
 setcoef.o: setcoef.f
-	pgf90 -fast    -c  setcoef.f
+	f77 -fast    -c  setcoef.f
 #
 rtr.o: rtr.f
-	pgf90    -fast    -c  rtr.f
+	f77    -fast    -c  rtr.f
 #
 rtreg.o: rtreg.f
-	pgf90    -fast    -c  rtreg.f
+	f77    -fast    -c  rtreg.f
 #
 taumol.o: taumol.f
-	pgf90 -fast  -c  taumol.f
+	f77 -fast  -c  taumol.f
 #
 k_g.o: k_g.f
-	get SCCS/s.k_gB*.f
-	pgf90 -fast  -c  k_g.f
+	f77 -fast  -c  k_g.f
 #
 extra.o: extra.f
-	pgf90 -fast  -c  extra.f
+	f77 -fast  -c  extra.f
 #
 util_sun.o: util_sun.f
-	pgf90 -fast  -c  util_sun.f
+	f77 -fast  -c  util_sun.f
 #
 rtrcld.o: rtrcld.f
-	pgf90    -fast    -c  rtrcld.f
+	f77    -fast    -c  rtrcld.f
 #
 rtregcld.o: rtregcld.f
-	pgf90    -fast    -c  rtregcld.f
+	f77    -fast    -c  rtregcld.f
 #
 cldprop.o: cldprop.f
-	pgf90    -fast    -c  cldprop.f
+	f77    -fast    -c  cldprop.f
 #
