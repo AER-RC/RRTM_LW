@@ -143,8 +143,28 @@ C ***    Process output for this atmosphere.
          WRITE(IWR,9901)
 C
          DO 3000 I = NLAYERS, 0, -1
-            WRITE(IWR,9902) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
-     &           FNET(I), HTR(I)
+            IF (PZ(I) .LT. 1.E-2) THEN
+               WRITE(IWR,9952) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSEIF (PZ(I) .LT. 1.E-1) THEN
+               WRITE(IWR,9953) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSEIF (PZ(I) .LT. 1.) THEN
+               WRITE(IWR,9954) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSEIF (PZ(I) .LT. 10.) THEN
+               WRITE(IWR,9955) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSEIF (PZ(I) .LT. 100.) THEN
+               WRITE(IWR,9956) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSEIF (PZ(I) .LT. 1000.) THEN
+               WRITE(IWR,9957) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ELSE
+               WRITE(IWR,9958) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+     &              FNET(I), HTR(I)
+            ENDIF
  3000    CONTINUE
          WRITE(IWR,9903)PAGE
          
@@ -166,6 +186,13 @@ C
 
  4000 CONTINUE
 
+ 9952 FORMAT(1X,I3,9X,F7.6,3X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9953 FORMAT(1X,I3,9X,F6.5,4X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9954 FORMAT(1X,I3,9X,F5.4,5X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9955 FORMAT(1X,I3,8X,F5.3,6X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9956 FORMAT(1X,I3,7X,F5.2,7X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9957 FORMAT(1X,I3,6X,F5.1,8X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
+ 9958 FORMAT(1X,I3,5X,F5.0,9X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9899 FORMAT(1X,'Wavenumbers: ',F6.1,' - ',F6.1,' cm-1')
  9900 FORMAT(1X,'LEVEL    PRESSURE   UPWARD FLUX   DOWNWARD FLUX    NET    
      &FLUX       HEATING RATE')
