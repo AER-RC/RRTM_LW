@@ -1,7 +1,3 @@
-C     path:      %P%
-C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
       BLOCK DATA KGB6
 
       PARAMETER (MG = 16)
@@ -9,13 +5,6 @@ C     presently: %H%  %T%
       DIMENSION SELFREF(10,MG)
 
       COMMON /K6/ KA ,SELFREF
-
-      COMMON /HVRSNB/ HVRKG(16)
-
-      CHARACTER*8 HVRKG
-
-      DATA HVRKG(6) / '$Revision$' /
-
 
 C     The array KA contains absorption coef5s at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first
