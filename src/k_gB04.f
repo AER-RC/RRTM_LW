@@ -2,18 +2,31 @@ C     path:      $Source$
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
+C
+C  --------------------------------------------------------------------------
+C |                                                                          |
+C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  This software may be used, copied, or redistributed as long as it is    |
+C |  not sold and this copyright notice is reproduced on each copy made.     |
+C |  This model is provided as is without any express or implied warranties. |
+C |                       (http://www.rtweb.aer.com/)                        |
+C |                                                                          |
+C  --------------------------------------------------------------------------
+
        PARAMETER (MG=16)
 
        REAL KA(9,5,13,MG), KB(5,5,13:59,MG)
        DIMENSION SELFREF(10,MG), FORREF(4,MG)
 
-       COMMON /HVRSN4/ HVRKG4
+       COMMON /CVRSN4/ HNAMKG4,HVRKG4
        COMMON /K4/ KA, KB, FORREF, SELFREF
 
-       CHARACTER*15 HVRKG4
+       CHARACTER*18 HVRKG4
+
+       CHARACTER*18 HNAMKG4
 
        DATA HVRKG4 /'$Revision$'/
-
+       DATA HNAMKG4 / '         k_gB04.f:' /
 C     The array KA contains absorption coefs for each of the 16 g-intervals
 C     for a range of pressure levels > ~100mb, temperatures, and ratios
 C     of water vapor to CO2.  The first index in the array, JS, runs

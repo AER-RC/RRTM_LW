@@ -2,19 +2,34 @@ C     path:      $Source$
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
+C
+C  --------------------------------------------------------------------------
+C |                                                                          |
+C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  This software may be used, copied, or redistributed as long as it is    |
+C |  not sold and this copyright notice is reproduced on each copy made.     |
+C |  This model is provided as is without any express or implied warranties. |
+C |                       (http://www.rtweb.aer.com/)                        |
+C |                                                                          |
+C  --------------------------------------------------------------------------
+
        PARAMETER (MG=16)
        DIMENSION SELFREF(10,MG), FORREF(4,MG)
        REAL KA(5,13,MG), KB(5,13:59,MG)
        REAL KA_MCO2(19,MG), KA_MO3(19,MG), KA_MN2O(19,MG), 
      &             KB_MCO2(19,MG), KB_MN2O(19,MG)
 
-       COMMON /HVRSN8/ HVRKG8
+       COMMON /CVRSN8/ HNAMKG8,HVRKG8
+
        COMMON /K8/ KA ,KB, FORREF, SELFREF, KA_MCO2, KA_MO3,
      &             KA_MN2O, KB_MCO2, KB_MN2O              
 
-       CHARACTER*15 HVRKG8
+       CHARACTER*18 HVRKG8
+
+       CHARACTER*18 HNAMKG8
 
        DATA HVRKG8 /'$Revision$'/
+       DATA HNAMKG8 / '         k_gB08.f:' /
 
 C     The array KA contains absorption coefs at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first

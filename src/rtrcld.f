@@ -2,6 +2,17 @@ C     path:      $Source$
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
+C
+C  --------------------------------------------------------------------------
+C |                                                                          |
+C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  This software may be used, copied, or redistributed as long as it is    |
+C |  not sold and this copyright notice is reproduced on each copy made.     |
+C |  This model is provided as is without any express or implied warranties. |
+C |                       (http://www.rtweb.aer.com/)                        |
+C |                                                                          |
+C  --------------------------------------------------------------------------
+
       SUBROUTINE RTRCLD
 
 C *** This program calculates the upward fluxes, downward fluxes,
@@ -41,9 +52,9 @@ C     Clouds are treated with random overlap scheme.
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
 
-      COMMON /CVRRTC/    HVRRTC
+      COMMON /CVRRTC/    HNAMRTC,HVRRTC
 
-      CHARACTER*15       HVRRTC
+      CHARACTER*18       HNAMRTC,HVRRTC
 
       DIMENSION BBUGAS(MXLAY)
       DIMENSION BBUTOT(MXLAY)
@@ -311,9 +322,6 @@ C ***    Calculate upward, downward, and net flux.
 
       TOTUFLUX(0) = TOTUFLUX(0) * FLUXFAC
       TOTDFLUX(0) = TOTDFLUX(0) * FLUXFAC
-
-      TOTUCLFL = TOTUCLFL * FLUXFAC
-      TOTDCLFL = TOTDCLFL * FLUXFAC
 
       FNET(0) = TOTUFLUX(0) - TOTDFLUX(0)
       DO 7000 LEV = 1, NLAYERS

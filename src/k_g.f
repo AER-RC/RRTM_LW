@@ -3,6 +3,16 @@ C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
 ****************************************************************************
+C
+C  --------------------------------------------------------------------------
+C |                                                                          |
+C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  This software may be used, copied, or redistributed as long as it is    |
+C |  not sold and this copyright notice is reproduced on each copy made.     |
+C |  This model is provided as is without any express or implied warranties. |
+C |                       (http://www.rtweb.aer.com/)                        |
+C |                                                                          |
+C  --------------------------------------------------------------------------
 
       BLOCK DATA KGB1
       PARAMETER (NBANDS = 16)

@@ -2,6 +2,17 @@ C     path:      $Source$
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
+C
+C  --------------------------------------------------------------------------
+C |                                                                          |
+C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |
+C |  This software may be used, copied, or redistributed as long as it is    |
+C |  not sold and this copyright notice is reproduced on each copy made.     |
+C |  This model is provided as is without any express or implied warranties. |
+C |                       (http://www.rtweb.aer.com/)                        |
+C |                                                                          |
+C  --------------------------------------------------------------------------
+
       SUBROUTINE RTREGCLD
 
 C *** This program calculates the upward fluxes, downward fluxes, and
@@ -27,7 +38,8 @@ C     Clouds are treated with random overlap scheme.
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
-      COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
+      COMMON /CONTROL/  NUMANGS, ISCAT, NSTR, 
+     &                  IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
@@ -41,9 +53,9 @@ C     Clouds are treated with random overlap scheme.
       COMMON /RTTBL/     BPADE,
      &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
 
-      COMMON /CVRRGC/    HVRRGC
+      COMMON /CVRRGC/    HNAMRGC,HVRRGC
 
-      CHARACTER*15       HVRRGC
+      CHARACTER*18       HNAMRGC,HVRRGC
 
       DIMENSION ATRANS(MXLAY,MXANG),BBUGAS(MXLAY,MXANG)
       DIMENSION ATOT(MXLAY,MXANG),ODCLD(MXLAY,NBANDS,MXANG)
