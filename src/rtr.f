@@ -114,9 +114,9 @@ C ***    Radiative transfer starts here.
          RADLD2 = 0.
          RADLD3 = 0.
 C ***    Upward radiative transfer.  Due to the simple form taken by
-C        certain equations when the optical depth is small, this 
-C        condition is tested for.  In either case, the labels 1, 2, and
-C        3 refer to the three angles.
+C        certain equations when the optical depth is either small or large, 
+C        these conditions are tested for.  In this section, the labels 
+C        1, 2, and 3 refer to the three angles.
          BGLEV = FRACS(1,IG) * PLANKLEV(0,IBAND)
          DO 2500 LEV = 1, NLAYERS
             BLAY = PLANKLAY(LEV,IBAND)
