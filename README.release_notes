@@ -1,6 +1,18 @@
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
 
+September 2002:
+
+	Release_3_01
+		This version was released to the public on September 16.  It is 
+		nearly identical to v3.0 EXCEPT for a change to the SUN makefile and
+		a minor modification to the instruction file.
+August 2002: 
+
+	Release_3_0
+		This version was released to the public in mid-August.  It is the full
+		release of the new version.  Comprised the tar file aer_rrtm_v3.0.tar.Z
+
 June 10, 2002:
 
 	Release_3_0_beta_a
