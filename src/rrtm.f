@@ -120,6 +120,7 @@ C ***    Input atmospheric profile from INPUT_RRTM.
             IEND = IFLAG
          ENDIF
 
+
 C ***    Calculate information needed by the radiative transfer routine
 C        that is specific to this atmosphere, especially some of the 
 C        coefficients and indices needed to compute the optical depths
@@ -149,25 +150,25 @@ C ***    Process output for this atmosphere.
 C
          DO 3000 I = NLAYERS, 0, -1
             IF (PZ(I) .LT. 1.E-2) THEN
-               WRITE(IWR,9952) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9952) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSEIF (PZ(I) .LT. 1.E-1) THEN
-               WRITE(IWR,9953) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9953) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSEIF (PZ(I) .LT. 1.) THEN
-               WRITE(IWR,9954) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9954) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSEIF (PZ(I) .LT. 10.) THEN
-               WRITE(IWR,9955) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9955) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSEIF (PZ(I) .LT. 100.) THEN
-               WRITE(IWR,9956) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9956) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSEIF (PZ(I) .LT. 1000.) THEN
-               WRITE(IWR,9957) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9957) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ELSE
-               WRITE(IWR,9958) I, PZ(I), TOTUFLUX(I), TOTDFLUX(I),
+               WRITE(IWR,9958) I,PZ(I),TOTUFLUX(I),TOTDFLUX(I),
      &              FNET(I), HTR(I)
             ENDIF
  3000    CONTINUE
@@ -191,6 +192,7 @@ C
 
  4000 CONTINUE
 
+
  9952 FORMAT(1X,I3,9X,F7.6,3X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9953 FORMAT(1X,I3,9X,F6.5,4X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9954 FORMAT(1X,I3,9X,F5.4,5X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
@@ -199,7 +201,7 @@ C
  9957 FORMAT(1X,I3,6X,F5.1,8X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9958 FORMAT(1X,I3,5X,F5.0,9X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9899 FORMAT(1X,'Wavenumbers: ',F6.1,' - ',F6.1,' cm-1')
- 9900 FORMAT(1X,'LEVEL    PRESSURE   UPWARD FLUX   DOWNWARD FLUX    NET    
+ 9900 FORMAT(1X,'LEVEL    PRESSURE   UPWARD FLUX   DOWNWARD FLUX    NET
      &FLUX       HEATING RATE')
  9901 FORMAT(1X,'            mb          W/m2          W/m2           W/
      &m2          degree/day')
@@ -398,13 +400,13 @@ C     Purpose:  To read in IN_CLD_RRTM, the file that contains input
 C               cloud properties.
 
       PARAMETER (MXLAY=203)
-      PARAMETER (MXCBANDS = 5)
+      PARAMETER (NBANDS = 16)
 
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /CLOUDIN/   INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
-     &                   CLDDAT3(MXLAY)
-      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXCBANDS,MXLAY)
+     &                   ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
+      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(NBANDS,MXLAY)
 
       CHARACTER*1 CTEST, CPERCENT
 
@@ -414,8 +416,7 @@ C               cloud properties.
       OPEN(IRDCLD,FILE='IN_CLD_RRTM',FORM='FORMATTED')
 
 C     Read in cloud input option.  
-      READ(IRDCLD,9050) INFLAG
-
+      READ(IRDCLD,9050) INFLAG, ICEFLAG, LIQFLAG
       DO 500 LAY = 1, NLAYERS
          CLDFRAC(LAY) = 0.
  500  CONTINUE
@@ -424,19 +425,20 @@ C     Read in cloud input option.
 C     For INFLAG = 0 or 1, for each cloudy layer only LAY, FRAC, and
 C     DAT1 are pertinent.  If CTEST = '%', then there are no more 
 C     cloudy layers to process.
-      READ (IRDCLD,9100,END=9000) CTEST,LAY,FRAC,DAT1,DAT2,DAT3
+      READ (IRDCLD,9100,END=9000) CTEST,LAY,FRAC,DAT1,DAT2,DAT3,DAT4
       IF (CTEST .EQ. CPERCENT) GO TO 9000
       CLDFRAC(LAY) = FRAC
       CLDDAT1(LAY) = DAT1
       CLDDAT2(LAY) = DAT2
       CLDDAT3(LAY) = DAT3
+      CLDDAT4(LAY) = DAT4
       GO TO 1000
 
  9000 CONTINUE
       CLOSE(IRDCLD)
 
- 9050 FORMAT (I2)
- 9100 FORMAT (A1,1X,I3,4E10.5)
+ 9050 FORMAT (3X,I2,4X,I1,4X,I1)
+ 9100 FORMAT (A1,1X,I3,5E10.5)
 
       RETURN
       END
@@ -519,7 +521,7 @@ C        Left-justify all inputed names.
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
 
-      DATA HVRRTM / '$Revision$' /,        HVRREG / 'NOT USED' /,
+      DATA HVRRTM / '2.13' /,        HVRREG / 'NOT USED' /,
      *     HVRRTR / 'NOT USED' /,   HVRATM / 'NOT USED' /,
      *     HVRSET / 'NOT USED' /,   HVRTAU / 'NOT USED' /,
      *     HVDUM1 / 4*'NOT USED' /, HVRUTL / 'NOT USED' /,
