@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
@@ -11,11 +11,14 @@ C     IFILE IS THE FILE DESIGNATION
 C                                  
       DIMENSION IARRAY(IWORDS)
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 C
-      CHARACTER*15 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
 C
 C     ASSIGN SCCS VERSION NUMBER TO MODULE 
 C
@@ -55,16 +58,6 @@ C
 
       DIMENSION IARRAY(IWORDS)
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
-C
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
-C
-C     ASSIGN SCCS VERSION NUMBER TO MODULE 
-C
-      HVRUTL = '$Revision$' 
-C                          
       IEOF = 1             
 C                          
 C#    BUFFER IN (IFILE,1) (IARRAY(ILO),IARRAY(IHI))

@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
@@ -9,15 +9,18 @@ C     AT LOCATION IARRAY
 C
 C     IFILE IS THE FILE DESIGNATION
 C                                                                         A10830
-      COMMON /HVERSN/  HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,
-     *                HVROPR,HVRPST,HVRPLT,HVRTST,HVRUTL,HVRXMR
-C
-      CHARACTER*15 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,
-     *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
+
 C                                  
       DIMENSION IARRAY(IWORDS)
 C
-C     ASSIGN SCCS VERSION NUMBER TO MODULE 
+C     ASSIGN CVS VERSION NUMBER TO MODULE 
 C
       HVRUTL = '$Revision$' 
 C                          
@@ -37,6 +40,40 @@ C
       RETURN                                    
 C                                               
       END                                       
+c >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+c         note the name change
+
+      SUBROUTINE BUFINln (IFILE,IEOF,IARRAY,IWORDS)
+C
+C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
+C     AT LOCATION IARRAY
+C
+C     IFILE IS THE FILE DESIGNATION
+C                                  
+      implicit integer*4 (i-n)
+      implicit real*4    (a-h,o-z)
+
+      DIMENSION IARRAY(IWORDS)
+C                                                                         A10830
+      IEOF = 1             
+C                          
+C#    BUFFER IN (IFILE,1) (IARRAY(ILO),IARRAY(IHI))
+C#    IF (UNIT(IFILE).EQ.0.) GO TO 10              
+C                                               
+      READ (IFILE,END=10) IARRAY
+      ITEST = MIN(IWORDS,4)                 
+      IF (IARRAY(ITEST).EQ.-99) IEOF = -99      
+C                                               
+      RETURN                                    
+C                                               
+   10 IEOF = 0                                  
+C                                               
+      RETURN                                    
+C                                               
+      END                                       
+c______________________________________________________________________________
+
       SUBROUTINE BUFOUT (IFILE,IARRAY,IWORDS)
 C                                                 
 C     THIS SUBROUTINE BUFFERS OUT (WRITES) IWORDS FROM IARRAY STARTING
@@ -54,9 +91,34 @@ C
       RETURN                                         
 C                                                    
       END                                            
+c______________________________________________________________________________
+
+      SUBROUTINE BUFOUTln (IFILE,IARRAY,IWORDS)
+C                                                 
+C     THIS SUBROUTINE BUFFERS OUT (WRITES) IWORDS FROM IARRAY STARTING
+C     AT LOCATION IARRAY                                                 
+C                                                                     
+C     IFILE IS THE FILE DESIGNATION                                   
+C                                                                     
+c
+      implicit integer*4 (i-n)
+      implicit real*4    (a-h,o-z)
+c
+      DIMENSION IARRAY(IWORDS)
+C                                                   
+C#    BUFFER OUT (IFILE,1) (IARRAY(ILO),IARRAY(IHI))
+C#    IF (UNIT(IFILE).EQ.0.) STOP ' ERROR IN BUFOUT '
+C                                                    
+      WRITE (IFILE) IARRAY
+C                                                    
+      RETURN                                         
+C                                                    
+      END                                            
+c______________________________________________________________________________
+
       SUBROUTINE LBLDAT(HDATE)                                           LN05190
 C                                                                        LN05200
-      DOUBLE PRECISION HDATE                                            &LN05210
+      CHARACTER*8 HDATE
 C                                                                        LN05220
       CHARACTER GDATE*10                                                 LN05230
 C                                                                        LN05240
@@ -86,7 +148,7 @@ C                                                                        LN05460
       END                                                                LN05470
       SUBROUTINE FTIME (HTIME)                                           LN05480
 C                                                                        LN05490
-      DOUBLE PRECISION HTIME                                            &LN05500
+      CHARACTER*8 HTIME
 C                                                                        LN05510
       CHARACTER GTIME*10                                                 LN05520
 C                                                                        LN05530

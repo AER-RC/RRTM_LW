@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE BUFIN (IFILE,IEOF,IARRAY,IWORDS)
 C
 C     THIS SUBROUTINE BUFFERS IN (READS) IWORDS INTO  IARRAY STARTING
