@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
 *******************************************************************************
 *                                                                             *
 *                  Optical depths developed for the                           *
@@ -10,11 +10,12 @@ C     presently: %H%  %T%
 *                                                                             *
 *                                                                             *
 *            ATMOSPHERIC AND ENVIRONMENTAL RESEARCH, INC.                     *
-*                        840 MEMORIAL DRIVE                                   *
-*                        CAMBRIDGE, MA 02139                                  *
+*                        131 HARTWELL AVENUE                                  *
+*                        LEXINGTON, MA 02421                                  *
 *                                                                             *
 *                                                                             *
-*                           ELI J. MLAWER                                     *
+*                           ELI J. MLAWER                                     * 
+*                         JENNIFER DELAMERE                                   * 
 *                         STEVEN J. TAUBMAN                                   *
 *                         SHEPARD A. CLOUGH                                   *
 *                                                                             *
@@ -46,11 +47,11 @@ C     presently: %H%  %T%
 *     COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)                  *
 *     COMMON /PRECISE/  ONEMINUS                                              *
 *     COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),                    *
-*    &                  PZ(0:MXLAY),TZ(0:MXLAY)                        *
-*     COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,                              *
-*    &                  COLH2O(MXLAY),COLCO2(MXLAY),                          *
-*    &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),             *
-*    &                  COLO2(MXLAY),CO2MULT(MXLAY)                           *
+*     &                 PZ(0:MXLAY),TZ(0:MXLAY)                               *
+*     COMMON /PROFDATA/ LAYTROP,                                              *
+*    &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),             *
+*    &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),             *
+*    &                  COLO2(MXLAY)
 *     COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            *
 *    &                  FAC10(MXLAY),FAC11(MXLAY)                             *
 *     COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)                        *
@@ -77,10 +78,7 @@ C     presently: %H%  %T%
 *     COLH2O, COLCO2, COLO3, COLN2O, COLCH4 - column amounts of water         *
 *               vapor,carbon dioxide, ozone, nitrous ozide, methane,          *
 *               respectively (molecules/cm**2)                                *
-*     CO2MULT - for bands in which carbon dioxide is implemented as a         *
-*               trace species, this is the factor used to multiply the        *
-*               band's average CO2 absorption coefficient to get the added    *
-*               contribution to the optical depth relative to 355 ppm.        *
+
 *     FACij(LAY) - for layer LAY, these are factors that are needed to        *
 *                  compute the interpolation factors that multiply the        *
 *                  appropriate reference k-values.  A value of 0 (1) for      *
@@ -123,7 +121,11 @@ C     presently: %H%  %T%
 
 C     Written by Eli J. Mlawer, Atmospheric & Environmental Research.
 
-C     BAND 1:  10-250 cm-1 (low - H2O; high - H2O)
+C     BAND 1:  10-350 cm-1 (low key - H2O; low minor - N2)
+C                          (high key - H2O; high minor - N2)
+
+C     NOTE: Previous versions of RRTM BAND 1: 
+C           10-250 cm-1 (low - H2O; high - H2O)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -137,77 +139,109 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /FOREIGN/  FORFAC(MXLAY)
-      COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
-      COMMON /HVERSN/   HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                  HVDUM1(4),HVRUTL,HVREXT
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG),FORREF(4,MG), 
+     &                  SELFREF(10,MG),KA_MN2(19,MG),KB_MN2(19,MG)
+
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
-      DIMENSION ABSA(65,MG),ABSB(235,MG),FORREF(MG)
+      DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
 
-      DATA FRACREFA/
-     &    0.08452097,0.17952873,0.16214369,0.13602182,
-     &    0.12760490,0.10302561,0.08392423,0.06337652,
-     &    0.04206551,0.00487497,0.00410743,0.00344421,
-     &    0.00285731,0.00157327,0.00080648,0.00012406/
-      DATA FRACREFB/
-     &    0.15492001,0.17384727,0.15165100,0.12675308,
-     &    0.10986247,0.09006091,0.07584465,0.05990077,
-     &    0.04113461,0.00438638,0.00374754,0.00313924,
-     &    0.00234381,0.00167167,0.00062744,0.00010889/
-      DATA FORREF/
-     &     -4.50470E-02,-1.18908E-01,-7.21730E-02,-2.83862E-02,
-     &     -3.01961E-02,-1.56877E-02,-1.53684E-02,-1.29135E-02,
-     &     -1.27963E-02,-1.81742E-03, 4.40008E-05, 1.05260E-02,
-     &      2.17290E-02, 1.65571E-02, 7.60751E-02, 1.47405E-01/
+
+C Planck fraction mapping level: P = 212.7250 mbar, T = 223.06 K
+      DATA FRACREFA /
+     &2.1227E-01,1.8897E-01,1.3934E-01,1.1557E-01,9.5282E-02,8.3359E-02,
+     &6.5333E-02,5.2016E-02,3.4272E-02,4.0257E-03,3.1857E-03,2.6014E-03,
+     &1.9141E-03,1.2612E-03,5.3169E-04,7.6476E-05/
+
+C Planck fraction mapping level: P = 212.7250 mbar, T = 223.06 K
+C These planck refractions were calculated using lower 
+C atmosphere parameters.
+      DATA FRACREFB /
+     &2.1227E-01,1.8897E-01,1.3934E-01,1.1557E-01,9.5282E-02,8.3359E-02,
+     &6.5333E-02,5.2016E-02,3.4272E-02,4.0257E-03,3.1857E-03,2.6014E-03,
+     &1.9141E-03,1.2612E-03,5.3169E-04,7.6476E-05/
+
+C Minor gas mapping levels:
+C     LOWER - N2, P = 142.5490 mbar, T = 215.70 K
+C     UPPER - N2, P = 142.5490 mbar, T = 215.70 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL KA,KB
-
-      HVRTAU = '2.13'
+      REAL KA, KB, KA_MN2, KB_MN2, MINORFRAC
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
-C     temperature.  Below LAYTROP, the water vapor self-continuum 
-C     is interpolated (in temperature) separately.  
+C     temperature.  Below LAYTROP, the water vapor self-continuum and
+C     foreign continuum is interpolated (in temperature) separately.
+
+      HVRTAU = '$Revision$'
       DO 2500 LAY = 1, LAYTROP
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(1) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(1) + 1
          INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 2000 IG = 1, NG(1)
-            TAUG(LAY,IG) = COLH2O(LAY) *
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+            TAUN2 = SCALEN2*(KA_MN2(INDM,IG) +  
+     &           MINORFRAC(LAY) *
+     &           (KA_MN2(INDM+1,IG) - KA_MN2(INDM,IG)))
+            TAUG(LAY,IG) = COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
-     &           FAC11(LAY) * ABSA(IND1+1,IG) +
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
-     &           FORFAC(LAY) * FORREF(IG))
-            FRACS(LAY,IG) = FRACREFA(IG)
+     &           FAC11(LAY) * ABSA(IND1+1,IG))  
+     &           + TAUSELF + TAUFOR
+     &           + TAUN2
+             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(1) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(1) + 1
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 3000 IG = 1, NG(1)
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) *
+     &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
+            TAUN2 = SCALEN2*(KB_MN2(INDM,IG) +  
+     &           MINORFRAC(LAY) *
+     &           (KB_MN2(INDM+1,IG) - KB_MN2(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
-     &           FAC11(LAY) * ABSB(IND1+1,IG) + 
-     &           FORFAC(LAY) * FORREF(IG))
+     &           FAC11(LAY) * ABSB(IND1+1,IG))   
+     &           + TAUFOR
+     &           + TAUN2
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -217,9 +251,15 @@ C     is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
+
+C----------------------------------------------------------------------------
+
       SUBROUTINE TAUGB2
 
-C     BAND 2:  250-500 cm-1 (low - H2O; high - H2O)
+C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O)
+
+C     NOTE: Previous version of RRTM BAND 2: 
+C           250 - 500 cm-1 (low - H2O; high - H2O)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -233,170 +273,89 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
-     &                  NMOL
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /FOREIGN/  FORFAC(MXLAY)
-      COMMON /K2/       KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /K2/       KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG), 
+     &                  SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      DIMENSION ABSA(65,MG),ABSB(235,MG),FORREF(MG)
-      DIMENSION FC00(MXLAY),FC01(MXLAY),FC10(MXLAY),FC11(MXLAY)
-      DIMENSION FRACREFA(MG,13),FRACREFB(MG), REFPARAM(13)
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
+      DIMENSION ABSA(65,MG),ABSB(235,MG)
+      DIMENSION FRACREFA(MG),FRACREFB(MG)
 
-C     These are the mixing ratios for H2O for a MLS atmosphere at the 
-C     13 RRTM reference pressure levels:  1.8759999E-02, 1.2223309E-02, 
-C     5.8908667E-03, 2.7675382E-03, 1.4065107E-03, 7.5969833E-04, 
-C     3.8875898E-04, 1.6542293E-04, 3.7189537E-05, 7.4764857E-06, 
-C     4.3081886E-06, 3.3319423E-06, 3.2039343E-06/        
+C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
 
-C     The following are parameters related to the reference water vapor
-C     mixing ratios by REFPARAM(I) = REFH2O(I) / (.002+REFH2O(I)).
-C     These parameters are used for the Planck function interpolation.
-      DATA REFPARAM/
-     &  0.903661, 0.859386, 0.746542, 0.580496, 0.412889, 0.275283, 
-     &  0.162745, 7.63929E-02, 1.82553E-02, 3.72432E-03, 
-     &  2.14946E-03, 1.66320E-03, 1.59940E-03/    
+      DATA FRACREFA /
+     & 1.6388E-01, 1.5241E-01, 1.4290E-01, 1.2864E-01, 
+     & 1.1615E-01, 1.0047E-01, 8.0013E-02, 6.0445E-02, 
+     & 4.0530E-02, 4.3879E-03, 3.5726E-03, 2.7669E-03,
+     & 2.0078E-03, 1.2864E-03, 4.7630E-04, 6.9109E-05/
 
-C     The ith set of reference fractions are from the ith reference
-C     pressure level.
-      DATA FRACREFA/
-     &    0.18068060,0.16803175,0.15140158,0.12221480,
-     &    0.10240850,0.09330297,0.07518960,0.05611294,
-     &    0.03781487,0.00387192,0.00321285,0.00244440,
-     &    0.00179546,0.00107704,0.00038798,0.00005060,
-     &    0.17927621,0.16731168,0.15129538,0.12328085,
-     &    0.10243484,0.09354796,0.07538418,0.05633071,
-     &    0.03810832,0.00398347,0.00320262,0.00250029,
-     &    0.00178666,0.00111127,0.00039438,0.00005169,
-     &    0.17762886,0.16638555,0.15115446,0.12470623,
-     &    0.10253213,0.09383459,0.07560240,0.05646568,
-     &    0.03844077,0.00409142,0.00322521,0.00254918,
-     &    0.00179296,0.00113652,0.00040169,0.00005259,
-     &    0.17566043,0.16539773,0.15092199,0.12571971,
-     &    0.10340609,0.09426189,0.07559051,0.05678188,
-     &    0.03881499,0.00414102,0.00328551,0.00258795,
-     &    0.00181648,0.00115145,0.00040969,0.00005357,
-     &    0.17335825,0.16442548,0.15070701,0.12667464,
-     &    0.10452303,0.09450833,0.07599410,0.05706393,
-     &    0.03910370,0.00417880,0.00335256,0.00261708,
-     &    0.00185491,0.00116627,0.00041759,0.00005464,
-     &    0.17082544,0.16321516,0.15044247,0.12797612,
-     &    0.10574646,0.09470057,0.07647423,0.05738756,
-     &    0.03935621,0.00423789,0.00342651,0.00264549,
-     &    0.00190188,0.00118281,0.00042592,0.00005583,
-     &    0.16809277,0.16193336,0.15013184,0.12937409,
-     &    0.10720784,0.09485368,0.07692636,0.05771774,
-     &    0.03966988,0.00427754,0.00349696,0.00268946,
-     &    0.00193536,0.00120222,0.00043462,0.00005712,
-     &    0.16517997,0.16059248,0.14984852,0.13079269,
-     &    0.10865030,0.09492947,0.07759736,0.05812201,
-     &    0.03997169,0.00432356,0.00355308,0.00274031,
-     &    0.00197243,0.00122401,0.00044359,0.00005849,
-     &    0.16209179,0.15912023,0.14938223,0.13198245,
-     &    0.11077233,0.09487948,0.07831636,0.05863440,
-     &    0.04028239,0.00436804,0.00360407,0.00279885,
-     &    0.00200364,0.00124861,0.00045521,0.00005996,
-     &    0.15962425,0.15789343,0.14898103,0.13275230,
-     &    0.11253940,0.09503502,0.07884382,0.05908009,
-     &    0.04053524,0.00439971,0.00364269,0.00284965,
-     &    0.00202758,0.00127076,0.00046408,0.00006114,
-     &    0.15926200,0.15770932,0.14891729,0.13283882,
-     &    0.11276010,0.09507311,0.07892222,0.05919230,
-     &    0.04054824,0.00440833,0.00365575,0.00286459,
-     &    0.00203786,0.00128405,0.00046504,0.00006146,
-     &    0.15926351,0.15770483,0.14891177,0.13279966,
-     &    0.11268171,0.09515216,0.07890341,0.05924807,
-     &    0.04052851,0.00440870,0.00365425,0.00286878,
-     &    0.00205747,0.00128916,0.00046589,0.00006221,
-     &    0.15937765,0.15775780,0.14892603,0.13273248,
-     &    0.11252731,0.09521657,0.07885858,0.05927679,
-     &    0.04050184,0.00440285,0.00365748,0.00286791,
-     &    0.00207507,0.00129193,0.00046679,0.00006308/
+C Planck fraction mapping level: P = 3.206e-2 mb, T = 197.92 K
+      DATA FRACREFB /
+     & 1.4697E-01, 1.4826E-01, 1.4278E-01, 1.3320E-01, 
+     & 1.1965E-01, 1.0297E-01, 8.4170E-02, 6.3282E-02, 
+     & 4.2868E-02, 4.6644E-03, 3.8619E-03, 3.0533E-03,
+     & 2.2359E-03, 1.4226E-03, 5.3642E-04, 7.6316E-05/
 
-C     From P = 0.432 mb.
-      DATA FRACREFB/
-     &    0.17444289,0.16467269,0.15021490,0.12460902,
-     &    0.10400643,0.09481928,0.07590704,0.05752856,
-     &    0.03931715,0.00428572,0.00349352,0.00278938,
-     &    0.00203448,0.00130037,0.00051560,0.00006255/
-      DATA FORREF/
-     &     -2.34550E-03,-8.42698E-03,-2.01816E-02,-5.66701E-02,
-     &     -8.93189E-02,-6.37487E-02,-4.56455E-02,-4.41417E-02,
-     &     -4.48605E-02,-4.74696E-02,-5.16648E-02,-5.63099E-02,
-     &     -4.74781E-02,-3.84704E-02,-2.49905E-02, 2.02114E-03/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
-C     temperature.  Below LAYTROP, the water vapor self-continuum is 
-C     interpolated (in temperature) separately.
-      DO 2500 LAY = 1, LAYTROP
-         WATER = 1.E20 * COLH2O(LAY) / COLDRY(LAY)
-         H2OPARAM = WATER/(WATER +.002)
-         DO 1800 IFRAC = 2, 12
-            IF (H2OPARAM .GE. REFPARAM(IFRAC)) GO TO 1900
- 1800    CONTINUE
- 1900    CONTINUE
-         FRACINT = (H2OPARAM-REFPARAM(IFRAC))/
-     &        (REFPARAM(IFRAC-1)-REFPARAM(IFRAC))
+C     temperature.  Below LAYTROP, the water vapor self-continuum and
+C     foreign continuum is interpolated (in temperature) separately.
+      HVRTAU = '$Revision$'
 
-         FP = FAC11(LAY) + FAC01(LAY)
-         IF (FP .EQ. 1. .OR. FP .LE. 0. ) THEN
-            CORR1 = 1
-            CORR2 = 1
-         ELSE
-            RTFP = SQRT(FP)
-            CORR1 = RTFP/FP
-            CORR2 = (1.-RTFP)/(1.-FP)
-         ENDIF
-         FC00(LAY) = FAC00(LAY) * CORR2 
-         FC10(LAY) = FAC10(LAY) * CORR2 
-         FC01(LAY) = FAC01(LAY) * CORR1 
-         FC11(LAY) = FAC11(LAY) * CORR1 
+      DO 2500 LAY = 1, LAYTROP
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(2) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(2) + 1
          INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
          DO 2000 IG = 1, NG(2)
-            TAUG(LAY,IG) = COLH2O(LAY) * 
-     &          (FC00(LAY) * ABSA(IND0,IG) +
-     &           FC10(LAY) * ABSA(IND0+1,IG) +
-     &           FC01(LAY) * ABSA(IND1,IG) + 
-     &           FC11(LAY) * ABSA(IND1+1,IG) + 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
-     &           FORFAC(LAY) * FORREF(IG))
-            FRACS(LAY,IG) = FRACREFA(IG,IFRAC) + FRACINT * 
-     &           (FRACREFA(IG,IFRAC-1)-FRACREFA(IG,IFRAC))
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+            TAUG(LAY,IG) = COLH2O(LAY) *
+     &          (FAC00(LAY) * ABSA(IND0,IG) +
+     &           FAC10(LAY) * ABSA(IND0+1,IG) +
+     &           FAC01(LAY) * ABSA(IND1,IG) + 
+     &           FAC11(LAY) * ABSA(IND1+1,IG)) 
+     &           + TAUSELF + TAUFOR
+            FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         FP = FAC11(LAY) + FAC01(LAY)
-         RTFP = SQRT(FP)
-         CORR1 = RTFP/FP
-         CORR2 = (1.-RTFP)/(1.-FP)
-         FC00(LAY) = FAC00(LAY) * CORR2
-         FC10(LAY) = FAC10(LAY) * CORR2
-         FC01(LAY) = FAC01(LAY) * CORR1
-         FC11(LAY) = FAC11(LAY) * CORR1
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(2) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(2) + 1
+         INDF = INDFOR(LAY)
          DO 3000 IG = 1, NG(2)
+            TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) *
+     &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
             TAUG(LAY,IG) = COLH2O(LAY) * 
-     &          (FC00(LAY) * ABSB(IND0,IG) +
-     &           FC10(LAY) * ABSB(IND0+1,IG) +
-     &           FC01(LAY) * ABSB(IND1,IG) + 
-     &           FC11(LAY) * ABSB(IND1+1,IG) +  
-     &           FORFAC(LAY) * FORREF(IG))
+     &          (FAC00(LAY) * ABSB(IND0,IG) +
+     &           FAC10(LAY) * ABSB(IND0+1,IG) +
+     &           FAC01(LAY) * ABSB(IND1,IG) + 
+     &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           + TAUFOR
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -408,7 +367,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB3
 
-C     BAND 3:  500-630 cm-1 (low - H2O,CO2; high - H2O,CO2)
+C     BAND 3:  500-630 cm-1 (low key - H2O,CO2; low minor - n2o)
+C                           (high key - H2O,CO2; high minor - n2o)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -423,247 +383,416 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
-     &                  FAC10(MXLAY),FAC11(MXLAY)                             
+     &                  FAC10(MXLAY),FAC11(MXLAY)  
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /FOREIGN/  FORFAC(MXLAY)
-      COMMON /K3/       KA(10,5,13,MG), KB(5,5,13:59,MG), SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K3/       KA(9,5,13,MG), KB(5,5,13:59,MG), FORREF(4,MG),
+     &                  SELFREF(10,MG), KA_MN2O(9,19,MG), 
+     &                  KB_MN2O(5,19,MG)
 
-      REAL KA,KB,N2OMULT,N2OREF
-      DIMENSION ABSA(650,MG),ABSB(1175,MG),FORREF(MG)
-      DIMENSION ABSN2OA(MG),ABSN2OB(MG)
-      DIMENSION FRACREFA(MG,10), FRACREFB(MG,5)
-      DIMENSION N2OREF(59),H2OREF(59),CO2REF(59), ETAREF(10)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      DATA FRACREFA/
-C     From P = 1053.6 mb.
-     &    0.15116400,0.14875700,0.14232300,0.13234501,
-     &    0.11881600,0.10224100,0.08345580,0.06267490,
-     &    0.04250650,0.00462650,0.00382259,0.00302600,
-     &    0.00222004,0.00141397,0.00053379,0.00007421,
-     &    0.15266000,0.14888400,0.14195900,0.13179500,
-     &    0.11842700,0.10209000,0.08336130,0.06264370,
-     &    0.04247660,0.00461946,0.00381536,0.00302601,
-     &    0.00222004,0.00141397,0.00053302,0.00007498,
-     &    0.15282799,0.14903000,0.14192399,0.13174300,
-     &    0.11835300,0.10202700,0.08329830,0.06264830,
-     &    0.04246910,0.00460242,0.00381904,0.00301573,
-     &    0.00222004,0.00141397,0.00053379,0.00007421,
-     &    0.15298399,0.14902800,0.14193401,0.13173500,
-     &    0.11833300,0.10195800,0.08324730,0.06264770,
-     &    0.04246490,0.00460489,0.00381123,0.00301893,
-     &    0.00221093,0.00141397,0.00053379,0.00007421,
-     &    0.15307599,0.14907201,0.14198899,0.13169800,
-     &    0.11827300,0.10192300,0.08321600,0.06263490,
-     &    0.04245600,0.00460846,0.00380836,0.00301663,
-     &    0.00221402,0.00141167,0.00052807,0.00007376,
-     &    0.15311401,0.14915401,0.14207301,0.13167299,
-     &    0.11819300,0.10188900,0.08318760,0.06261960,
-     &    0.04243890,0.00461584,0.00380929,0.00300815,
-     &    0.00221736,0.00140588,0.00052776,0.00007376,
-     &    0.15316001,0.14925499,0.14213000,0.13170999,
-     &    0.11807700,0.10181400,0.08317400,0.06260300,
-     &    0.04242720,0.00461520,0.00381381,0.00301285,
-     &    0.00220275,0.00140371,0.00052776,0.00007376,
-     &    0.15321200,0.14940999,0.14222500,0.13164200,
-     &    0.11798200,0.10174500,0.08317500,0.06253640,
-     &    0.04243130,0.00461724,0.00381534,0.00300320,
-     &    0.00220091,0.00140364,0.00052852,0.00007300,
-     &    0.15312800,0.14973100,0.14234400,0.13168900,
-     &    0.11795200,0.10156100,0.08302990,0.06252240,
-     &    0.04240980,0.00461035,0.00381381,0.00300176,
-     &    0.00220160,0.00140284,0.00052774,0.00007376,
-     &    0.15292500,0.14978001,0.14242400,0.13172600,
-     &    0.11798800,0.10156400,0.08303050,0.06251670,
-     &    0.04240970,0.00461302,0.00381452,0.00300250,
-     &    0.00220126,0.00140324,0.00052850,0.00007300/
-      DATA FRACREFB/
-C     From P = 64.1 mb.
-     &    0.16340201,0.15607700,0.14601400,0.13182700,
-     &    0.11524700,0.09666570,0.07825360,0.05849780,
-     &    0.03949650,0.00427980,0.00353719,0.00279303,
-     &    0.00204788,0.00130139,0.00049055,0.00006904,
-     &    0.15762900,0.15494700,0.14659800,0.13267800,
-     &    0.11562700,0.09838360,0.07930420,0.05962700,
-     &    0.04036360,0.00438053,0.00361463,0.00285723,
-     &    0.00208345,0.00132135,0.00050528,0.00008003,
-     &    0.15641500,0.15394500,0.14633600,0.13180400,
-     &    0.11617100,0.09924170,0.08000510,0.06021420,
-     &    0.04082730,0.00441694,0.00365364,0.00287723,
-     &    0.00210914,0.00135784,0.00054651,0.00008003,
-     &    0.15482700,0.15286300,0.14392500,0.13244100,
-     &    0.11712000,0.09994920,0.08119200,0.06104360,
-     &    0.04135600,0.00446685,0.00368377,0.00290767,
-     &    0.00215445,0.00142865,0.00056142,0.00008003,
-     &    0.15975100,0.15653500,0.14214399,0.12892200,
-     &    0.11508400,0.09906020,0.08087940,0.06078190,
-     &    0.04140530,0.00452724,0.00374558,0.00295328,
-     &    0.00218509,0.00138644,0.00056018,0.00008003/
-      DATA ABSN2OA/
-     &     1.50387E-01,2.91407E-01,6.28803E-01,9.65619E-01,
-     &     1.15054E-00,2.23424E-00,1.83392E-00,1.39033E-00,
-     &     4.28457E-01,2.73502E-01,1.84307E-01,1.61325E-01,
-     &     7.66314E-02,1.33862E-01,6.71196E-07,1.59293E-06/
-      DATA ABSN2OB/
-     &     9.37044E-05,1.23318E-03,7.91720E-03,5.33005E-02,
-     &     1.72343E-01,4.29571E-01,1.01288E+00,3.83863E+00,
-     &     1.15312E+01,1.08383E+00,2.24847E+00,1.51268E+00,
-     &     3.33177E-01,7.82102E-01,3.44631E-01,1.61039E-03/
-      DATA ETAREF/
-     &     0.,0.125,0.25,0.375,0.5,0.625,0.75,0.875,0.9875,1.0/
-      DATA H2OREF/
-     &     1.87599E-02,1.22233E-02,5.89086E-03,2.76753E-03,1.40651E-03, 
-     &     7.59698E-04,3.88758E-04,1.65422E-04,3.71895E-05,7.47648E-06, 
-     &     4.30818E-06,3.33194E-06,3.20393E-06,3.16186E-06,3.25235E-06, 
-     &     3.42258E-06,3.62884E-06,3.91482E-06,4.14875E-06,4.30810E-06,
-     &     4.44204E-06,4.57783E-06,4.70865E-06,4.79432E-06,4.86971E-06, 
-     &     4.92603E-06,4.96688E-06,4.99628E-06,5.05266E-06,5.12658E-06, 
-     &     5.25028E-06,5.35708E-06,5.45085E-06,5.48304E-06,5.50000E-06, 
-     &     5.50000E-06,5.45359E-06,5.40468E-06,5.35576E-06,5.25327E-06,
-     &     5.14362E-06,5.03396E-06,4.87662E-06,4.69787E-06,4.51911E-06, 
-     &     4.33600E-06,4.14416E-06,3.95232E-06,3.76048E-06,3.57217E-06, 
-     &     3.38549E-06,3.19881E-06,3.01212E-06,2.82621E-06,2.64068E-06, 
-     &     2.45515E-06,2.26962E-06,2.08659E-06,1.93029E-06/
-      DATA N2OREF/
-     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
-     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
-     &     2.76714E-07,2.64709E-07,2.42847E-07,2.09547E-07,1.71945E-07,
-     &     1.37491E-07,1.13319E-07,1.00354E-07,9.12812E-08,8.54633E-08,
-     &     8.03631E-08,7.33718E-08,6.59754E-08,5.60386E-08,4.70901E-08,
-     &     3.99774E-08,3.29786E-08,2.60642E-08,2.10663E-08,1.65918E-08,
-     &     1.30167E-08,1.00900E-08,7.62490E-09,6.11592E-09,4.66725E-09,
-     &     3.28574E-09,2.84838E-09,2.46198E-09,2.07557E-09,1.85507E-09,
-     &     1.65675E-09,1.45843E-09,1.31948E-09,1.20716E-09,1.09485E-09,
-     &     9.97803E-10,9.31260E-10,8.64721E-10,7.98181E-10,7.51380E-10,
-     &     7.13670E-10,6.75960E-10,6.38250E-10,6.09811E-10,5.85998E-10,
-     &     5.62185E-10,5.38371E-10,5.15183E-10,4.98660E-10/
-      DATA CO2REF/
-     &     53*3.55E-04, 3.5470873E-04, 3.5427220E-04, 3.5383567E-04,
-     &     3.5339911E-04, 3.5282588E-04, 3.5079606E-04/  
-      DATA FORREF/
-     &      1.76842E-04, 1.77913E-04, 1.25186E-04, 1.07912E-04,
-     &      1.05217E-04, 7.48726E-05, 1.11701E-04, 7.68921E-05,
-     &      9.87242E-05, 9.85711E-05, 6.16557E-05,-1.61291E-05,
-     &     -1.26794E-04,-1.19011E-04,-2.67814E-04, 6.95005E-05/
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
-  
+      REAL KA,KB
+      REAL KA_MN2O, KB_MN2O, MINORFRAC
+      REAL N2OM1,N2OM2
+      DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+
+C Planck fraction mapping level: P=212.7250 mbar, T = 223.06 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.6251E-01,1.5572E-01,1.4557E-01,1.3208E-01,1.1582E-01,9.6895E-02,
+     &7.8720E-02,5.8462E-02,3.9631E-02,4.3001E-03,3.5555E-03,2.8101E-03,
+     &2.0547E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.6006E-01,1.5576E-01,1.4609E-01,1.3276E-01,1.1594E-01,9.7336E-02,
+     &7.9035E-02,5.8696E-02,3.9723E-02,4.3001E-03,3.5555E-03,2.8101E-03,
+     &2.0547E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.5952E-01,1.5566E-01,1.4590E-01,1.3294E-01,1.1599E-01,9.7511E-02,
+     &7.9127E-02,5.8888E-02,3.9874E-02,4.3001E-03,3.5555E-03,2.8102E-03,
+     &2.0547E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.5907E-01,1.5541E-01,1.4585E-01,1.3316E-01,1.1596E-01,9.7647E-02,
+     &7.9243E-02,5.9024E-02,4.0028E-02,4.3112E-03,3.5555E-03,2.8102E-03,
+     &2.0547E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.5862E-01,1.5517E-01,1.4588E-01,1.3328E-01,1.1585E-01,9.7840E-02,
+     &7.9364E-02,5.9174E-02,4.0160E-02,4.3403E-03,3.5900E-03,2.8102E-03,
+     &2.0547E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.5830E-01,1.5490E-01,1.4582E-01,1.3331E-01,1.1567E-01,9.8079E-02,
+     &7.9510E-02,5.9369E-02,4.0326E-02,4.3343E-03,3.5908E-03,2.8527E-03,
+     &2.0655E-03,1.3109E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.5789E-01,1.5435E-01,1.4595E-01,1.3304E-01,1.1566E-01,9.8426E-02,
+     &7.9704E-02,5.9618E-02,4.0520E-02,4.3812E-03,3.6147E-03,2.8395E-03,
+     &2.1301E-03,1.3145E-03,4.9403E-04,6.9515E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.5704E-01,1.5398E-01,1.4564E-01,1.3222E-01,1.1586E-01,9.9230E-02,
+     &8.0011E-02,6.0149E-02,4.0790E-02,4.4253E-03,3.6534E-03,2.9191E-03,
+     &2.1373E-03,1.3558E-03,5.1631E-04,7.8794E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.5270E-01,1.5126E-01,1.4264E-01,1.3106E-01,1.1740E-01,1.0137E-01,
+     &8.3057E-02,6.2282E-02,4.2301E-02,4.6486E-03,3.8159E-03,3.0472E-03,
+     &2.2870E-03,1.4818E-03,5.6773E-04,7.8794E-05/
+C Planck fraction mapping level: P = 95.8 mbar, T = 215.7 K
+      DATA (FRACREFB(IG, 1),IG=1,16) /
+     &1.6413E-01,1.5665E-01,1.4606E-01,1.3184E-01,1.1517E-01,9.6243E-02,
+     &7.7982E-02,5.8165E-02,3.9311E-02,4.2586E-03,3.5189E-03,2.7793E-03,
+     &2.0376E-03,1.2938E-03,4.8853E-04,6.8745E-05/
+      DATA (FRACREFB(IG, 2),IG=1,16) /
+     &1.6254E-01,1.5674E-01,1.4652E-01,1.3221E-01,1.1535E-01,9.6439E-02,
+     &7.8155E-02,5.8254E-02,3.9343E-02,4.2586E-03,3.5189E-03,2.7793E-03,
+     &2.0376E-03,1.2938E-03,4.8853E-04,6.8745E-05/
+      DATA (FRACREFB(IG, 3),IG=1,16) /
+     &1.6177E-01,1.5664E-01,1.4669E-01,1.3242E-01,1.1541E-01,9.6536E-02,
+     &7.8257E-02,5.8387E-02,3.9431E-02,4.2587E-03,3.5189E-03,2.7793E-03,
+     &2.0376E-03,1.2938E-03,4.8853E-04,6.8745E-05/
+      DATA (FRACREFB(IG, 4),IG=1,16) /
+     &1.6077E-01,1.5679E-01,1.4648E-01,1.3273E-01,1.1546E-01,9.6779E-02,
+     &7.8371E-02,5.8546E-02,3.9611E-02,4.2772E-03,3.5190E-03,2.7793E-03,
+     &2.0376E-03,1.2938E-03,4.8853E-04,6.8745E-05/
+      DATA (FRACREFB(IG, 5),IG=1,16) /
+     &1.6067E-01,1.5608E-01,1.4247E-01,1.2881E-01,1.1449E-01,9.8802E-02,
+     &8.0828E-02,6.0977E-02,4.1494E-02,4.5116E-03,3.7290E-03,2.9460E-03,
+     &2.1948E-03,1.3778E-03,5.4552E-04,7.9969E-05/
+
+C Minor gas mapping levels:
+C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
+C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
+
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      STRRAT = 1.19268
 
-C     Compute the optical depth by interpolating in ln(pressure), 
-C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     P = 212.725 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(2,9)
+
+C     P = 95.58 mb
+      REFRAT_PLANCK_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+
+C     P = 706.270mb
+      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(2,3)
+
+C     P = 95.58 mb 
+      REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+
+C     Compute the optical depth by interpolating in ln(pressure) and 
+C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
+C     self-continuum and foreign continuum is interpolated (in temperature) 
+C     separately.
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
-         FS = AMOD(SPECMULT,1.0)
-         IF (JS .EQ. 8) THEN
-            IF (FS .GE. 0.9) THEN
-               JS = 9
-               FS = 10. * (FS - 0.9)
-            ELSE
-               FS = FS/0.9
-            ENDIF
-         ENDIF
-         NS = JS + INT(FS + 0.5)
-         FP = FAC01(LAY) + FAC11(LAY)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(3) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(3) + JS
-         INDS = INDSELF(LAY)
-         COLREF1 = N2OREF(JP(LAY))
-         COLREF2 = N2OREF(JP(LAY)+1)
-         IF (NS .EQ. 10) THEN
-            WCOMB1 = H2OREF(JP(LAY))
-            WCOMB2 = H2OREF(JP(LAY)+1)
+         FS = AMOD(SPECMULT,1.0)        
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MN2O = COLH2O(LAY) + REFRAT_M_A*COLCO2(LAY)
+         SPECPARM_MN2O = COLH2O(LAY)/SPECCOMB_MN2O
+         IF (SPECPARM_MN2O .GE. ONEMINUS) SPECPARM_MN2O = ONEMINUS
+         SPECMULT_MN2O = 8.*SPECPARM_MN2O
+         JMN2O = 1 + INT(SPECMULT_MN2O)
+         FMN2O = AMOD(SPECMULT_MN2O,1.0)
+         FMN2OMF = MINORFRAC(LAY)*FMN2O
+c     In atmospheres where the amount of N2O is too great to be considered
+c     a minor species, adjust the column amount of N2O by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
+         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+         IF (RATN2O .GT. 1.5) THEN
+            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
          ELSE
-            WCOMB1 = STRRAT * CO2REF(JP(LAY))/(1.-ETAREF(NS))
-            WCOMB2 = STRRAT * CO2REF(JP(LAY)+1)/(1.-ETAREF(NS))
+            ADJCOLN2O = COLN2O(LAY)
          ENDIF
-         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
-         CURRN2O = SPECCOMB * RATIO
-         N2OMULT = COLN2O(LAY) - CURRN2O 
-         DO 2000 IG = 1, NG(3)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+10,IG) +
-     &           FAC110 * ABSA(IND0+11,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+10,IG) +
-     &           FAC111 * ABSA(IND1+11,IG)) +
-     &           COLH2O(LAY) * 
-     &           (SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))) +
-     &           FORFAC(LAY) * FORREF(IG))
-     &           + N2OMULT * ABSN2OA(IG)
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(3) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(3) + JS1
+         INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(3)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY) *
+     &              (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLN2O*ABSN2O            
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000       CONTINUE
+         ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(3)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY) *
+     &              (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLN2O*ABSN2O 
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010          CONTINUE
+         ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(3)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY) *
+     &              (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLN2O*ABSN2O   
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+        ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         SPECCOMB = COLH2O(LAY) + STRRAT*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         NS = JS + INT(FS + 0.5)
-         FP = FAC01(LAY) + FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 4.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
          FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(3) + JS
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(3) + JS
-         COLREF1 = N2OREF(JP(LAY)) 
-         COLREF2 = N2OREF(JP(LAY)+1) 
-         IF (NS .EQ. 5) THEN
-            WCOMB1 = H2OREF(JP(LAY))
-            WCOMB2 = H2OREF(JP(LAY)+1)
+         FAC001 = (1. - FS1) * FAC01(LAY)
+         FAC011 = (1. - FS1) * FAC11(LAY)
+         FAC101 = FS1 * FAC01(LAY)
+         FAC111 = FS1 * FAC11(LAY)
+
+         SPECCOMB_MN2O = COLH2O(LAY) + REFRAT_M_B*COLCO2(LAY)
+         SPECPARM_MN2O = COLH2O(LAY)/SPECCOMB_MN2O
+         IF (SPECPARM_MN2O .GE. ONEMINUS) SPECPARM_MN2O = ONEMINUS
+         SPECMULT_MN2O = 4.*SPECPARM_MN2O
+         JMN2O = 1 + INT(SPECMULT_MN2O)
+         FMN2O = AMOD(SPECMULT_MN2O,1.0)
+         FMN2OMF = MINORFRAC(LAY)*FMN2O
+c     In atmospheres where the amount of N2O is too great to be considered
+c     a minor species, adjust the column amount of N2O by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
+         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+         IF (RATN2O .GT. 1.5) THEN
+            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
          ELSE
-            WCOMB1 = STRRAT * CO2REF(JP(LAY))/(1.-ETAREF(NS))
-            WCOMB2 = STRRAT * CO2REF(JP(LAY)+1)/(1.-ETAREF(NS))
+            ADJCOLN2O = COLN2O(LAY)
          ENDIF
-         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
-         CURRN2O = SPECCOMB * RATIO
-         N2OMULT = COLN2O(LAY) - CURRN2O 
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(3) + JS
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(3) + JS1
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
          DO 3000 IG = 1, NG(3)
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+            N2OM1 = KB_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &           (KB_MN2O(JMN2O+1,INDM,IG)-KB_MN2O(JMN2O,INDM,IG))
+            N2OM2 = KB_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &           (KB_MN2O(JMN2O+1,INDM+1,IG)-KB_MN2O(JMN2O,INDM+1,IG))
+            ABSN2O = N2OM1 + MINORFRAC(LAY) * (N2OM2 - N2OM1)
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSB(IND0,IG) +
-     &           FAC100 * ABSB(IND0+1,IG) +
-     &           FAC010 * ABSB(IND0+5,IG) +
-     &           FAC110 * ABSB(IND0+6,IG) +
-     &           FAC001 * ABSB(IND1,IG) + 
-     &           FAC101 * ABSB(IND1+1,IG) +
-     &           FAC011 * ABSB(IND1+5,IG) +
-     &           FAC111 * ABSB(IND1+6,IG)) +
-     &           COLH2O(LAY) * FORFAC(LAY) * FORREF(IG) 
-     &           + N2OMULT * ABSN2OB(IG)
-            FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
-     &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
+     &          FAC100 * ABSB(IND0+1,IG) +
+     &          FAC010 * ABSB(IND0+5,IG) +
+     &          FAC110 * ABSB(IND0+6,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSB(IND1,IG) + 
+     &          FAC101 * ABSB(IND1+1,IG) +
+     &          FAC011 * ABSB(IND1+5,IG) +
+     &          FAC111 * ABSB(IND1+6,IG)) 
+     &          + TAUFOR
+     &          + ADJCOLN2O*ABSN2O            
+            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
+     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
  3000    CONTINUE
  3500 CONTINUE
 
@@ -674,7 +803,7 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB4
 
-C     BAND 4:  630-700 cm-1 (low - H2O,CO2; high - O3,CO2)
+C     BAND 4:  630-700 cm-1 (low key - H2O,CO2; high key - O3,CO2)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -689,170 +818,335 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K4/       KA(9,5,13,MG), KB(6,5,13:59,MG) , SELFREF(10,MG)
+      COMMON /K4/       KA(9,5,13,MG), KB(5,5,13:59,MG) , FORREF(4,MG), 
+     &                  SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      DIMENSION ABSA(585,MG),ABSB(1410,MG)
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
+
+      DIMENSION ABSA(585,MG),ABSB(1175,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG,6)
 
-      DATA FRACREFA/
-C     From P = 
-     &    0.15579100,0.14918099,0.14113800,0.13127001,
-     &    0.11796300,0.10174300,0.08282370,0.06238150,
-     &    0.04213440,0.00458968,0.00377949,0.00298736,
-     &    0.00220743,0.00140644,0.00053024,0.00007459,
-     &    0.15292799,0.15004000,0.14211500,0.13176700,
-     &    0.11821100,0.10186300,0.08288040,0.06241390,
-     &    0.04220720,0.00459006,0.00377919,0.00298743,
-     &    0.00220743,0.00140644,0.00053024,0.00007459,
-     &    0.14386199,0.15125300,0.14650001,0.13377000,
-     &    0.11895900,0.10229400,0.08312110,0.06239520,
-     &    0.04225560,0.00459428,0.00378865,0.00298860,
-     &    0.00220743,0.00140644,0.00053024,0.00007459,
-     &    0.14359100,0.14561599,0.14479300,0.13740200,
-     &    0.12150100,0.10315400,0.08355480,0.06247240,
-     &    0.04230980,0.00459916,0.00378373,0.00300063,
-     &    0.00221111,0.00140644,0.00053024,0.00007459,
-     &    0.14337599,0.14451601,0.14238000,0.13520500,
-     &    0.12354200,0.10581200,0.08451810,0.06262440,
-     &    0.04239590,0.00460297,0.00378701,0.00300466,
-     &    0.00221899,0.00141020,0.00053024,0.00007459,
-     &    0.14322001,0.14397401,0.14117201,0.13401900,
-     &    0.12255500,0.10774100,0.08617650,0.06296420,
-     &    0.04249590,0.00463406,0.00378241,0.00302037,
-     &    0.00221583,0.00141103,0.00053814,0.00007991,
-     &    0.14309500,0.14364301,0.14043900,0.13348100,
-     &    0.12211600,0.10684700,0.08820590,0.06374610,
-     &    0.04264730,0.00464231,0.00384022,0.00303427,
-     &    0.00221825,0.00140943,0.00055564,0.00007991,
-     &    0.15579100,0.14918099,0.14113800,0.13127001,
-     &    0.11796300,0.10174300,0.08282370,0.06238150,
-     &    0.04213440,0.00458968,0.00377949,0.00298736,
-     &    0.00220743,0.00140644,0.00053024,0.00007459,
-     &    0.15937001,0.15159500,0.14242800,0.13078900,
-     &    0.11671300,0.10035700,0.08143450,0.06093850,
-     &    0.04105320,0.00446233,0.00369844,0.00293784,
-     &    0.00216425,0.00143403,0.00054571,0.00007991/
-      DATA FRACREFB/
-C     From P = 1.17 mb.
-     &    0.15558299,0.14930600,0.14104301,0.13124099,
-     &    0.11792900,0.10159200,0.08314130,0.06240450,
-     &    0.04217020,0.00459313,0.00379798,0.00299835,
-     &    0.00218950,0.00140615,0.00053010,0.00007457,
-     &    0.15592700,0.14918999,0.14095700,0.13115700,
-     &    0.11788900,0.10158000,0.08313780,0.06240240,
-     &    0.04217000,0.00459313,0.00379798,0.00299835,
-     &    0.00218950,0.00140615,0.00053010,0.00007457,
-     &    0.15949000,0.15014900,0.14162201,0.13080800,
-     &    0.11713500,0.10057100,0.08170080,0.06128110,
-     &    0.04165600,0.00459202,0.00379835,0.00299717,
-     &    0.00218958,0.00140616,0.00053010,0.00007457,
-     &    0.15967900,0.15038200,0.14196999,0.13074800,
-     &    0.11701700,0.10053000,0.08160790,0.06122690,
-     &    0.04128310,0.00456598,0.00379486,0.00299457,
-     &    0.00219016,0.00140619,0.00053011,0.00007456,
-     &    0.15989800,0.15057300,0.14207700,0.13068600,
-     &    0.11682900,0.10053900,0.08163610,0.06121870,
-     &    0.04121690,0.00449061,0.00371235,0.00294207,
-     &    0.00217778,0.00139877,0.00053011,0.00007455,
-     &    0.15950100,0.15112500,0.14199100,0.13071300,
-     &    0.11680800,0.10054600,0.08179050,0.06120910,
-     &    0.04126050,0.00444324,0.00366843,0.00289369,
-     &    0.00211550,0.00134746,0.00050874,0.00007863/
+C Planck fraction mapping level : P = 142.5940 mbar, T = 215.70 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7965E-03,2.9744E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2392E-02,4.2146E-02,4.5906E-03,3.7965E-03,2.9745E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7965E-03,2.9745E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7964E-03,2.9744E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7965E-03,2.9744E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.5572E-01,1.4925E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7965E-03,2.9744E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.5572E-01,1.4926E-01,1.4107E-01,1.3126E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5908E-03,3.7964E-03,2.9745E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.5571E-01,1.4926E-01,1.4107E-01,1.3125E-01,1.1791E-01,1.0173E-01,
+     &8.2949E-02,6.2393E-02,4.2146E-02,4.5907E-03,3.7964E-03,2.9744E-03,
+     &2.2074E-03,1.4063E-03,5.3012E-04,7.4595E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.5952E-01,1.5155E-01,1.4217E-01,1.3077E-01,1.1667E-01,1.0048E-01,
+     &8.1511E-02,6.1076E-02,4.1111E-02,4.4432E-03,3.6910E-03,2.9076E-03,
+     &2.1329E-03,1.3566E-03,5.2235E-04,7.9935E-05/
+
+C Planck fraction mapping level : P = 95.58350 mb, T = 215.70 K
+
+      DATA (FRACREFB(IG, 1),IG=1,16) /
+     &1.5558E-01,1.4931E-01,1.4104E-01,1.3124E-01,1.1793E-01,1.0160E-01,
+     &8.3142E-02,6.2403E-02,4.2170E-02,4.5935E-03,3.7976E-03,2.9986E-03,
+     &2.1890E-03,1.4061E-03,5.3005E-04,7.4587E-05/
+      DATA (FRACREFB(IG, 2),IG=1,16) /
+     &1.5558E-01,1.4932E-01,1.4104E-01,1.3124E-01,1.1792E-01,1.0159E-01,
+     &8.3142E-02,6.2403E-02,4.2170E-02,4.5935E-03,3.7976E-03,2.9986E-03,
+     &2.1890E-03,1.4061E-03,5.3005E-04,7.4587E-05/
+      DATA (FRACREFB(IG, 3),IG=1,16) /
+     &1.5558E-01,1.4933E-01,1.4103E-01,1.3124E-01,1.1792E-01,1.0159E-01,
+     &8.3142E-02,6.2403E-02,4.2170E-02,4.5935E-03,3.7976E-03,2.9986E-03,
+     &2.1890E-03,1.4061E-03,5.3005E-04,7.4587E-05/
+      DATA (FRACREFB(IG, 4),IG=1,16) /
+     &1.5569E-01,1.4926E-01,1.4102E-01,1.3122E-01,1.1791E-01,1.0159E-01,
+     &8.3141E-02,6.2403E-02,4.2170E-02,4.5935E-03,3.7976E-03,2.9986E-03,
+     &2.1890E-03,1.4061E-03,5.3005E-04,7.4587E-05/
+      DATA (FRACREFB(IG, 5),IG=1,16) /
+     &1.5947E-01,1.5132E-01,1.4195E-01,1.3061E-01,1.1680E-01,1.0054E-01,
+     &8.1785E-02,6.1212E-02,4.1276E-02,4.4424E-03,3.6628E-03,2.8943E-03,
+     &2.1134E-03,1.3457E-03,5.1024E-04,7.3998E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
-      STRRAT1 = 850.577
-      STRRAT2 = 35.7416
 
-C     Compute the optical depth by interpolating in ln(pressure), 
-C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     P =   142.5940 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,11)/CHI_MLS(2,11)
+
+C     P = 95.58350 mb
+      REFRAT_PLANCK_B = CHI_MLS(3,13)/CHI_MLS(2,13)
+
+C     Compute the optical depth by interpolating in ln(pressure) and 
+C     temperature, and appropriate species.  Below LAYTROP, the water 
+C     vapor self-continuum and foreign continuum is interpolated (in temperature) 
+C     separately.
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(4) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(4) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(4) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(4)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+         INDF = INDFOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(4)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+         ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+            DO 2010 IG = 1, NG(4)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+         ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(4)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+        ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         SPECCOMB = COLO3(LAY) + STRRAT2*COLCO2(LAY)
-         SPECPARM = COLO3(LAY)/SPECCOMB 
+         SPECCOMB = COLO3(LAY) + RAT_O3CO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLO3(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         IF (JS .GT. 1) THEN
-            JS = JS + 1
-         ELSEIF (FS .GE. 0.0024) THEN
-            JS = 2
-            FS = (FS - 0.0024)/0.9976
-         ELSE
-            JS = 1
-            FS = FS/0.0024
-         ENDIF
+
+         SPECCOMB1 = COLO3(LAY) + RAT_O3CO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLO3(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 4.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
          FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(4) + JS
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(4) + JS
-         DO 3000 IG = 1, NG(4)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSB(IND0,IG) +
-     &           FAC100 * ABSB(IND0+1,IG) +
-     &           FAC010 * ABSB(IND0+6,IG) +
-     &           FAC110 * ABSB(IND0+7,IG) +
-     &           FAC001 * ABSB(IND1,IG) + 
-     &           FAC101 * ABSB(IND1+1,IG) +
-     &           FAC011 * ABSB(IND1+6,IG) +
-     &           FAC111 * ABSB(IND1+7,IG))
-            FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
-     &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
- 3000    CONTINUE
- 3500 CONTINUE
+         FAC001 = (1. - FS1) * FAC01(LAY)
+         FAC011 = (1. - FS1) * FAC11(LAY)
+         FAC101 = FS1 * FAC01(LAY)
+         FAC111 = FS1 * FAC11(LAY)
 
+         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(4) + JS
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(4) + JS1
+
+         DO 3000 IG = 1, NG(4)
+            TAUG(LAY,IG) =  SPECCOMB * 
+     &          (FAC000 * ABSB(IND0,IG) +
+     &          FAC100 * ABSB(IND0+1,IG) +
+     &          FAC010 * ABSB(IND0+5,IG) +
+     &          FAC110 * ABSB(IND0+6,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSB(IND1,IG) + 
+     &          FAC101 * ABSB(IND1+1,IG) +
+     &          FAC011 * ABSB(IND1+5,IG) +
+     &          FAC111 * ABSB(IND1+6,IG)) 
+            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
+     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+ 3000    CONTINUE
+
+C EMPIRICAL MODIFICATION TO CODE TO IMPROVING STRATOSPHERIC COOLING RATES
+C FOR CO2.
+
+         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+
+ 3500 CONTINUE
       RETURN
       END
 
@@ -860,7 +1154,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB5
 
-C     BAND 5:  700-820 cm-1 (low - H2O,CO2; high - O3,CO2)
+C     BAND 5:  700-820 cm-1 (low key - H2O,CO2; low minor - O3, CCL4)
+C                           (high key - O3,CO2)
 
       PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
@@ -875,80 +1170,102 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
-      COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K5/       KA(9,5,13,MG), KB(5,5,13:59,MG) , SELFREF(10,MG)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY),INDSELF(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K5/       KA(9,5,13,MG), KB(5,5,13:59,MG),
+     &                  FORREF(4,MG),SELFREF(10,MG), KA_MO3(9,19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG,5), CCL4(MG)
 
-      DATA FRACREFA/
-C     From P = 387.6 mb.
-     &    0.13966499,0.14138900,0.13763399,0.13076700,
-     &    0.12299100,0.10747700,0.08942000,0.06769200,
-     &    0.04587610,0.00501173,0.00415809,0.00328398,
-     &    0.00240015,0.00156222,0.00059104,0.00008323,
-     &    0.13958199,0.14332899,0.13785399,0.13205400,
-     &    0.12199700,0.10679600,0.08861080,0.06712320,
-     &    0.04556030,0.00500863,0.00416315,0.00328629,
-     &    0.00240023,0.00156220,0.00059104,0.00008323,
-     &    0.13907100,0.14250501,0.13889600,0.13297300,
-     &    0.12218700,0.10683800,0.08839260,0.06677310,
-     &    0.04538570,0.00495402,0.00409863,0.00328219,
-     &    0.00240805,0.00156266,0.00059104,0.00008323,
-     &    0.13867700,0.14190100,0.13932300,0.13327099,
-     &    0.12280800,0.10692500,0.08844510,0.06658510,
-     &    0.04519340,0.00492276,0.00408832,0.00323856,
-     &    0.00239289,0.00155698,0.00059104,0.00008323,
-     &    0.13845000,0.14158800,0.13929300,0.13295600,
-     &    0.12348300,0.10736700,0.08859480,0.06650610,
-     &    0.04498230,0.00491335,0.00406968,0.00322901,
-     &    0.00234666,0.00155235,0.00058813,0.00008323,
-     &    0.13837101,0.14113200,0.13930500,0.13283101,
-     &    0.12349200,0.10796400,0.08890490,0.06646480,
-     &    0.04485990,0.00489554,0.00405264,0.00320313,
-     &    0.00234742,0.00151159,0.00058438,0.00008253,
-     &    0.13834500,0.14093500,0.13896500,0.13262001,
-     &    0.12326900,0.10828900,0.08950050,0.06674610,
-     &    0.04476560,0.00489624,0.00400962,0.00317423,
-     &    0.00233479,0.00148249,0.00058590,0.00008253,
-     &    0.13831300,0.14069000,0.13871400,0.13247600,
-     &    0.12251400,0.10831300,0.08977090,0.06776920,
-     &    0.04498390,0.00484111,0.00398948,0.00316069,
-     &    0.00229741,0.00150104,0.00058608,0.00008253,
-     &    0.14027201,0.14420401,0.14215700,0.13446601,
-     &    0.12303700,0.10596100,0.08650370,0.06409570,
-     &    0.04312310,0.00471110,0.00393954,0.00310850,
-     &    0.00229588,0.00146366,0.00058194,0.00008253/
-      DATA FRACREFB/
-C     From P = 1.17 mb.
-     &    0.14339100,0.14358699,0.13935301,0.13306700,
-     &    0.12135700,0.10590600,0.08688240,0.06553220,
-     &    0.04446740,0.00483580,0.00399413,0.00316225,
-     &    0.00233007,0.00149135,0.00056246,0.00008059,
-     &    0.14330500,0.14430299,0.14053699,0.13355300,
-     &    0.12151200,0.10529100,0.08627630,0.06505230,
-     &    0.04385850,0.00476555,0.00395010,0.00313878,
-     &    0.00232273,0.00149354,0.00056246,0.00008059,
-     &    0.14328399,0.14442700,0.14078601,0.13390100,
-     &    0.12132600,0.10510600,0.08613660,0.06494630,
-     &    0.04381310,0.00475378,0.00394166,0.00313076,
-     &    0.00231235,0.00149159,0.00056301,0.00008059,
-     &    0.14326900,0.14453100,0.14114200,0.13397101,
-     &    0.12127200,0.10493400,0.08601380,0.06483360,
-     &    0.04378900,0.00474655,0.00393549,0.00312583,
-     &    0.00230686,0.00148433,0.00056502,0.00008059,
-     &    0.14328900,0.14532700,0.14179000,0.13384600,
-     &    0.12093700,0.10461500,0.08573010,0.06461340,
-     &    0.04366570,0.00473087,0.00392539,0.00311238,
-     &    0.00229865,0.00147572,0.00056517,0.00007939/
+
+C Planck fraction mapping level : P = 473.42 mb, T = 259.83
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.4111E-01,1.4222E-01,1.3802E-01,1.3101E-01,1.2244E-01,1.0691E-01,
+     &8.8703E-02,6.7130E-02,4.5509E-02,4.9866E-03,4.1214E-03,3.2557E-03,
+     &2.3805E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.4152E-01,1.4271E-01,1.3784E-01,1.3075E-01,1.2215E-01,1.0674E-01,
+     &8.8686E-02,6.7135E-02,4.5508E-02,4.9866E-03,4.1214E-03,3.2558E-03,
+     &2.3805E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.4159E-01,1.4300E-01,1.3781E-01,1.3094E-01,1.2192E-01,1.0661E-01,
+     &8.8529E-02,6.7127E-02,4.5511E-02,4.9877E-03,4.1214E-03,3.2558E-03,
+     &2.3805E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.4162E-01,1.4337E-01,1.3774E-01,1.3122E-01,1.2172E-01,1.0641E-01,
+     &8.8384E-02,6.7056E-02,4.5514E-02,4.9880E-03,4.1214E-03,3.2557E-03,
+     &2.3805E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.4161E-01,1.4370E-01,1.3770E-01,1.3143E-01,1.2173E-01,1.0613E-01,
+     &8.8357E-02,6.6874E-02,4.5509E-02,4.9883E-03,4.1214E-03,3.2558E-03,
+     &2.3804E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.4154E-01,1.4405E-01,1.3771E-01,1.3169E-01,1.2166E-01,1.0603E-01,
+     &8.8193E-02,6.6705E-02,4.5469E-02,4.9902E-03,4.1214E-03,3.2558E-03,
+     &2.3804E-03,1.5450E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.4126E-01,1.4440E-01,1.3790E-01,1.3214E-01,1.2153E-01,1.0603E-01,
+     &8.7908E-02,6.6612E-02,4.5269E-02,4.9900E-03,4.1256E-03,3.2558E-03,
+     &2.3804E-03,1.5451E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.4076E-01,1.4415E-01,1.3885E-01,1.3286E-01,1.2147E-01,1.0612E-01,
+     &8.7579E-02,6.6280E-02,4.4977E-02,4.9782E-03,4.1200E-03,3.2620E-03,
+     &2.3820E-03,1.5452E-03,5.8423E-04,8.2275E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.4205E-01,1.4496E-01,1.4337E-01,1.3504E-01,1.2260E-01,1.0428E-01,
+     &8.4946E-02,6.3625E-02,4.2951E-02,4.7313E-03,3.9157E-03,3.0879E-03,
+     &2.2666E-03,1.5193E-03,5.7469E-04,8.1674E-05/
+
+C Planck fraction mapping level : P = 0.2369280 mbar, T = 253.60 K
+      DATA (FRACREFB(IG, 1),IG=1,16) /
+     &1.4075E-01,1.4196E-01,1.3833E-01,1.3345E-01,1.2234E-01,1.0718E-01,
+     &8.8004E-02,6.6308E-02,4.5028E-02,4.9029E-03,4.0377E-03,3.1870E-03,
+     &2.3503E-03,1.5146E-03,5.7165E-04,8.2371E-05/
+      DATA (FRACREFB(IG, 2),IG=1,16) /
+     &1.4081E-01,1.4225E-01,1.3890E-01,1.3410E-01,1.2254E-01,1.0680E-01,
+     &8.7391E-02,6.5819E-02,4.4725E-02,4.9121E-03,4.0420E-03,3.1869E-03,
+     &2.3504E-03,1.5146E-03,5.7165E-04,8.2371E-05/
+      DATA (FRACREFB(IG, 3),IG=1,16) /
+     &1.4087E-01,1.4227E-01,1.3920E-01,1.3395E-01,1.2270E-01,1.0694E-01,
+     &8.7229E-02,6.5653E-02,4.4554E-02,4.8797E-03,4.0460E-03,3.1939E-03,
+     &2.3505E-03,1.5146E-03,5.7165E-04,8.1910E-05/
+      DATA (FRACREFB(IG, 4),IG=1,16) /
+     &1.4089E-01,1.4238E-01,1.3956E-01,1.3379E-01,1.2284E-01,1.0688E-01,
+     &8.7192E-02,6.5490E-02,4.4390E-02,4.8395E-03,4.0173E-03,3.2070E-03,
+     &2.3559E-03,1.5146E-03,5.7165E-04,8.2371E-05/
+      DATA (FRACREFB(IG, 5),IG=1,16) /
+     &1.4091E-01,1.4417E-01,1.4194E-01,1.3457E-01,1.2167E-01,1.0551E-01,
+     &8.6450E-02,6.4889E-02,4.3584E-02,4.7551E-03,3.9509E-03,3.1374E-03,
+     &2.3226E-03,1.4942E-03,5.7545E-04,8.0887E-05/
+
+C Minor gas mapping level :
+C     LOWER - O3, P = 317.34 mbar, T = 240.77 K
+C     LOWER - CCL4
 
       DATA CCL4/
      &     26.1407,  53.9776,  63.8085,  36.1701,
@@ -958,80 +1275,272 @@ C     From P = 1.17 mb.
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
-      STRRAT1 = 90.4894
-      STRRAT2 = 0.900502
+      REAL KA_MO3, MINORFRAC
+      REAL O3M1, O3M2
 
-C     Compute the optical depth by interpolating in ln(pressure), 
-C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+C     P = 473.420 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,5)/CHI_MLS(2,5)
+
+C     P = 0.2369 mb
+      REFRAT_PLANCK_B = CHI_MLS(3,43)/CHI_MLS(2,43)
+
+C     P = 317.3480
+      REFRAT_M_A = CHI_MLS(1,7)/CHI_MLS(2,7)
+
+C     Compute the optical depth by interpolating in ln(pressure) and 
+C     temperature, and appropriate species.  Below LAYTROP, the 
+C     water vapor self-continuum and foreign continuum is 
+C     interpolated (in temperature) separately.
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MO3 = COLH2O(LAY) + REFRAT_M_A*COLCO2(LAY)
+         SPECPARM_MO3 = COLH2O(LAY)/SPECCOMB_MO3
+         IF (SPECPARM_MO3 .GE. ONEMINUS) SPECPARM_MO3 = ONEMINUS
+         SPECMULT_MO3 = 8.*SPECPARM_MO3
+         JMO3 = 1 + INT(SPECMULT_MO3)
+         FMO3 = AMOD(SPECMULT_MO3,1.0)
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(5) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(5)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-     &           + WX(1,LAY) * CCL4(IG)
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(5)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
+
+               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
+               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ABSO3*COLO3(LAY)
+     &              + WX(1,LAY) * CCL4(IG)
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(5)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
+               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
+               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF+ TAUFOR
+     &              + ABSO3*COLO3(LAY)
+     &              + WX(1,LAY) * CCL4(IG)
+                FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &               (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(5)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
+               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
+     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
+               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ABSO3*COLO3(LAY)
+     &              + WX(1,LAY) * CCL4(IG)
+            FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         SPECCOMB = COLO3(LAY) + STRRAT2*COLCO2(LAY)
-         SPECPARM = COLO3(LAY)/SPECCOMB 
+         SPECCOMB = COLO3(LAY) + RAT_O3CO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLO3(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
+
+         SPECCOMB1 = COLO3(LAY) + RAT_O3CO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLO3(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 4.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
          FAC000 = (1. - FS) * FAC00(LAY)
          FAC010 = (1. - FS) * FAC10(LAY)
          FAC100 = FS * FAC00(LAY)
          FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+         FAC001 = (1. - FS1) * FAC01(LAY)
+         FAC011 = (1. - FS1) * FAC11(LAY)
+         FAC101 = FS1 * FAC01(LAY)
+         FAC111 = FS1 * FAC11(LAY)
+
+         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(5) + JS
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(5) + JS
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(5) + JS1
+         
          DO 3000 IG = 1, NG(5)
-            TAUG(LAY,IG) = SPECCOMB * 
+            TAUG(LAY,IG) =  SPECCOMB * 
      &          (FAC000 * ABSB(IND0,IG) +
-     &           FAC100 * ABSB(IND0+1,IG) +
-     &           FAC010 * ABSB(IND0+5,IG) +
-     &           FAC110 * ABSB(IND0+6,IG) +
-     &           FAC001 * ABSB(IND1,IG) + 
-     &           FAC101 * ABSB(IND1+1,IG) +
-     &           FAC011 * ABSB(IND1+5,IG) +
-     &           FAC111 * ABSB(IND1+6,IG))
-     &           + WX(1,LAY) * CCL4(IG)
-            FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
-     &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
+     &          FAC100 * ABSB(IND0+1,IG) +
+     &          FAC010 * ABSB(IND0+5,IG) +
+     &          FAC110 * ABSB(IND0+6,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSB(IND1,IG) + 
+     &          FAC101 * ABSB(IND1+1,IG) +
+     &          FAC011 * ABSB(IND1+5,IG) +
+     &          FAC111 * ABSB(IND1+6,IG)) 
+     &          + WX(1,LAY) * CCL4(IG)
+            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
+     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
  3000    CONTINUE
  3500 CONTINUE
 
@@ -1042,7 +1551,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB6
 
-C     BAND 6:  820-980 cm-1 (low - H2O; high - nothing)
+C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2)
+C                           (high key - nothing; high minor - CFC11, CFC12)
 
       PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
@@ -1056,32 +1566,52 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K6/       KA(5,13,MG), SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K6/       KA(5,13,MG), FORREF(4,MG), SELFREF(10,MG), 
+     &                  KA_MCO2(19,MG)
 
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       DIMENSION ABSA(65,MG)
-      DIMENSION FRACREFA(MG),ABSCO2(MG), CFC11ADJ(MG), CFC12(MG)
+      DIMENSION FRACREFA(MG),CFC11ADJ(MG), CFC12(MG)
+      REAL KA_MCO2, MINORFRAC
+      
+C Planck fraction mapping level : P = 473.4280 mb, T = 259.83 K
+      DATA FRACREFA /
+     &1.4353E-01,1.4774E-01,1.4467E-01,1.3785E-01,1.2376E-01,1.0214E-01,
+     &8.1984E-02,6.1152E-02,4.0987E-02,4.5067E-03,4.0020E-03,3.1772E-03,
+     &2.3458E-03,1.5025E-03,5.7415E-04,8.2970E-05/
 
-C     From P = 706 mb.
-      DATA FRACREFA/
-     &    0.13739009,0.14259538,0.14033118,0.13547136,
-     &    0.12569460,0.11028396,0.08626066,0.06245148,
-     &    0.04309394,0.00473551,0.00403920,0.00321695,
-     &    0.00232470,0.00147662,0.00056095,0.00007373/
+C Minor gas mapping level:
+C     LOWER - CO2, P = 706.2720 mb, T = 294.2 K
+C     UPPER - CFC11, CFC12
+
 C      DATA CFC11/
 C     &     0., 0., 26.5435, 108.850,
 C     &     58.7804, 54.0875, 41.1065, 35.6120,
 C     &     41.2328, 47.7402, 79.1026, 64.3005,
 C     &     108.206, 141.617, 186.565, 58.4782/
 C     CFC11 is multiplied by 1.385 to account for the 1060-1107 cm-1 band.
+
       DATA CFC11ADJ/
      &     0.,  0., 36.7627,    150.757,    
      &     81.4109, 74.9112, 56.9325, 49.3226,  
@@ -1093,34 +1623,56 @@ C     CFC11 is multiplied by 1.385 to account for the 1060-1107 cm-1 band.
      &     18.4062, 13.9534, 22.6268, 24.2604,
      &     30.0088, 26.3634, 15.8237, 57.5050/
 
-      DATA ABSCO2/
-     &     7.44852E-05, 6.29208E-05, 7.34031E-05, 6.65218E-05,
-     &     7.87511E-05, 1.22489E-04, 3.39785E-04, 9.33040E-04,
-     &     1.54323E-03, 4.07220E-04, 4.34332E-04, 8.76418E-05,
-     &     9.80381E-05, 3.51680E-05, 5.31766E-05, 1.01542E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and
-C     temperature. The water vapor self-continuum is interpolated
-C     (in temperature) separately.  
+C     temperature. The water vapor self-continuum and foreign continuum
+C     is interpolated (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+ 
       DO 2500 LAY = 1, LAYTROP
+
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 2.0+(RATCO2-2.0)**0.77
+            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+     &           *COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(6) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(6) + 1
          INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
          DO 2000 IG = 1, NG(6)
-            TAUG(LAY,IG) = COLH2O(LAY) * 
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG)))
+            ABSCO2 =  (KA_MCO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_MCO2(INDM+1,IG) - KA_MCO2(INDM,IG)))
+            TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
-     &           FAC11(LAY) * ABSA(IND1+1,IG) + 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY)*
-     &           (SELFREF(INDS+1,IG)-SELFREF(INDS,IG))))
+     &           FAC11(LAY) * ABSA(IND1+1,IG)) 
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLCO2 * ABSCO2
      &           + WX(2,LAY) * CFC11ADJ(IG)
      &           + WX(3,LAY) * CFC12(IG)
-     &           + CO2MULT(LAY) * ABSCO2(IG)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -1142,7 +1694,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB7
 
-C     BAND 7:  980-1080 cm-1 (low - H2O,O3; high - O3)
+C     BAND 7:  980-1080 cm-1 (low key - H2O,O3; low minor - CO2)
+C                            (high key - O3; high minor - CO2)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -1157,126 +1710,359 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
-     &                  FAC10(MXLAY),FAC11(MXLAY)                             
+     &                  FAC10(MXLAY),FAC11(MXLAY) 
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K7/       KA(9,5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K7/       KA(9,5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+     &                  SELFREF(10,MG), KA_MCO2(9,19,MG), KB_MCO2(19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       DIMENSION ABSA(585,MG),ABSB(235,MG)
-      DIMENSION FRACREFA(MG,9),FRACREFB(MG),ABSCO2(MG)
+      DIMENSION FRACREFA(MG,9),FRACREFB(MG)
+      REAL KA_MCO2, KB_MCO2, MINORFRAC
 
-      DATA FRACREFA/
-     &  0.16461779, 0.14889984, 0.14233345, 0.13156526,
-     &  0.11679733, 0.09988949, 0.08078653, 0.06006384,
-     &  0.04028391, 0.00435899, 0.00359173, 0.00281707,
-     &  0.00206767, 0.00135012, 0.00050720, 0.00007146,
-     &  0.16442357, 0.14944240, 0.14245804, 0.13111183,
-     &  0.11688625, 0.09983791, 0.08085148, 0.05993948,
-     &  0.04028057, 0.00435939, 0.00358708, 0.00284036,
-     &  0.00208869, 0.00133256, 0.00049260, 0.00006931,
-     &  0.16368519, 0.15018989, 0.14262174, 0.13084342,
-     &  0.11682195, 0.09996257, 0.08074036, 0.05985692,
-     &  0.04045362, 0.00436208, 0.00358257, 0.00287122,
-     &  0.00211004, 0.00133804, 0.00049260, 0.00006931,
-     &  0.16274056, 0.15133780, 0.14228874, 0.13081114,
-     &  0.11688486, 0.09979610, 0.08073687, 0.05996741,
-     &  0.04040616, 0.00439869, 0.00368910, 0.00293041,
-     &  0.00211604, 0.00133536, 0.00049260, 0.00006931,
-     &  0.16176532, 0.15207882, 0.14226955, 0.13079646,
-     &  0.11688191, 0.09966998, 0.08066384, 0.06020275,
-     &  0.04047901, 0.00446696, 0.00377456, 0.00294410,
-     &  0.00211082, 0.00133536, 0.00049260, 0.00006931,
-     &  0.15993737, 0.15305527, 0.14259829, 0.13078023,
-     &  0.11686983, 0.09980131, 0.08058286, 0.06031430,
-     &  0.04082833, 0.00450509, 0.00377574, 0.00294823,
-     &  0.00210977, 0.00133302, 0.00049260, 0.00006931,
-     &  0.15371189, 0.15592396, 0.14430280, 0.13076764,
-     &  0.11720382, 0.10023471, 0.08066396, 0.06073554,
-     &  0.04121581, 0.00451202, 0.00377832, 0.00294609,
-     &  0.00210943, 0.00133336, 0.00049260, 0.00006931,
-     &  0.14262275, 0.14572631, 0.14560597, 0.13736825,
-     &  0.12271351, 0.10419556, 0.08294533, 0.06199794,
-     &  0.04157615, 0.00452842, 0.00377704, 0.00293852,
-     &  0.00211034, 0.00133278, 0.00049259, 0.00006931,
-     &  0.14500433, 0.14590444, 0.14430299, 0.13770708,
-     &  0.12288283, 0.10350952, 0.08269450, 0.06130579,
-     &  0.04144571, 0.00452096, 0.00377382, 0.00294532,
-     &  0.00210943, 0.00133228, 0.00049260, 0.00006931/
+C Planck fraction mapping level : P = 706.27 mb, T = 278.94 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.6312E-01,1.4949E-01,1.4305E-01,1.3161E-01,1.1684E-01,9.9900E-02,
+     &8.0912E-02,6.0203E-02,4.0149E-02,4.3365E-03,3.5844E-03,2.8019E-03,
+     &2.0756E-03,1.3449E-03,5.0492E-04,7.1194E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.6329E-01,1.4989E-01,1.4328E-01,1.3101E-01,1.1691E-01,9.9754E-02,
+     &8.0956E-02,5.9912E-02,4.0271E-02,4.3298E-03,3.5626E-03,2.8421E-03,
+     &2.1031E-03,1.3360E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.6236E-01,1.5081E-01,1.4341E-01,1.3083E-01,1.1684E-01,9.9701E-02,
+     &8.0956E-02,5.9884E-02,4.0245E-02,4.3837E-03,3.6683E-03,2.9250E-03,
+     &2.0969E-03,1.3320E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.6096E-01,1.5183E-01,1.4354E-01,1.3081E-01,1.1687E-01,9.9619E-02,
+     &8.0947E-02,5.9899E-02,4.0416E-02,4.4389E-03,3.7280E-03,2.9548E-03,
+     &2.0977E-03,1.3305E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.5661E-01,1.5478E-01,1.4414E-01,1.3097E-01,1.1695E-01,9.9823E-02,
+     &8.0750E-02,6.0100E-02,4.0741E-02,4.4598E-03,3.7366E-03,2.9521E-03,
+     &2.0980E-03,1.3297E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.4879E-01,1.5853E-01,1.4586E-01,1.3162E-01,1.1729E-01,1.0031E-01,
+     &8.0908E-02,6.0460E-02,4.1100E-02,4.4578E-03,3.7388E-03,2.9508E-03,
+     &2.0986E-03,1.3288E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.4117E-01,1.4838E-01,1.4807E-01,1.3759E-01,1.2218E-01,1.0228E-01,
+     &8.2130E-02,6.1546E-02,4.1522E-02,4.4577E-03,3.7428E-03,2.9475E-03,
+     &2.0997E-03,1.3277E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.4018E-01,1.4207E-01,1.3919E-01,1.3332E-01,1.2325E-01,1.0915E-01,
+     &9.0280E-02,6.5554E-02,4.1852E-02,4.4707E-03,3.7572E-03,2.9364E-03,
+     &2.1023E-03,1.3249E-03,4.8965E-04,6.8900E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.4863E-01,1.4926E-01,1.4740E-01,1.3558E-01,1.1999E-01,1.0044E-01,
+     &8.1927E-02,6.0989E-02,4.0665E-02,4.4481E-03,3.7369E-03,2.9482E-03,
+     &2.0976E-03,1.3281E-03,4.8965E-04,6.8900E-05/
 
-      DATA FRACREFB/
-     &    0.15355594,0.15310939,0.14274909,0.13129812,
-     &    0.11736792,0.10118213,0.08215259,0.06165591,
-     &    0.04164486,0.00451141,0.00372837,0.00294095,
-     &    0.00215259,0.00136792,0.00051233,0.00007075/
+c Planck fraction mapping level : P=95.58 mbar, T= 215.70 K
+      DATA FRACREFB /
+     &1.5872E-01,1.5443E-01,1.4413E-01,1.3147E-01,1.1634E-01,9.8914E-02,
+     &8.0236E-02,6.0197E-02,4.0624E-02,4.4225E-03,3.6688E-03,2.9074E-03,
+     &2.0862E-03,1.3039E-03,4.8561E-04,6.8854E-05/
 
-      DATA ABSCO2/
-     &     9.30038E-05, 1.74061E-04, 2.09293E-04, 2.52360E-04,
-     &     3.13404E-04, 4.16619E-04, 6.27394E-04, 1.29386E-03,
-     &     4.05192E-03, 3.97050E-03, 7.00634E-04, 6.06617E-04,
-     &     7.66978E-04, 6.70661E-04, 7.89971E-04, 7.55709E-04/
+C Minor gas mapping level :
+C     LOWER - CO2, P = 706.2620 mbar, T= 278.94 K
+C     UPPER - CO2, P = 12.9350 mbar, T = 234.01 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
-      STRRAT1 = 8.21104E4
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower atmosphere.
+
+C     P = 706.2620 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,3)/CHI_MLS(3,3)
+
+C     P = 706.2720 mb
+      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(3,3)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately. 
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLO3(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OO3(LAY)*COLO3(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
-         SPECMULT = 8.*SPECPARM
+         SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OO3_1(LAY)*COLO3(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MCO2 = COLH2O(LAY) + REFRAT_M_A*COLO3(LAY)
+         SPECPARM_MCO2 = COLH2O(LAY)/SPECCOMB_MCO2
+         IF (SPECPARM_MCO2 .GE. ONEMINUS) SPECPARM_MCO2 = ONEMINUS
+         SPECMULT_MCO2 = 8.*SPECPARM_MCO2
+
+         JMCO2 = 1 + INT(SPECMULT_MCO2)
+         FMCO2 = AMOD(SPECMULT_MCO2,1.0)
+
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 3.0+(RATCO2-3.0)**0.79
+            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+     &           *COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(7) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(7) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(7) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(7)
-            TAUG(LAY,IG) = SPECCOMB * 
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(7)
+
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               TAUG(LAY,IG) = SPECCOMB *
      &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-     &           + CO2MULT(LAY) * ABSCO2(IG)
-         FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+     &          FAC100 * ABSA(IND0+1,IG) +
+     &          FAC200 * ABSA(IND0+2,IG) +
+     &          FAC010 * ABSA(IND0+9,IG) +
+     &          FAC110 * ABSA(IND0+10,IG) +
+     &          FAC210 * ABSA(IND0+11,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSA(IND1,IG) + 
+     &          FAC101 * ABSA(IND1+1,IG) +
+     &          FAC201 * ABSA(IND1+2,IG) +
+     &          FAC011 * ABSA(IND1+9,IG) +
+     &          FAC111 * ABSA(IND1+10,IG) +
+     &          FAC211 * ABSA(IND1+11,IG)) 
+     &          + TAUSELF + TAUFOR
+     &          + ADJCOLCO2*ABSCO2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(7)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLCO2*ABSCO2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(7)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &         (FAC000 * ABSA(IND0,IG) +
+     &          FAC100 * ABSA(IND0+1,IG) +
+     &          FAC010 * ABSA(IND0+9,IG) +
+     &          FAC110 * ABSA(IND0+10,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSA(IND1,IG) + 
+     &          FAC101 * ABSA(IND1+1,IG) +
+     &          FAC011 * ABSA(IND1+9,IG) +
+     &          FAC111 * ABSA(IND1+10,IG)) 
+     &          + TAUSELF + TAUFOR
+     &          + ADJCOLCO2*ABSCO2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020    CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
+
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 2.0+(RATCO2-2.0)**0.79
+            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+     &           *COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(7) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(7) + 1
+         INDM = INDMINOR(LAY)
+
          DO 3000 IG = 1, NG(7)
-            TAUG(LAY,IG) = COLO3(LAY) *
+            ABSCO2 = KB_MCO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MCO2(INDM+1,IG) - KB_MCO2(INDM,IG))
+            TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
-     &           + CO2MULT(LAY) * ABSCO2(IG)
+     &           + ADJCOLCO2 * ABSCO2
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
+
+C EMPIRICAL MODIFICATION TO CODE TO IMPROVE STRATOSPHERIC COOLING RATES
+C FOR O3 
+
+         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+
  3500 CONTINUE
 
       RETURN
@@ -1286,7 +2072,8 @@ C     vapor self-continuum is interpolated (in temperature) separately.
 
       SUBROUTINE TAUGB8
 
-C     BAND 8:  1080-1180 cm-1 (low (i.e.>~300mb) - H2O; high - O3)
+C     BAND 8:  1080-1180 cm-1 (low key - H2O; low minor - CO2,O3,N2O)
+C                             (high key - O3; high minor - CO2, N2O)
 
       PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
@@ -1300,35 +2087,56 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
-      COMMON /K8/       KA(5,7,MG), KB(5,7:59,MG), SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K8/       KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
+     &                  SELFREF(10,MG), KA_MCO2(19,MG), KA_MO3(19,MG),
+     &                  KA_MN2O(19,MG), KB_MCO2(19,MG), KB_MN2O(19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      REAL KA,KB,N2OMULT,N2OREF
-      DIMENSION ABSA(35,MG),ABSB(265,MG),CFC12(MG),CFC22ADJ(MG)
-      DIMENSION ABSN2OA(MG),ABSN2OB(MG)
-      DIMENSION FRACREFA(MG),FRACREFB(MG),ABSCO2A(MG),ABSCO2B(MG)
-      DIMENSION N2OREF(59),H2OREF(59),O3REF(59)
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
-C     From P = 1053.6 mb.
-      DATA FRACREFA/
-     &    0.15309700,0.15450300,0.14458799,0.13098200,
-     &    0.11817900,0.09953490,0.08132080,0.06139960,
-     &    0.04132010,0.00446788,0.00372533,0.00294053,
-     &    0.00211371,0.00128122,0.00048050,0.00006759/
-C     From P = 28.9 mb.
-      DATA FRACREFB/
-     &    0.14105400,0.14728899,0.14264800,0.13331699,
-     &    0.12034100,0.10467000,0.08574980,0.06469390,
-     &    0.04394640,0.00481284,0.00397375,0.00315006,
-     &    0.00228636,0.00144606,0.00054604,0.00007697/
+      REAL KA,KB,KA_MCO2,KA_MO3,KA_MN2O,KB_MCO2,KB_MN2O, MINORFRAC              
+
+      DIMENSION ABSA(65,MG),ABSB(235,MG),CFC12(MG),CFC22ADJ(MG)
+      DIMENSION FRACREFA(MG),FRACREFB(MG)
+
+C Planck fraction mapping level : P=473.4280 mb, T = 259.83 K
+      DATA FRACREFA /
+     &1.6004E-01,1.5437E-01,1.4502E-01,1.3084E-01,1.1523E-01,9.7743E-02,
+     &8.0376E-02,6.0261E-02,4.1111E-02,4.4772E-03,3.6511E-03,2.9154E-03,
+     &2.1184E-03,1.3048E-03,4.6637E-04,6.5624E-05/
+
+C Planck fraction mapping level : P=95.5835 mb, T= 215.7 K
+      DATA FRACREFB /
+     &1.4987E-01,1.4665E-01,1.4154E-01,1.3200E-01,1.1902E-01,1.0352E-01,
+     &8.4939E-02,6.4105E-02,4.3190E-02,4.5129E-03,3.7656E-03,2.8733E-03,
+     &2.0947E-03,1.3201E-03,5.1832E-04,7.7473E-05/
+
+C Minor gas mapping level:
+C     LOWER - CO2, P = 1053.63 mb, T = 294.2 K
+C     LOWER - O3,  P = 317.348 mb, T = 240.77 K
+C     LOWER - N2O, P = 706.2720 mb, T= 278.94 K
+C     LOWER - CFC12,CFC11
+C     UPPER - CO2, P = 35.1632 mb, T = 223.28 K
+C     UPPER - N2O, P = 8.716e-2 mb, T = 226.03 K
 
       DATA CFC12/
      &     85.4027, 89.4696, 74.0959, 67.7480,
@@ -1343,121 +2151,101 @@ C     and 1290-1335 cm-1 bands.
      &     51.3018, 7.07911, 5.86928, 0.398693,
      &     2.82885, 9.12751, 6.28271, 0./
 
-      DATA ABSCO2A/
-     &     1.11233E-05, 3.92400E-05, 6.62059E-05, 8.51687E-05,
-     &     7.79035E-05, 1.34058E-04, 2.82553E-04, 5.41741E-04,
-     &     1.47029E-05, 2.34982E-05, 6.91094E-08, 8.48917E-08,
-     &     6.58783E-08, 4.64849E-08, 3.62742E-08, 3.62742E-08/
-      DATA ABSCO2B/
-     &     4.10977E-09, 5.65200E-08, 1.70800E-07, 4.16840E-07,
-     &     9.53684E-07, 2.36468E-06, 7.29502E-06, 4.93883E-05, 
-     &     5.10440E-04, 9.75248E-04, 1.36495E-03, 2.40451E-03,
-     &     4.50277E-03, 2.24486E-02, 4.06756E-02, 2.17447E-10/
-      DATA ABSN2OA/
-     &     1.28527E-02,5.28651E-02,1.01668E-01,1.57224E-01,
-     &     2.76947E-01,4.93048E-01,6.71387E-01,3.48809E-01,
-     &     4.19840E-01,3.13558E-01,2.44432E-01,2.05108E-01,
-     &     1.21423E-01,1.22158E-01,1.49702E-01,1.47799E-01/
-      DATA ABSN2OB/
-     &     3.15864E-03,4.87347E-03,8.63235E-03,2.16053E-02,
-     &     3.63699E-02,7.89149E-02,3.53807E-01,1.27140E-00,
-     &     2.31464E-00,7.75834E-02,5.15063E-02,4.07059E-02,
-     &     5.91947E-02,5.83546E-02,3.12716E-01,1.47456E-01/
-
-      DATA H2OREF/
-     &     1.87599E-02,1.22233E-02,5.89086E-03,2.76753E-03,1.40651E-03, 
-     &     7.59698E-04,3.88758E-04,1.65422E-04,3.71895E-05,7.47648E-06, 
-     &     4.30818E-06,3.33194E-06,3.20393E-06,3.16186E-06,3.25235E-06, 
-     &     3.42258E-06,3.62884E-06,3.91482E-06,4.14875E-06,4.30810E-06,
-     &     4.44204E-06,4.57783E-06,4.70865E-06,4.79432E-06,4.86971E-06, 
-     &     4.92603E-06,4.96688E-06,4.99628E-06,5.05266E-06,5.12658E-06, 
-     &     5.25028E-06,5.35708E-06,5.45085E-06,5.48304E-06,5.50000E-06, 
-     &     5.50000E-06,5.45359E-06,5.40468E-06,5.35576E-06,5.25327E-06,
-     &     5.14362E-06,5.03396E-06,4.87662E-06,4.69787E-06,4.51911E-06, 
-     &     4.33600E-06,4.14416E-06,3.95232E-06,3.76048E-06,3.57217E-06, 
-     &     3.38549E-06,3.19881E-06,3.01212E-06,2.82621E-06,2.64068E-06, 
-     &     2.45515E-06,2.26962E-06,2.08659E-06,1.93029E-06/
-      DATA N2OREF/
-     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
-     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
-     &     2.76714E-07,2.64709E-07,2.42847E-07,2.09547E-07,1.71945E-07,
-     &     1.37491E-07,1.13319E-07,1.00354E-07,9.12812E-08,8.54633E-08,
-     &     8.03631E-08,7.33718E-08,6.59754E-08,5.60386E-08,4.70901E-08,
-     &     3.99774E-08,3.29786E-08,2.60642E-08,2.10663E-08,1.65918E-08,
-     &     1.30167E-08,1.00900E-08,7.62490E-09,6.11592E-09,4.66725E-09,
-     &     3.28574E-09,2.84838E-09,2.46198E-09,2.07557E-09,1.85507E-09,
-     &     1.65675E-09,1.45843E-09,1.31948E-09,1.20716E-09,1.09485E-09,
-     &     9.97803E-10,9.31260E-10,8.64721E-10,7.98181E-10,7.51380E-10,
-     &     7.13670E-10,6.75960E-10,6.38250E-10,6.09811E-10,5.85998E-10,
-     &     5.62185E-10,5.38371E-10,5.15183E-10,4.98660E-10/
-      DATA O3REF/
-     &     3.01700E-08,3.47254E-08,4.24769E-08,5.27592E-08,6.69439E-08,
-     &     8.71295E-08,1.13911E-07,1.56771E-07,2.17878E-07,3.24430E-07,
-     &     4.65942E-07,5.68057E-07,6.96065E-07,1.11863E-06,1.76175E-06,
-     &     2.32689E-06,2.95769E-06,3.65930E-06,4.59503E-06,5.31891E-06,
-     &     5.96179E-06,6.51133E-06,7.06350E-06,7.69169E-06,8.25771E-06,
-     &     8.70824E-06,8.83245E-06,8.71486E-06,8.09434E-06,7.33071E-06,
-     &     6.31014E-06,5.36717E-06,4.48289E-06,3.83913E-06,3.28270E-06,
-     &     2.82351E-06,2.49061E-06,2.16453E-06,1.83845E-06,1.66182E-06,
-     &     1.50517E-06,1.34852E-06,1.19718E-06,1.04822E-06,8.99264E-07,
-     &     7.63432E-07,6.53806E-07,5.44186E-07,4.34564E-07,3.64210E-07,
-     &     3.11938E-07,2.59667E-07,2.07395E-07,1.91456E-07,1.93639E-07,
-     &     1.95821E-07,1.98004E-07,2.06442E-07,2.81546E-07/
-
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
-C     temperature.  
-      DO 2500 LAY = 1, LAYSWTCH
-         FP = FAC01(LAY) + FAC11(LAY)
+C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
+C     self-continuum and foreign continuum is interpolated (in temperature) 
+C     separately.
+
+      HVRTAU = '$Revision$'
+
+      DO 2500 LAY = 1, LAYTROP
+
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 2.0+(RATCO2-2.0)**0.65
+            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+     &           *COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(8) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(8) + 1
          INDS = INDSELF(LAY)
-         COLREF1 = N2OREF(JP(LAY))
-         COLREF2 = N2OREF(JP(LAY)+1)
-         WCOMB1 = H2OREF(JP(LAY))
-         WCOMB2 = H2OREF(JP(LAY)+1)
-         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
-         CURRN2O = COLH2O(LAY) * RATIO
-         N2OMULT = COLN2O(LAY) - CURRN2O 
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
          DO 2000 IG = 1, NG(8)
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG)))
+            ABSCO2 =  (KA_MCO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_MCO2(INDM+1,IG) - KA_MCO2(INDM,IG)))
+            ABSO3 =  (KA_MO3(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_MO3(INDM+1,IG) - KA_MO3(INDM,IG)))
+            ABSN2O =  (KA_MN2O(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_MN2O(INDM+1,IG) - KA_MN2O(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
-     &           FAC11(LAY) * ABSA(IND1+1,IG) + 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
+     &           FAC11(LAY) * ABSA(IND1+1,IG)) 
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLCO2*ABSCO2
+     &           + COLO3(LAY) * ABSO3
+     &           + COLN2O(LAY) * ABSN2O
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
-     &           + CO2MULT(LAY) * ABSCO2A(IG)
-     &           + N2OMULT * ABSN2OA(IG)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
 
-      DO 3500 LAY = LAYSWTCH+1, NLAYERS
-         FP = FAC01(LAY) + FAC11(LAY)
-         IND0 = ((JP(LAY)-7)*5+(JT(LAY)-1))*NSPB(8) + 1
-         IND1 = ((JP(LAY)-6)*5+(JT1(LAY)-1))*NSPB(8) + 1
-         COLREF1 = N2OREF(JP(LAY))
-         COLREF2 = N2OREF(JP(LAY)+1)
-         WCOMB1 = O3REF(JP(LAY))
-         WCOMB2 = O3REF(JP(LAY)+1)
-         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
-         CURRN2O = COLO3(LAY) * RATIO
-         N2OMULT = COLN2O(LAY) - CURRN2O 
+      DO 3500 LAY = LAYTROP+1, NLAYERS
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/COLDRY(LAY)
+         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 2.0+(RATCO2-2.0)**0.65
+            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+     &           * COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(8) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(8) + 1
+         INDM = INDMINOR(LAY)
+
          DO 3000 IG = 1, NG(8)
+            ABSCO2 =  (KB_MCO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MCO2(INDM+1,IG) - KB_MCO2(INDM,IG)))
+            ABSN2O =  (KB_MN2O(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MN2O(INDM+1,IG) - KB_MN2O(INDM,IG)))
             TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           + ADJCOLCO2*ABSCO2
+     &           + COLN2O(LAY)*ABSN2O 
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
-     &           + CO2MULT(LAY) * ABSCO2B(IG)
-     &           + N2OMULT * ABSN2OB(IG)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1469,7 +2257,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB9
 
-C     BAND 9:  1180-1390 cm-1 (low - H2O,CH4; high - CH4)
+C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
+C                             (high key - CH4; high minor - N2O)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -1484,191 +2273,348 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K9/       KA(11,5,13,MG),KB(5,13:59,MG),SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K9/       KA(9,5,13,MG),KB(5,13:59,MG),FORREF(4,MG),
+     &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      REAL KA,KB,N2OREF,N2OMULT
-      DIMENSION ABSA(715,MG),ABSB(235,MG),ABSN2O(3*MG)
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
+      REAL KA,KB
+      REAL KA_MN2O,KB_MN2O,MINORFRAC,N2OM1,N2OM2
+      DIMENSION ABSA(585,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
-      DIMENSION N2OREF(13),H2OREF(13),CH4REF(13),ETAREF(11)
 
-      DATA FRACREFA/
-C     From P = 1053.6 mb.
-     &    0.16898900,0.15898301,0.13575301,0.12600900,
-     &    0.11545800,0.09879170,0.08106830,0.06063440,
-     &    0.03988780,0.00421760,0.00346635,0.00278779,
-     &    0.00206225,0.00132324,0.00050033,0.00007038,
-     &    0.18209399,0.15315101,0.13571000,0.12504999,
-     &    0.11379100,0.09680810,0.08008570,0.05970280,
-     &    0.03942860,0.00413383,0.00343186,0.00275558,
-     &    0.00204657,0.00130219,0.00045454,0.00005664,
-     &    0.18459500,0.15512000,0.13395500,0.12576801,
-     &    0.11276800,0.09645190,0.07956650,0.05903340,
-     &    0.03887050,0.00412226,0.00339453,0.00273518,
-     &    0.00196922,0.00119411,0.00040263,0.00005664,
-     &    0.18458800,0.15859900,0.13278100,0.12589300,
-     &    0.11272700,0.09599660,0.07903030,0.05843600,
-     &    0.03843400,0.00405181,0.00337980,0.00263818,
-     &    0.00186869,0.00111807,0.00040263,0.00005664,
-     &    0.18459301,0.16176100,0.13235000,0.12528200,
-     &    0.11237100,0.09618840,0.07833760,0.05800770,
-     &    0.03787610,0.00408253,0.00330363,0.00250445,
-     &    0.00176725,0.00111753,0.00040263,0.00005664,
-     &    0.18454400,0.16505300,0.13221300,0.12476600,
-     &    0.11158300,0.09618120,0.07797340,0.05740380,
-     &    0.03742820,0.00392691,0.00312208,0.00246306,
-     &    0.00176735,0.00111721,0.00040263,0.00005664,
-     &    0.18452001,0.16697501,0.13445500,0.12391300,
-     &    0.11059100,0.09596890,0.07761050,0.05643200,
-     &    0.03686520,0.00377086,0.00309351,0.00246297,
-     &    0.00176765,0.00111700,0.00040263,0.00005664,
-     &    0.18460999,0.16854499,0.13922299,0.12266400,
-     &    0.10962200,0.09452030,0.07653800,0.05551340,
-     &    0.03609660,0.00377043,0.00309367,0.00246304,
-     &    0.00176749,0.00111689,0.00040263,0.00005664,
-     &    0.18312500,0.16787501,0.14720701,0.12766500,
-     &    0.10890900,0.08935530,0.07310870,0.05443140,
-     &    0.03566380,0.00376446,0.00309521,0.00246510,
-     &    0.00176139,0.00111543,0.00040263,0.00005664/
-C     From P = 0.071 mb.
-      DATA FRACREFB/
-     &    0.20148601,0.15252700,0.13376500,0.12184600,
-     &    0.10767800,0.09307410,0.07674570,0.05876940,
-     &    0.04001480,0.00424612,0.00346896,0.00269954,
-     &    0.00196864,0.00122562,0.00043628,0.00004892/
+C Planck fractions mapping level : P=212.7250 mb, T = 223.06 K
 
-      DATA N2OREF/
-     &     3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,3.20000E-07,
-     &     3.19652E-07,3.15324E-07,3.03830E-07,2.94221E-07,2.84953E-07,
-     &     2.76714E-07,2.64709E-07,2.42847E-07/
-      DATA H2OREF/
-     &     1.8759999E-02, 1.2223309E-02, 5.8908667E-03, 2.7675382E-03,  
-     &     1.4065107E-03, 7.5969833E-04, 3.8875898E-04, 1.6542293E-04,  
-     &     3.7189537E-05, 7.4764857E-06, 4.3081886E-06, 3.3319423E-06,  
-     &     3.2039343E-06/  
-      DATA CH4REF/
-     &     1.7000001E-06, 1.7000001E-06, 1.6998713E-06, 1.6904165E-06,  
-     &     1.6671424E-06, 1.6350652E-06, 1.6097551E-06, 1.5590465E-06,  
-     &     1.5119849E-06, 1.4741138E-06, 1.4384609E-06, 1.4002215E-06,  
-     &     1.3573376E-06/
-      DATA ETAREF/
-     &     0.,0.125,0.25,0.375,0.5,0.625,0.75,0.875,0.96,0.99,1.0/
-      DATA ABSN2O/
-C     From P = 952.
-     &     3.26267E-01,2.42869E-00,1.15455E+01,7.39478E-00,
-     &     5.16550E-00,2.54474E-00,3.53082E-00,3.82278E-00,
-     &     1.81297E-00,6.65313E-01,1.23652E-01,1.83895E-03,
-     &     1.70592E-03,2.68434E-09,0.,0.,
-C     From P = 620.
-     &     2.08632E-01,1.11865E+00,4.95975E+00,8.10907E+00,
-     &     1.10408E+01,5.45460E+00,4.18611E+00,3.53422E+00,
-     &     2.54164E+00,3.65093E-01,5.84480E-01,2.26918E-01,
-     &     1.36230E-03,5.54400E-10,6.83703E-10,0.,
-C     From P=313.
-     &     6.20022E-02,2.69521E-01,9.81928E-01,1.65004E-00,
-     &     3.08089E-00,5.38696E-00,1.14600E+01,2.41211E+01,
-     &     1.69655E+01,1.37556E-00,5.43254E-01,3.52079E-01,
-     &     4.31888E-01,4.82523E-06,5.74747E-11,0./
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.8129E-01,1.6119E-01,1.3308E-01,1.2342E-01,1.1259E-01,9.7580E-02,
+     &7.9176E-02,5.8541E-02,3.9084E-02,4.2419E-03,3.4314E-03,2.6935E-03,
+     &1.9404E-03,1.2218E-03,4.5263E-04,6.0909E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.9665E-01,1.5640E-01,1.3101E-01,1.2153E-01,1.1037E-01,9.6043E-02,
+     &7.7856E-02,5.7547E-02,3.8670E-02,4.1955E-03,3.4104E-03,2.6781E-03,
+     &1.9245E-03,1.2093E-03,4.4113E-04,6.0913E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &2.0273E-01,1.5506E-01,1.3044E-01,1.2043E-01,1.0952E-01,9.5384E-02,
+     &7.7157E-02,5.7176E-02,3.8379E-02,4.1584E-03,3.3836E-03,2.6412E-03,
+     &1.8865E-03,1.1791E-03,4.2094E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &2.0272E-01,1.5963E-01,1.2913E-01,1.2060E-01,1.0820E-01,9.4685E-02,
+     &7.6544E-02,5.6851E-02,3.8155E-02,4.0913E-03,3.3442E-03,2.6054E-03,
+     &1.8875E-03,1.1263E-03,3.7743E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &2.0280E-01,1.6353E-01,1.2910E-01,1.1968E-01,1.0725E-01,9.4112E-02,
+     &7.5828E-02,5.6526E-02,3.7972E-02,4.0205E-03,3.3063E-03,2.5681E-03,
+     &1.8386E-03,1.0757E-03,3.5301E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &2.0294E-01,1.6840E-01,1.2852E-01,1.1813E-01,1.0724E-01,9.2946E-02,
+     &7.5029E-02,5.6158E-02,3.7744E-02,3.9632E-03,3.2434E-03,2.5275E-03,
+     &1.7558E-03,1.0080E-03,3.5301E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &2.0313E-01,1.7390E-01,1.2864E-01,1.1689E-01,1.0601E-01,9.1791E-02,
+     &7.4224E-02,5.5500E-02,3.7374E-02,3.9214E-03,3.1984E-03,2.4162E-03,
+     &1.6394E-03,9.7275E-04,3.5299E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &2.0332E-01,1.7800E-01,1.3286E-01,1.1555E-01,1.0407E-01,9.0475E-02,
+     &7.2452E-02,5.4566E-02,3.6677E-02,3.7889E-03,3.0351E-03,2.2587E-03,
+     &1.5764E-03,9.7270E-04,3.5300E-04,4.7410E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.9624E-01,1.6519E-01,1.3663E-01,1.1535E-01,1.0719E-01,9.4156E-02,
+     &7.6745E-02,5.6987E-02,3.8135E-02,4.1626E-03,3.4243E-03,2.7116E-03,
+     &1.7095E-03,9.7271E-04,3.5299E-04,4.7410E-05/
+
+C Planck fraction mapping level : P=3.20e-2 mb, T = 197.92 K
+
+      DATA FRACREFB /
+     &2.0914E-01,1.5077E-01,1.2878E-01,1.1856E-01,1.0695E-01,9.3048E-02,
+     &7.7645E-02,6.0785E-02,4.0642E-02,4.0499E-03,3.3931E-03,2.6363E-03,
+     &1.9151E-03,1.1963E-03,4.3471E-04,5.1421E-05/
+
+C Minor gas mapping level :
+C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
+C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      STRRAT = 21.6282
-      IOFF = 0
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+C     P = 212 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(6,9)
+
+C     P = 706.272 mb 
+      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT*COLCH4(LAY)
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCH4(LAY)*COLCH4(LAY)
          SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
-         JFRAC = JS
          FS = AMOD(SPECMULT,1.0)
-         FFRAC = FS
-         IF (JS .EQ. 8) THEN
-            IF (FS. LE. 0.68) THEN
-               FS = FS/0.68
-            ELSEIF (FS .LE. 0.92) THEN
-               JS = JS + 1
-               FS = (FS-0.68)/0.24
-            ELSE
-               JS = JS + 2
-               FS = (FS-0.92)/0.08
-            ENDIF
-         ELSEIF (JS .EQ.9) THEN
-            JS = 10
-            FS = 1.
-            JFRAC = 8
-            FFRAC = 1.
-         ENDIF
-         FP = FAC01(LAY) + FAC11(LAY)
-         NS = JS + INT(FS + 0.5)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(9) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(9) + JS
-         INDS = INDSELF(LAY)
-         IF (LAY .EQ. LAYLOW) IOFF = 16
-         IF (LAY .EQ. LAYSWTCH) IOFF = 32
-         COLREF1 = N2OREF(JP(LAY))
-         COLREF2 = N2OREF(JP(LAY)+1)
-         IF (NS .EQ. 11) THEN
-            WCOMB1 = H2OREF(JP(LAY))
-            WCOMB2 = H2OREF(JP(LAY)+1)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCH4_1(LAY)*COLCH4(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MN2O = COLH2O(LAY) + REFRAT_M_A*COLCH4(LAY)
+         SPECPARM_MN2O = COLH2O(LAY)/SPECCOMB_MN2O
+         IF (SPECPARM_MN2O .GE. ONEMINUS) SPECPARM_MN2O = ONEMINUS
+         SPECMULT_MN2O = 8.*SPECPARM_MN2O
+         JMN2O = 1 + INT(SPECMULT_MN2O)
+         FMN2O = AMOD(SPECMULT_MN2O,1.0)
+
+c     In atmospheres where the amount of N2O is too great to be considered
+c     a minor species, adjust the column amount of N2O by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_N2O = COLN2O(LAY)/(COLDRY(LAY))
+         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+         IF (RATN2O .GT. 1.5) THEN
+            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
          ELSE
-            WCOMB1 = STRRAT * CH4REF(JP(LAY))/(1.-ETAREF(NS))
-            WCOMB2 = STRRAT * CH4REF(JP(LAY)+1)/(1.-ETAREF(NS))
+            ADJCOLN2O = COLN2O(LAY)
          ENDIF
-         RATIO = (COLREF1/WCOMB1)+FP*((COLREF2/WCOMB2)-(COLREF1/WCOMB1))
-         CURRN2O = SPECCOMB * RATIO
-         N2OMULT = COLN2O(LAY) - CURRN2O 
-         DO 2000 IG = 1, NG(9)
-            TAUG(LAY,IG) = SPECCOMB * 
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCH4(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(9) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(9) + JS1
+         INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(9)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG)-
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY)
+     &              * (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB *
      &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+11,IG) +
-     &           FAC110 * ABSA(IND0+12,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+11,IG) +
-     &           FAC111 * ABSA(IND1+12,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-     &           + N2OMULT * ABSN2O(IG+IOFF)
-            FRACS(LAY,IG) = FRACREFA(IG,JFRAC) + FFRAC *
-     &           (FRACREFA(IG,JFRAC+1) - FRACREFA(IG,JFRAC))
- 2000    CONTINUE
+     &          FAC100 * ABSA(IND0+1,IG) +
+     &          FAC200 * ABSA(IND0+2,IG) +
+     &          FAC010 * ABSA(IND0+9,IG) +
+     &          FAC110 * ABSA(IND0+10,IG) +
+     &          FAC210 * ABSA(IND0+11,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSA(IND1,IG) + 
+     &          FAC101 * ABSA(IND1+1,IG) +
+     &          FAC201 * ABSA(IND1+2,IG) +
+     &          FAC011 * ABSA(IND1+9,IG) +
+     &          FAC111 * ABSA(IND1+10,IG) +
+     &          FAC211 * ABSA(IND1+11,IG)) 
+     &          + TAUSELF + TAUFOR
+     &          + ADJCOLN2O*ABSN2O            
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(9)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG)-
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY)
+     &              * (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLN2O*ABSN2O            
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(9)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM,IG)-
+     &              KA_MN2O(JMN2O,INDM,IG))
+               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
+     &              KA_MN2O(JMN2O,INDM+1,IG))
+               ABSN2O = N2OM1 + MINORFRAC(LAY)
+     &              * (N2OM2 - N2OM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLN2O*ABSN2O            
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
+c     In atmospheres where the amount of N2O is too great to be considered
+c     a minor species, adjust the column amount of N2O by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_N2O = COLN2O(LAY)/(COLDRY(LAY))
+         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+         IF (RATN2O .GT. 1.5) THEN
+            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLN2O = COLN2O(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(9) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(9) + 1
+         INDM = INDMINOR(LAY)
+
          DO 3000 IG = 1, NG(9)
-            TAUG(LAY,IG) = COLCH4(LAY) *
+            ABSN2O = KB_MN2O(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MN2O(INDM+1,IG) - KB_MN2O(INDM,IG))
+            TAUG(LAY,IG) = COLCH4(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
+     &           + ADJCOLN2O*ABSN2O
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
-
       RETURN
       END
 
@@ -1677,7 +2623,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
 
       SUBROUTINE TAUGB10
 
-C     BAND 10:  1390-1480 cm-1 (low - H2O; high - H2O)
+C     BAND 10:  1390-1480 cm-1 (low key - H2O; high key - H2O)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -1691,45 +2637,68 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
-      COMMON /K10/      KA(5,13,MG), KB(5,13:59,MG)
+      COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /K10/      KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
+     &                  SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
 
-C     From P = 473 mb.
+C Planck fraction mapping level : P = 212.7250, T = 223.06 K
       DATA FRACREFA/
-     &    0.16271301,0.15141940,0.14065412,0.12899506,
-     &    0.11607002,0.10142808,0.08116794,0.06104711,
-     &    0.04146209,0.00447386,0.00372902,0.00287258,
-     &    0.00206028,0.00134634,0.00049232,0.00006927/
-C     From P = 1.17 mb.
+     & 1.6909E-01, 1.5419E-01, 1.3999E-01, 1.2637E-01,
+     & 1.1429E-01, 9.9676E-02, 8.0093E-02, 6.0283E-02,
+     & 4.1077E-02, 4.4857E-03, 3.6545E-03, 2.9243E-03,
+     & 2.0407E-03, 1.2891E-03, 4.8767E-04, 6.7748E-05/
+C Planck fraction mapping level : P = 95.58350 mb, T = 215.70 K
       DATA FRACREFB/
-     &    0.16571465,0.15262246,0.14036226,0.12620729,
-     &    0.11477834,0.09967982,0.08155201,0.06159503,
-     &    0.04196607,0.00453940,0.00376881,0.00300437,
-     &    0.00223034,0.00139432,0.00051516,0.00007095/
+     & 1.7391E-01, 1.5680E-01, 1.4419E-01, 1.2672E-01,
+     & 1.0708E-01, 9.7034E-02, 7.8545E-02, 5.9784E-02,
+     & 4.0879E-02, 4.4704E-03, 3.7150E-03, 2.9038E-03,
+     & 2.1454E-03, 1.2802E-03, 4.8328E-04, 6.7378E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
-C     temperature.  
+C     temperature.  Below LAYTROP, the water vapor self-continuum and
+C     foreign continuum is interpolated (in temperature) separately.
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(10) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(10) + 1
+         INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
          DO 2000 IG = 1, NG(10)
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
      &           FAC11(LAY) * ABSA(IND1+1,IG)) 
+     &           + TAUSELF + TAUFOR
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -1737,12 +2706,17 @@ C     temperature.
       DO 3500 LAY = LAYTROP+1, NLAYERS
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(10) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(10) + 1
+         INDF = INDFOR(LAY)
          DO 3000 IG = 1, NG(10)
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) *
+     &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
             TAUG(LAY,IG) = COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
-     &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           FAC11(LAY) * ABSB(IND1+1,IG))
+     &           + TAUFOR
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1754,7 +2728,8 @@ C     temperature.
 
       SUBROUTINE TAUGB11
 
-C     BAND 11:  1480-1800 cm-1 (low - H2O; high - H2O)
+C     BAND 11:  1480-1800 cm-1 (low - H2O; low minor - O2)
+C                              (high key - H2O; high minor - O2)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -1768,64 +2743,105 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+     &                  SELFREF(10,MG), KA_MO2(19,MG), KB_MO2(19,MG)
+
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
+      REAL KA_MO2, KB_MO2, MINORFRAC
 
-C     From P = 473 mb.
-      DATA FRACREFA/
-     &    0.14152819,0.13811260,0.14312185,0.13705885,
-     &    0.11944738,0.10570189,0.08866373,0.06565409,
-     &    0.04428961,0.00481540,0.00387058,0.00329187,
-     &    0.00238294,0.00150971,0.00049287,0.00005980/
-C     From P = 1.17 mb.
-      DATA FRACREFB/
-     &    0.10874039,0.15164889,0.15149839,0.14515044,
-     &    0.12486220,0.10725017,0.08715712,0.06463144,
-     &    0.04332319,0.00441193,0.00393819,0.00305960,
-     &    0.00224221,0.00145100,0.00055586,0.00007934/
+C Planck fraction mapping level : P=1053.63 mb, T= 294.2 K
+      DATA FRACREFA /
+     &1.4601E-01,1.3824E-01,1.4240E-01,1.3463E-01,1.1948E-01,1.0440E-01,
+     &8.8667E-02,6.5792E-02,4.3893E-02,4.7941E-03,4.0760E-03,3.3207E-03,
+     &2.4087E-03,1.3912E-03,4.3482E-04,6.0932E-05/
+C Planck fraction mapping level : P=0.353 mb, T = 262.11 K
+      DATA FRACREFB /
+     &7.2928E-02,1.4900E-01,1.6156E-01,1.5603E-01,1.3934E-01,1.1394E-01,
+     &8.8783E-02,6.2411E-02,4.0191E-02,4.4587E-03,3.9533E-03,3.0847E-03,
+     &2.2317E-03,1.4410E-03,5.6722E-04,7.7933E-05/
+
+C Minor gas mapping level :
+C     LOWER - O2, P = 706.2720 mbar, T = 278.94 K
+C     UPPER - O2, P = 4.758820 mbarm T = 250.85 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
-C     temperature.  Below LAYTROP, the water vapor self-continuum 
-C     is interpolated (in temperature) separately.  
+C     temperature.  Below LAYTROP, the water vapor self-continuum and
+C     foreign continuum is interpolated (in temperature) separately.
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(11) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(11) + 1
          INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+         SCALEO2 = COLO2(LAY)*SCALEMINOR(LAY)
          DO 2000 IG = 1, NG(11)
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG)))
+            TAUO2 =  SCALEO2 *
+     &           (KA_MO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_MO2(INDM+1,IG) - KA_MO2(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
-     &           FAC11(LAY) * ABSA(IND1+1,IG) +
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
+     &           FAC11(LAY) * ABSA(IND1+1,IG))
+     &           + TAUSELF + TAUFOR
+     &           + TAUO2
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
-
       DO 3500 LAY = LAYTROP+1, NLAYERS
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(11) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(11) + 1
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+         SCALEO2 = COLO2(LAY)*SCALEMINOR(LAY)
          DO 3000 IG = 1, NG(11)
+            TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) *
+     &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
+            TAUO2 =  SCALEO2*
+     &           (KB_MO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MO2(INDM+1,IG) - KB_MO2(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           + TAUFOR
+     &           + TAUO2
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1852,100 +2868,249 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
-     &                  FAC10(MXLAY),FAC11(MXLAY)                             
+     &                  FAC10(MXLAY),FAC11(MXLAY)  
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K12/      KA(9,5,13,MG),SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /K12/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ABSA(585,MG)
       DIMENSION FRACREFA(MG,9)
 
-      DATA FRACREFA/
-C     From P = 706.3 mb.
-     &    0.21245100,0.15164700,0.14486700,0.13075501,
-     &    0.11629600,0.09266050,0.06579930,0.04524000,
-     &    0.03072870,0.00284297,0.00234660,0.00185208,
-     &    0.00133978,0.00082214,0.00031016,0.00004363,
-     &    0.14703900,0.16937999,0.15605700,0.14159000,
-     &    0.12088500,0.10058500,0.06809110,0.05131470,
-     &    0.03487040,0.00327281,0.00250183,0.00190024,
-     &    0.00133978,0.00082214,0.00031016,0.00004363,
-     &    0.13689300,0.16610400,0.15723500,0.14299500,
-     &    0.12399400,0.09907820,0.07169690,0.05367370,
-     &    0.03671630,0.00378148,0.00290510,0.00221076,
-     &    0.00142810,0.00093527,0.00031016,0.00004363,
-     &    0.13054299,0.16273800,0.15874299,0.14279599,
-     &    0.12674300,0.09664900,0.07462200,0.05620080,
-     &    0.03789090,0.00411690,0.00322920,0.00245036,
-     &    0.00178303,0.00098595,0.00040802,0.00010150,
-     &    0.12828299,0.15824600,0.15688400,0.14449100,
-     &    0.12787800,0.09517830,0.07679350,0.05890820,
-     &    0.03883570,0.00442304,0.00346796,0.00255333,
-     &    0.00212519,0.00116168,0.00067065,0.00010150,
-     &    0.12649800,0.15195100,0.15646499,0.14569700,
-     &    0.12669300,0.09653520,0.07887920,0.06106920,
-     &    0.04043910,0.00430390,0.00364453,0.00314360,
-     &    0.00203206,0.00187787,0.00067075,0.00010150,
-     &    0.12500300,0.14460599,0.15672199,0.14724600,
-     &    0.11978900,0.10190200,0.08196710,0.06315770,
-     &    0.04240100,0.00433645,0.00404097,0.00329466,
-     &    0.00288491,0.00187803,0.00067093,0.00010150,
-     &    0.12317200,0.14118700,0.15242000,0.13794300,
-     &    0.12119200,0.10655400,0.08808350,0.06521370,
-     &    0.04505680,0.00485949,0.00477105,0.00401468,
-     &    0.00288491,0.00187786,0.00067110,0.00010150,
-     &    0.10193600,0.11693000,0.13236099,0.14053200,
-     &    0.13749801,0.12193100,0.10221000,0.07448910,
-     &    0.05205320,0.00572312,0.00476882,0.00403380,
-     &    0.00288871,0.00187396,0.00067218,0.00010150/
+C P = 174.1640 mbar, T= 215.78 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.3984E-01,1.6809E-01,1.8072E-01,1.5400E-01,1.2613E-01,9.6959E-02,
+     &5.9713E-02,3.8631E-02,2.6937E-02,3.1711E-03,2.3458E-03,1.4653E-03,
+     &1.0567E-03,6.6504E-04,2.4957E-04,3.5172E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.2745E-01,1.6107E-01,1.6568E-01,1.5436E-01,1.3183E-01,1.0166E-01,
+     &6.4506E-02,4.7756E-02,3.4472E-02,3.7189E-03,2.9349E-03,2.1469E-03,
+     &1.3746E-03,7.1691E-04,2.8057E-04,5.6242E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.2181E-01,1.5404E-01,1.6540E-01,1.5255E-01,1.3736E-01,9.8856E-02,
+     &6.8927E-02,5.1385E-02,3.7046E-02,4.0302E-03,3.0949E-03,2.3772E-03,
+     &1.6538E-03,8.9641E-04,4.6991E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.1794E-01,1.4864E-01,1.6316E-01,1.5341E-01,1.3986E-01,9.6656E-02,
+     &7.2478E-02,5.5061E-02,3.8886E-02,4.3398E-03,3.3576E-03,2.4891E-03,
+     &1.7674E-03,1.0764E-03,7.7689E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.1635E-01,1.4342E-01,1.5924E-01,1.5670E-01,1.3740E-01,9.7087E-02,
+     &7.6250E-02,5.7802E-02,4.0808E-02,4.4113E-03,3.6035E-03,2.6269E-03,
+     &1.7586E-03,1.6498E-03,7.7689E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.1497E-01,1.3751E-01,1.5587E-01,1.5904E-01,1.3140E-01,1.0159E-01,
+     &7.9729E-02,6.1475E-02,4.2382E-02,4.5291E-03,3.8161E-03,2.7683E-03,
+     &1.9899E-03,2.0395E-03,7.7720E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.1331E-01,1.3015E-01,1.5574E-01,1.5489E-01,1.2697E-01,1.0746E-01,
+     &8.4777E-02,6.5145E-02,4.4293E-02,4.7426E-03,3.8383E-03,2.9065E-03,
+     &2.8430E-03,2.0401E-03,7.7689E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.0993E-01,1.2320E-01,1.4893E-01,1.4573E-01,1.3174E-01,1.1149E-01,
+     &9.3326E-02,6.9942E-02,4.6762E-02,4.9309E-03,3.8583E-03,4.1889E-03,
+     &3.0415E-03,2.0406E-03,7.7720E-04,1.1251E-04/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.2028E-01,1.2091E-01,1.3098E-01,1.3442E-01,1.3574E-01,1.1739E-01,
+     &9.5343E-02,7.0224E-02,5.3456E-02,6.0206E-03,5.0758E-03,4.1906E-03,
+     &3.0431E-03,2.0400E-03,7.7689E-04,1.1251E-04/
 
       EQUIVALENCE (KA,ABSA)
       REAL KA
-      STRRAT1 = 0.009736757
+
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+C     P =   174.164 mb 
+      REFRAT_PLANCK_A = CHI_MLS(1,10)/CHI_MLS(2,10)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     vapor self-continuum adn foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(12) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(12) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(12) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(12)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
+         INDF = INDFOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(12)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+            DO 2010 IG = 1, NG(12)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(12)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -1962,7 +3127,7 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB13
 
-C     BAND 13:  2080-2250 cm-1 (low - H2O,N2O; high - nothing)
+C     BAND 13:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -1977,106 +3142,364 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K13/      KA(9,5,13,MG),SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K13/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG),
+     &                  KA_MCO2(9,19,MG), KA_MCO(9,19,MG),KB_MO3(19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ABSA(585,MG)
-      DIMENSION FRACREFA(MG,9)
+      DIMENSION FRACREFA(MG,9),FRACREFB(MG)
+      REAL KA_MCO2,KA_MCO,KB_MO3,MINORFRAC
 
-      DATA FRACREFA/
-C     From P = 706.3 mb.
-     &    0.17683899,0.17319500,0.15712699,0.13604601,
-     &    0.10776200,0.08750010,0.06808820,0.04905150,
-     &    0.03280360,0.00350836,0.00281864,0.00219862,
-     &    0.00160943,0.00101885,0.00038147,0.00005348,
-     &    0.17535400,0.16999300,0.15610200,0.13589200,
-     &    0.10842100,0.08988550,0.06943920,0.04974900,
-     &    0.03323400,0.00352752,0.00289402,0.00231003,
-     &    0.00174659,0.00101884,0.00038147,0.00005348,
-     &    0.17409500,0.16846400,0.15641899,0.13503000,
-     &    0.10838600,0.08985800,0.07092720,0.05075710,
-     &    0.03364180,0.00354241,0.00303507,0.00243391,
-     &    0.00177502,0.00114638,0.00043585,0.00005348,
-     &    0.17248300,0.16778600,0.15543500,0.13496999,
-     &    0.10826300,0.09028740,0.07156720,0.05187120,
-     &    0.03424890,0.00363933,0.00324715,0.00255030,
-     &    0.00187380,0.00116978,0.00051229,0.00009768,
-     &    0.17061099,0.16715799,0.15405200,0.13471501,
-     &    0.10896400,0.09069460,0.07229760,0.05218280,
-     &    0.03555340,0.00379576,0.00330240,0.00274693,
-     &    0.00201587,0.00119598,0.00061885,0.00009768,
-     &    0.16789700,0.16629100,0.15270300,0.13360199,
-     &    0.11047200,0.09151080,0.07325000,0.05261450,
-     &    0.03657990,0.00450092,0.00349537,0.00283321,
-     &    0.00208396,0.00140354,0.00066587,0.00009768,
-     &    0.16412200,0.16387400,0.15211500,0.13062200,
-     &    0.11325100,0.09348130,0.07381380,0.05434740,
-     &    0.03803160,0.00481346,0.00393592,0.00296633,
-     &    0.00222532,0.00163762,0.00066648,0.00009768,
-     &    0.15513401,0.15768200,0.14850400,0.13330200,
-     &    0.11446500,0.09868230,0.07642050,0.05624170,
-     &    0.04197810,0.00502288,0.00429452,0.00315347,
-     &    0.00263559,0.00171772,0.00066860,0.00009768,
-     &    0.15732600,0.15223300,0.14271900,0.13563600,
-     &    0.11859600,0.10274200,0.07934560,0.05763410,
-     &    0.03921740,0.00437741,0.00337921,0.00280212,
-     &    0.00200156,0.00124812,0.00064664,0.00009768/
+C Planck fraction mapping level : P=473.4280 mb, T = 259.83 K      
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.7534E-01,1.7394E-01,1.6089E-01,1.3782E-01,1.0696E-01,8.5853E-02,
+     &6.6548E-02,4.9053E-02,3.2064E-02,3.4820E-03,2.8763E-03,2.2204E-03,
+     &1.5612E-03,9.8572E-04,3.6853E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.7489E-01,1.7309E-01,1.5981E-01,1.3782E-01,1.0797E-01,8.6367E-02,
+     &6.7042E-02,4.9257E-02,3.2207E-02,3.4820E-03,2.8767E-03,2.2203E-03,
+     &1.5613E-03,9.8571E-04,3.6853E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.7459E-01,1.7259E-01,1.5948E-01,1.3694E-01,1.0815E-01,8.7376E-02,
+     &6.7339E-02,4.9541E-02,3.2333E-02,3.5019E-03,2.8958E-03,2.2527E-03,
+     &1.6099E-03,9.8574E-04,3.6853E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.7391E-01,1.7244E-01,1.5921E-01,1.3644E-01,1.0787E-01,8.7776E-02,
+     &6.8361E-02,4.9628E-02,3.2578E-02,3.5117E-03,2.9064E-03,2.2571E-03,
+     &1.6887E-03,1.0045E-03,3.6853E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.7338E-01,1.7157E-01,1.5957E-01,1.3571E-01,1.0773E-01,8.7966E-02,
+     &6.9000E-02,5.0300E-02,3.2813E-02,3.5470E-03,2.9425E-03,2.2552E-03,
+     &1.7038E-03,1.1025E-03,3.6853E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.7230E-01,1.7082E-01,1.5917E-01,1.3562E-01,1.0806E-01,8.7635E-02,
+     &6.9815E-02,5.1155E-02,3.3139E-02,3.6264E-03,2.9436E-03,2.3417E-03,
+     &1.7731E-03,1.1156E-03,4.4533E-04,5.1612E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.7073E-01,1.6961E-01,1.5844E-01,1.3594E-01,1.0821E-01,8.7791E-02,
+     &7.0502E-02,5.1904E-02,3.4107E-02,3.5888E-03,2.9574E-03,2.5851E-03,
+     &1.9127E-03,1.1537E-03,4.7789E-04,1.0016E-04/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.6700E-01,1.6848E-01,1.5628E-01,1.3448E-01,1.1011E-01,8.9016E-02,
+     &7.1973E-02,5.2798E-02,3.5650E-02,3.8534E-03,3.4142E-03,2.7799E-03,
+     &2.1288E-03,1.3043E-03,6.2858E-04,1.0016E-04/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.6338E-01,1.5565E-01,1.4470E-01,1.3500E-01,1.1909E-01,9.8312E-02,
+     &7.9023E-02,5.5728E-02,3.6831E-02,3.6569E-03,3.0552E-03,2.3431E-03,
+     &1.7088E-03,1.1082E-03,3.6829E-04,5.1612E-05/
+
+C Planck fraction mapping level : P=4.758820 mb, T = 250.85 K
+      DATA FRACREFB /
+     &1.5411E-01,1.3573E-01,1.2527E-01,1.2698E-01,1.2394E-01,1.0876E-01,
+     &8.9906E-02,6.9551E-02,4.8240E-02,5.2434E-03,4.3630E-03,3.4262E-03,
+     &2.5124E-03,1.5479E-03,3.7294E-04,5.1050E-05/
+
+C Minor gas mapping levels :
+C     LOWER - CO2, P = 1053.63 mb, T = 294.2 K
+C     LOWER - CO, P = 706 mb, T = 278.94 K
+C     UPPER - O3, P = 95.5835 mb, T = 215.7 K
 
       EQUIVALENCE (KA,ABSA)
       REAL KA
-      STRRAT1 = 16658.87
+
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+C     P = 473.420 mb (Level 5)
+      REFRAT_PLANCK_A = CHI_MLS(1,5)/CHI_MLS(4,5)
+
+C     P = 1053. (Level 1)
+      REFRAT_M_A = CHI_MLS(1,1)/CHI_MLS(4,1)
+
+C     P = 706. (Level 3)
+      REFRAT_M_A3 = CHI_MLS(1,3)/CHI_MLS(4,3)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLN2O(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2ON2O(LAY)*COLN2O(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2ON2O_1(LAY)*COLN2O(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MCO2 = COLH2O(LAY) + REFRAT_M_A*COLN2O(LAY)
+         SPECPARM_MCO2 = COLH2O(LAY)/SPECCOMB_MCO2
+         IF (SPECPARM_MCO2 .GE. ONEMINUS) SPECPARM_MCO2 = ONEMINUS
+         SPECMULT_MCO2 = 8.*SPECPARM_MCO2
+         JMCO2 = 1 + INT(SPECMULT_MCO2)
+         FMCO2 = AMOD(SPECMULT_MCO2,1.0)
+
+c     In atmospheres where the amount of CO2 is too great to be considered
+c     a minor species, adjust the column amount of CO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+         RATCO2 = 1.E20*CHI_CO2/3.55E-4
+         IF (RATCO2 .GT. 3.0) THEN
+            ADJFAC = 2.0+(RATCO2-2.0)**0.68
+            ADJCOLCO2 = ADJFAC*3.55E-4*COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLCO2 = COLCO2(LAY)
+         ENDIF
+
+         SPECCOMB_MCO = COLH2O(LAY) + REFRAT_M_A3*COLN2O(LAY)
+         SPECPARM_MCO = COLH2O(LAY)/SPECCOMB_MCO
+         IF (SPECPARM_MCO .GE. ONEMINUS) SPECPARM_MCO = ONEMINUS
+         SPECMULT_MCO = 8.*SPECPARM_MCO
+         JMCO = 1 + INT(SPECMULT_MCO)
+         FMCO = AMOD(SPECMULT_MCO,1.0)
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLN2O(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(13) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(13) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(13) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(13)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(13)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 + 
+     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
+     &              (KA_MCO(JMCO+1,INDM,IG)-
+     &              KA_MCO(JMCO,INDM,IG))
+               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
+     &              (KA_MCO(JMCO+1,INDM+1,IG)-
+     &              KA_MCO(JMCO,INDM+1,IG))
+               ABSCO = COM1 + 
+     &              MINORFRAC(LAY) * (COM2 - COM1)
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))+
+     &              SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLCO2*ABSCO2
+     &              + COLCO(LAY)*ABSCO
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(13)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 +
+     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
+     &           (KA_MCO(JMCO+1,INDM,IG)-
+     &              KA_MCO(JMCO,INDM,IG))
+               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
+     &           (KA_MCO(JMCO+1,INDM+1,IG)-
+     &              KA_MCO(JMCO,INDM+1,IG))
+               ABSCO = COM1 +
+     &              MINORFRAC(LAY) * (COM2 - COM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLCO2*ABSCO2
+     &              + COLCO(LAY)*ABSCO
+                FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &               (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(13)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM,IG)-
+     &              KA_MCO2(JMCO2,INDM,IG))
+               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &              KA_MCO2(JMCO2,INDM+1,IG))
+               ABSCO2 = CO2M1 + 
+     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
+               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
+     &              (KA_MCO(JMCO+1,INDM,IG)-
+     &              KA_MCO(JMCO,INDM,IG))
+               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
+     &              (KA_MCO(JMCO+1,INDM+1,IG)-
+     &              KA_MCO(JMCO,INDM+1,IG))
+               ABSCO = COM1 +
+     &              MINORFRAC(LAY) * (COM2 - COM1)
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + ADJCOLCO2*ABSCO2
+     &              + COLCO(LAY)*ABSCO
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+
+ 2020          CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
          DO 3000 IG = 1, NG(13)
-            TAUG(LAY,IG) = 0.0
-            FRACS(LAY,IG) = 0.0
+            ABSO3 = KB_MO3(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MO3(INDM+1,IG) - KB_MO3(INDM,IG))
+            TAUG(LAY,IG) = COLO3(LAY)*ABSO3
+            FRACS(LAY,IG) =  FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
 
@@ -2101,51 +3524,67 @@ C  Input
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K14/      KA(5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /K14/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+     &                  SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
 
-C     From P = 1053.6 mb.
-      DATA FRACREFA/
-     &    0.18446200,0.16795200,0.14949700,0.12036000,
-     &    0.10440100,0.09024280,0.07435880,0.05629380,
-     &    0.03825420,0.00417276,0.00345278,0.00272949,
-     &    0.00200378,0.00127404,0.00050721,0.00004141/
-C     From P = 0.64 mb.
-      DATA FRACREFB/
-     &    0.19128500,0.16495700,0.14146100,0.11904500,
-     &    0.10350200,0.09151190,0.07604270,0.05806020,
-     &    0.03979950,0.00423959,0.00357439,0.00287559,
-     &    0.00198860,0.00116529,0.00043616,0.00005987/
+C Planck fraction mapping level : P = 142.5940 mb, T = 215.70 K
+      DATA FRACREFA /
+     & 1.9360E-01, 1.7276E-01, 1.4811E-01, 1.2238E-01, 
+     & 1.0242E-01, 8.6830E-02, 7.1890E-02, 5.4030E-02, 
+     & 3.5075E-02, 3.8052E-03, 3.1458E-03, 2.4873E-03,
+     & 1.8182E-03, 1.1563E-03, 4.3251E-04, 5.7744E-05/
+C Planck fraction mapping level : P = 4.758820mb, T = 250.85 K
+      DATA FRACREFB /
+     & 1.8599E-01, 1.6646E-01, 1.4264E-01, 1.2231E-01, 
+     & 1.0603E-01, 9.2014E-02, 7.5287E-02, 5.6758E-02, 
+     & 3.8386E-02, 4.2139E-03, 3.5399E-03, 2.7381E-03,
+     & 1.9202E-03, 1.2083E-03, 4.5395E-04, 6.2699E-05/
 
-      EQUIVALENCE (KA,ABSA),(KB,ABSB)
+      Equivalence (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum 
-C     is interpolated (in temperature) separately.  
+C     and foreign continuum is interpolated (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(14) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(14) + 1
          INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
          DO 2000 IG = 1, NG(14)
+            TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
+     &           SELFFRAC(LAY) *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+            TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
             TAUG(LAY,IG) = COLCO2(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
-     &           FAC11(LAY) * ABSA(IND1+1,IG) +
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
+     &           FAC11(LAY) * ABSA(IND1+1,IG))
+     &           + TAUSELF + TAUFOR
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -2158,7 +3597,7 @@ C     is interpolated (in temperature) separately.
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
-     &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           FAC11(LAY) * ABSB(IND1+1,IG))
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -2170,7 +3609,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB15
 
-C     BAND 15:  2380-2600 cm-1 (low - N2O,CO2; high - nothing)
+C     BAND 15:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
+C                              (high - nothing)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -2185,100 +3625,295 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K15/      KA(9,5,13,MG),SELFREF(10,MG)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K15/      KA(9,5,13,MG), 
+     &                  FORREF(4,MG), SELFREF(10,MG), KA_MN2(9,19,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       DIMENSION ABSA(585,MG)
       DIMENSION FRACREFA(MG,9)
 
-      DATA FRACREFA/
-C     From P = 1053.6 mb.
-     &    0.11287100,0.12070200,0.12729000,0.12858100,
-     &    0.12743001,0.11961800,0.10290400,0.07888980,
-     &    0.05900120,0.00667979,0.00552926,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.13918801,0.16353001,0.16155800,0.14090499,
-     &    0.11322300,0.08757720,0.07225720,0.05173390,
-     &    0.04731360,0.00667979,0.00552926,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.14687300,0.17853101,0.15664500,0.13351700,
-     &    0.10791200,0.08684320,0.07158090,0.05198410,
-     &    0.04340110,0.00667979,0.00552926,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.15760700,0.17759100,0.15158001,0.13193300,
-     &    0.10742800,0.08693760,0.07159490,0.05196250,
-     &    0.04065270,0.00667979,0.00552926,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.16646700,0.17299300,0.15018500,0.13138700,
-     &    0.10735900,0.08713110,0.07130330,0.05279420,
-     &    0.03766730,0.00667979,0.00552926,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.17546000,0.16666500,0.14969499,0.13105400,
-     &    0.10782500,0.08718610,0.07156770,0.05308320,
-     &    0.03753960,0.00432465,0.00509623,0.00436993,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.18378501,0.16064601,0.14940400,0.13146400,
-     &    0.10810300,0.08775740,0.07115360,0.05400040,
-     &    0.03689970,0.00388333,0.00323610,0.00353414,
-     &    0.00320611,0.00204765,0.00077371,0.00010894,
-     &    0.18966800,0.15744300,0.14993000,0.13152599,
-     &    0.10899200,0.08858690,0.07142920,0.05399600,
-     &    0.03433460,0.00374886,0.00302066,0.00240653,
-     &    0.00199205,0.00204765,0.00077371,0.00010894,
-     &    0.11887100,0.12479600,0.12569501,0.12839900,
-     &    0.12473500,0.12012800,0.11086700,0.08493590,
-     &    0.05063770,0.00328723,0.00266849,0.00210232,
-     &    0.00152114,0.00095635,0.00035374,0.00004980/
+C Planck fraction mapping level : P = 1053. mb, T = 294.2 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.0689E-01,1.1563E-01,1.2447E-01,1.2921E-01,1.2840E-01,1.2113E-01,
+     &1.0643E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.0782E-01,1.1637E-01,1.2290E-01,1.2911E-01,1.2841E-01,1.2113E-01,
+     &1.0643E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.0858E-01,1.1860E-01,1.2237E-01,1.2665E-01,1.2841E-01,1.2111E-01,
+     &1.0642E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.1022E-01,1.1965E-01,1.2334E-01,1.2383E-01,1.2761E-01,1.2109E-01,
+     &1.0642E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.1342E-01,1.2069E-01,1.2360E-01,1.2447E-01,1.2340E-01,1.2020E-01,
+     &1.0639E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.1771E-01,1.2280E-01,1.2177E-01,1.2672E-01,1.2398E-01,1.1787E-01,
+     &1.0131E-01,8.4987E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.2320E-01,1.2491E-01,1.2001E-01,1.2936E-01,1.2653E-01,1.1929E-01,
+     &9.8955E-02,7.4887E-02,6.0142E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.3105E-01,1.2563E-01,1.3055E-01,1.2854E-01,1.3402E-01,1.1571E-01,
+     &9.4876E-02,6.0459E-02,5.6457E-02,6.6798E-03,5.5293E-03,4.3700E-03,
+     &3.2061E-03,2.0476E-03,7.7366E-04,1.0897E-04/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.1375E-01,1.2090E-01,1.2348E-01,1.2458E-01,1.2406E-01,1.1921E-01,
+     &1.0802E-01,8.6613E-02,5.8125E-02,6.2984E-03,5.2359E-03,4.0641E-03,
+     &2.9379E-03,1.9001E-03,7.2646E-04,1.0553E-04/
 
       EQUIVALENCE (KA,ABSA)
-      REAL KA
-      STRRAT1 = 0.2883201
+      REAL KA, KA_MN2, MINORFRAC
+      REAL N2M1,N2M2
+
+C Minor gas mapping level : 
+C     Lower - Nitrogen Continuum, P = 1053., T = 294.
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower atmosphere.
+C     P = 1053. mb (Level 1)
+      REFRAT_PLANCK_A = CHI_MLS(4,1)/CHI_MLS(2,1)
+
+C     P = 1053.
+      REFRAT_M_A = CHI_MLS(4,1)/CHI_MLS(2,1)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLN2O(LAY) + STRRAT1*COLCO2(LAY)
-         SPECPARM = COLN2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLN2O(LAY) + RAT_N2OCO2(LAY)*COLCO2(LAY)
+         SPECPARM = COLN2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLN2O(LAY) + RAT_N2OCO2_1(LAY)*COLCO2(LAY)
+         SPECPARM1 = COLN2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_MN2 = COLN2O(LAY) + REFRAT_M_A*COLCO2(LAY)
+         SPECPARM_MN2 = COLN2O(LAY)/SPECCOMB_MN2
+         IF (SPECPARM_MN2 .GE. ONEMINUS) SPECPARM_MN2 = ONEMINUS
+         SPECMULT_MN2 = 8.*SPECPARM_MN2
+         JMN2 = 1 + INT(SPECMULT_MN2)
+         FMN2 = AMOD(SPECMULT_MN2,1.0)
+
+         SPECCOMB_PLANCK = COLN2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+         SPECPARM_PLANCK = COLN2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(15) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(15) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(15) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(15)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+         
+         SCALEN2 = COLBRD(LAY)*SCALEMINOR(LAY)
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(15)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM,IG)-
+     &              KA_MN2(JMN2,INDM,IG))
+               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM+1,IG)-
+     &              KA_MN2(JMN2,INDM+1,IG))
+               TAUN2 = SCALEN2*
+     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + TAUN2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2010 IG = 1, NG(15)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM,IG)-
+     &              KA_MN2(JMN2,INDM,IG))
+               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM+1,IG)-
+     &              KA_MN2(JMN2,INDM+1,IG))
+               TAUN2 = SCALEN2*
+     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+     &              + TAUN2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+
+            DO 2020 IG = 1, NG(15)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM,IG)-
+     &              KA_MN2(JMN2,INDM,IG))
+               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
+     &              (KA_MN2(JMN2+1,INDM+1,IG)-
+     &              KA_MN2(JMN2,INDM+1,IG))
+               TAUN2 = SCALEN2 *
+     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+     &              + TAUN2
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+      ENDIF
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -2296,7 +3931,7 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB16
 
-C     BAND 16:  2600-3000 cm-1 (low - H2O,CH4; high - nothing)
+C     BAND 16:  2600-3250 cm-1 (low - H2O,CH4; high key - CH4)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
@@ -2311,106 +3946,268 @@ C  Input
       COMMON /PRECISE/  ONEMINUS
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
-     &                  COLH2O(MXLAY),COLCO2(MXLAY),
-     &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K16/      KA(9,5,13,MG),SELFREF(10,MG)
+      COMMON /K16/      KA(9,5,13,MG),KB(5,13:59,MG),
+     &                  FORREF(4,MG),SELFREF(10,MG)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
-      DIMENSION ABSA(585,MG)
-      DIMENSION FRACREFA(MG,9)
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
-      DATA FRACREFA/
-C     From P = 862.6 mb.
-     &    0.17356300,0.18880001,0.17704099,0.13661300,
-     &    0.10691600,0.08222480,0.05939860,0.04230810,
-     &    0.02526330,0.00244532,0.00193541,0.00150415,
-     &    0.00103528,0.00067068,0.00024951,0.00003348,
-     &    0.17779499,0.19837400,0.16557600,0.13470000,
-     &    0.11013600,0.08342720,0.05987030,0.03938700,
-     &    0.02293650,0.00238849,0.00192400,0.00149921,
-     &    0.00103539,0.00067150,0.00024822,0.00003348,
-     &    0.18535601,0.19407199,0.16053200,0.13300700,
-     &    0.10779000,0.08408500,0.06480450,0.04070160,
-     &    0.02203590,0.00227779,0.00189074,0.00146888,
-     &    0.00103147,0.00066770,0.00024751,0.00003348,
-     &    0.19139200,0.18917400,0.15748601,0.13240699,
-     &    0.10557300,0.08383260,0.06724060,0.04364450,
-     &    0.02175820,0.00225436,0.00184421,0.00143153,
-     &    0.00103027,0.00066066,0.00024222,0.00003148,
-     &    0.19547801,0.18539500,0.15442000,0.13114899,
-     &    0.10515600,0.08350350,0.06909780,0.04671630,
-     &    0.02168820,0.00224400,0.00182009,0.00139098,
-     &    0.00102582,0.00065367,0.00023202,0.00003148,
-     &    0.19757500,0.18266800,0.15208900,0.12897800,
-     &    0.10637200,0.08391220,0.06989830,0.04964120,
-     &    0.02155800,0.00224310,0.00177358,0.00138184,
-     &    0.00101538,0.00063370,0.00023227,0.00003148,
-     &    0.20145500,0.17692900,0.14940600,0.12690400,
-     &    0.10828800,0.08553720,0.07004940,0.05153430,
-     &    0.02268740,0.00216943,0.00178603,0.00137754,
-     &    0.00098344,0.00063165,0.00023218,0.00003148,
-     &    0.20383500,0.17047501,0.14570600,0.12679300,
-     &    0.11043100,0.08719150,0.07045440,0.05345420,
-     &    0.02448340,0.00215839,0.00175893,0.00138296,
-     &    0.00098318,0.00063188,0.00023199,0.00003148,
-     &    0.18680701,0.15961801,0.15092900,0.13049100,
-     &    0.11418400,0.09380540,0.07093450,0.05664280,
-     &    0.02938410,0.00217751,0.00176766,0.00138275,
-     &    0.00098377,0.00063181,0.00023193,0.00003148/
+      DIMENSION ABSA(585,MG), ABSB(235,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
-      EQUIVALENCE (KA,ABSA)
-      REAL KA
-      STRRAT1 = 830.411
+C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.1626E-01,2.1062E-01,2.0986E-01,1.4338E-01,1.0358E-01,7.9637E-02,
+     &6.2090E-02,4.1683E-02,2.4574E-02,2.5630E-03,2.1297E-03,1.5811E-03,
+     &1.0876E-03,6.7512E-04,2.4334E-04,3.4252E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &2.7943E-01,2.7274E-01,1.6359E-01,9.2089E-02,6.0422E-02,4.4132E-02,
+     &3.5890E-02,2.7620E-02,1.7960E-02,1.8267E-03,1.5055E-03,1.2170E-03,
+     &8.6273E-04,5.1470E-04,1.7475E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &2.8258E-01,2.7794E-01,1.5844E-01,9.4327E-02,5.7472E-02,4.4010E-02,
+     &3.5128E-02,2.6843E-02,1.7179E-02,1.8134E-03,1.4992E-03,1.2131E-03,
+     &8.5991E-04,5.1034E-04,1.7419E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &2.8477E-01,2.7914E-01,1.5632E-01,9.4997E-02,5.6924E-02,4.3913E-02,
+     &3.4671E-02,2.6260E-02,1.6938E-02,1.8110E-03,1.4957E-03,1.2116E-03,
+     &8.5720E-04,5.1007E-04,1.7371E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &2.8524E-01,2.8038E-01,1.5515E-01,9.5642E-02,5.6712E-02,4.3862E-02,
+     &3.4257E-02,2.5784E-02,1.6901E-02,1.8139E-03,1.4918E-03,1.2097E-03,
+     &8.5496E-04,5.1024E-04,1.7283E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &2.7971E-01,2.8636E-01,1.5512E-01,9.6683E-02,5.6246E-02,4.3701E-02,
+     &3.3742E-02,2.5487E-02,1.6893E-02,1.8178E-03,1.4820E-03,1.2121E-03,
+     &8.5231E-04,5.1136E-04,1.7142E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &2.6050E-01,3.0261E-01,1.5843E-01,9.7788E-02,5.5813E-02,4.3260E-02,
+     &3.3321E-02,2.5382E-02,1.6853E-02,1.8068E-03,1.4735E-03,1.2220E-03,
+     &8.4671E-04,5.1418E-04,1.6845E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &2.3305E-01,3.0712E-01,1.8186E-01,9.9369E-02,5.5250E-02,4.2378E-02,
+     &3.2851E-02,2.5343E-02,1.6758E-02,1.7844E-03,1.5010E-03,1.2010E-03,
+     &8.2094E-04,5.3304E-04,1.5841E-04,1.6802E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &2.6946E-01,2.7691E-01,1.7390E-01,9.8279E-02,5.7196E-02,4.2943E-02,
+     &3.2931E-02,2.5436E-02,1.6881E-02,1.8124E-03,1.4922E-03,1.2089E-03,
+     &8.5357E-04,5.0962E-04,1.7283E-04,1.6802E-05/
+
+C Planck fraction mapping level : P=95.58350 mb, T = 215.70 K
+      DATA FRACREFB /
+     &1.8535E-01,2.2718E-01,1.6065E-01,1.1705E-01,9.7691E-02,7.9920E-02,
+     &6.1503E-02,4.1673E-02,2.2976E-02,1.9263E-03,1.4694E-03,1.1498E-03,
+     &7.9906E-04,4.8310E-04,1.6188E-04,2.2651E-05/
+
+      EQUIVALENCE (KA,ABSA), (KB,ABSB)
+      REAL KA,KB
+
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower atmosphere.
+
+C     P = 1013. mb (Level 1)
+      REFRAT_PLANCK_A = CHI_MLS(1,1)/CHI_MLS(6,1)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
-C     temperature, and appropriate species.  Below LAYTROP, the water
-C     vapor self-continuum is interpolated (in temperature) separately.  
+C     temperature,and appropriate species.  Below LAYTROP, the water
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision$'
+
       DO 2500 LAY = 1, LAYTROP
-         SPECCOMB = COLH2O(LAY) + STRRAT1*COLCH4(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCH4(LAY)*COLCH4(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS) * FAC01(LAY)
-         FAC011 = (1. - FS) * FAC11(LAY)
-         FAC101 = FS * FAC01(LAY)
-         FAC111 = FS * FAC11(LAY)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCH4_1(LAY)*COLCH4(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCH4(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(16) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(16) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(16) + JS1
          INDS = INDSELF(LAY)
-         DO 2000 IG = 1, NG(16)
-            TAUG(LAY,IG) = SPECCOMB * 
-     &          (FAC000 * ABSA(IND0,IG) +
-     &           FAC100 * ABSA(IND0+1,IG) +
-     &           FAC010 * ABSA(IND0+9,IG) +
-     &           FAC110 * ABSA(IND0+10,IG) +
-     &           FAC001 * ABSA(IND1,IG) + 
-     &           FAC101 * ABSA(IND1+1,IG) +
-     &           FAC011 * ABSA(IND1+9,IG) +
-     &           FAC111 * ABSA(IND1+10,IG)) +
-     &           COLH2O(LAY) * 
-     &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
-     &           SELFFRAC(LAY) *
-     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-            FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
-     &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
- 2000    CONTINUE
+         INDF = INDFOR(LAY)
+
+         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+
+            DO 2000 IG = 1, NG(16)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB *
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC200 * ABSA(IND0+2,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG) +
+     &              FAC210 * ABSA(IND0+11,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC201 * ABSA(IND1+2,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG) +
+     &              FAC211 * ABSA(IND1+11,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000          CONTINUE
+      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+            DO 2010 IG = 1, NG(16)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC200 * ABSA(IND0-1,IG) +
+     &              FAC100 * ABSA(IND0,IG) +
+     &              FAC000 * ABSA(IND0+1,IG) +
+     &              FAC210 * ABSA(IND0+8,IG) +
+     &              FAC110 * ABSA(IND0+9,IG) +
+     &              FAC010 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC201 * ABSA(IND1-1,IG) +
+     &              FAC101 * ABSA(IND1,IG) +
+     &              FAC001 * ABSA(IND1+1,IG) +
+     &              FAC211 * ABSA(IND1+8,IG) +
+     &              FAC111 * ABSA(IND1+9,IG) +
+     &              FAC011 * ABSA(IND1+10,IG))
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2010           CONTINUE
+       ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+            DO 2020 IG = 1, NG(16)
+               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &              SELFFRAC(LAY)  *
+     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &              FORREF(INDF,IG))) 
+               TAUG(LAY,IG) = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
+     &              FAC100 * ABSA(IND0+1,IG) +
+     &              FAC010 * ABSA(IND0+9,IG) +
+     &              FAC110 * ABSA(IND0+10,IG))
+     &              + SPECCOMB1 *
+     &              (FAC001 * ABSA(IND1,IG) + 
+     &              FAC101 * ABSA(IND1+1,IG) +
+     &              FAC011 * ABSA(IND1+9,IG) +
+     &              FAC111 * ABSA(IND1+10,IG)) 
+     &              + TAUSELF + TAUFOR
+               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2020          CONTINUE
+      ENDIF
+
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(16) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(16) + 1
          DO 3000 IG = 1, NG(16)
-            TAUG(LAY,IG) = 0.0
-            FRACS(LAY,IG) = 0.0
+            TAUG(LAY,IG) = COLCH4(LAY) * 
+     &          (FAC00(LAY) * ABSB(IND0,IG) +
+     &           FAC10(LAY) * ABSB(IND0+1,IG) +
+     &           FAC01(LAY) * ABSB(IND1,IG) + 
+     &           FAC11(LAY) * ABSB(IND1+1,IG))
+            FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
 
