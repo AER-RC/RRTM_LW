@@ -1,10 +1,8 @@
-      BLOCK DATA KGB12
-
       PARAMETER (MG = 16)
       REAL KA(9,5,13,MG)
       DIMENSION SELFREF(10,MG)
 
-      COMMON /HVRSNB/ HVRKG(16)
+      COMMON /HVRSNB/ HVRKG(NBANDS)
       COMMON /K12/ KA, SELFREF
 
       CHARACTER*8 HVRKG
@@ -1953,4 +1951,3 @@ C     etc.  The second index runs over the g-channel (1 to 16).
      & 1.65126E-01, 1.53281E-01, 1.42287E-01, 1.32081E-01, 1.22607E-01,
      & 1.13812E-01, 1.05649E-01, 9.80707E-02, 9.10362E-02, 8.45063E-02/
 
-      END

@@ -1,10 +1,8 @@
-      BLOCK DATA KGB5
-
       PARAMETER (MG = 16)
       REAL KA(9,5,13,MG),KB(5,5,13:59,MG)
       DIMENSION SELFREF(10,MG)
 
-      COMMON /HVRSNB/ HVRKG(16)
+      COMMON /HVRSNB/ HVRKG(NBANDS)
       COMMON /K5/ KA, KB, SELFREF
 
       CHARACTER*8 HVRKG
@@ -6484,4 +6482,3 @@ C     etc.  The second index runs over the g-channel (1 to 16).
      & 1.99865E-01, 1.72699E-01, 1.49225E-01, 1.28942E-01, 1.11416E-01,
      & 9.62721E-02, 8.31866E-02, 7.18797E-02, 6.21097E-02, 5.36676E-02/      
 
-      END	

@@ -1,9 +1,7 @@
-      BLOCK DATA KGB10
-
       PARAMETER (MG = 16)
       REAL KA(5,13,MG),KB(5,13:59,MG)
 
-      COMMON /HVRSNB/ HVRKG(16)
+      COMMON /HVRSNB/ HVRKG(NBANDS)
       COMMON /K10/ KA ,KB
 
       CHARACTER*8 HVRKG
@@ -1954,4 +1952,3 @@ C     and tells us which g-interval the absorption coefficients are for.
       DATA (KB(JT,59,16),JT=1,5) /
      &2.4534E+03,2.6638E+03,2.7735E+03,2.8383E+03,2.8978E+03/
 
-      END

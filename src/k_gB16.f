@@ -1,5 +1,3 @@
-      BLOCK DATA KGB16
-
       PARAMETER (MG = 16)
       REAL KA(9,5,13,MG)
       DIMENSION SELFREF(10,MG)
@@ -1953,4 +1951,3 @@ C     etc.  The second index runs over the g-channel (1 to 16).
      & 3.03559E-03, 2.80023E-03, 2.58312E-03, 2.38284E-03, 2.19809E-03,
      & 2.02767E-03, 1.87045E-03, 1.72543E-03, 1.59165E-03, 1.46825E-03/
 
-      END
