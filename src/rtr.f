@@ -34,6 +34,9 @@ C     per g-value per band.
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /SOURCE/    AVGPLANK(16,141,16)
 
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
+
       EQUIVALENCE (AVGPLANK,PLANK)
 
       DIMENSION BAVE(MXLAY,16), PLANK(2256,16)
@@ -47,11 +50,16 @@ C     per g-value per band.
       DIMENSION DRAD3(0:MXLAY-1),URAD3(0:MXLAY)
       DIMENSION WTNUM(MXANG)
 
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+
 C *** These weights correspond to angles of 34.9, 65.8, and 74.1
 C     degrees, resp.  They are used when "numerical" Gaussian
 C     quadrature is chosen.
       DATA WTNUM(3) /0.1084176674/, WTNUM(2) /0.0424353369/
       DATA WTNUM(1) /0.3491473794/
+
+      HVRRT0 = '$Revision$'
 
 C *** SECANG is equal to the secant of the first angle.
       SECANG = 1.219512195

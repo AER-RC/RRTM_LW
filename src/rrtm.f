@@ -52,6 +52,10 @@ C     Keep in mind that AER_RRTM is still a work in progress.
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
 
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
+
       COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
       COMMON /CONTROL/   NUMANGS
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
@@ -59,6 +63,10 @@ C     Keep in mind that AER_RRTM is still a work in progress.
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
+      COMMON /HVRSNB/ HVRKG(NBANDS)
+
 
       DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
       DATA NSPA /1,1,7,7,7,1,0,0,0,0,0,0,0,0,0,0/
@@ -118,14 +126,35 @@ C
      &           FNET(I), HTR(I)
  3000    CONTINUE
 
+C
+C ***    Output module version numbers
+C
+         WRITE(IWR,9910) HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                   HVRUTL,HVREXT,(HVRKG(NB),NB=1,2)
+
          CLOSE(IWR)
 
 
  9900 FORMAT(1X,'LEVEL    PRESSURE   UPWARD FLUX   DOWNWARD FLUX    NET    
-     &FLUX        HEATING RATE')
- 9901 FORMAT(1X,'            mb          W/m2           W/m2          W/
-     &m2           degree/day')
- 9902 FORMAT(1X,I3,3X,F11.6,4X,1P,3(G12.6,3X),G16.9,0P)
+     &FLUX       HEATING RATE')
+ 9901 FORMAT(1X,'            mb          W/m2          W/m2           W/
+     &m2          degree/day')
+ 9902 FORMAT(1X,I3,3X,F11.6,4X,1P,2(G12.6,2X),G13.6,3X,G16.9,0P)
+ 9910 FORMAT('  Modules and versions used in this calculation:',/,/,5X,
+     *        '    rrtm.f: ',6X,A8,10X, '  init.f: ',6X,A8,/,5X,
+     *        '      rt.f: ',6X,A8,10X, 'rrtatm.f: ',6X,A8,/,5X,
+     *        ' setcoef.f: ',6X,A8,10X, 'taumol.f: ',6X,A8,/,5X,
+     *        'util_xxx.f: ',6X,A8,10X, ' extra.f: ',6X,A8,/,5X,
+     *        '   k_gB1.f: ',6X,A8,10X, ' k_gB2.f: ',6X,A8,/,5X)
+c    *        '   k_gB3.f: ',6X,A8,10X, ' k_gB4.f: ',6X,A8,/,5X,
+c    *        '   k_gB5.f: ',6X,A8,10X, ' k_gB6.f: ',6X,A8,/,5X,
+c    *        '   k_gB7.f: ',6X,A8,10X, ' k_gB8.f: ',6X,A8,/,5X,
+c    *        '   k_gB9.f: ',6X,A8,10X, 'k_gB10.f: ',6X,A8,/,5X,
+c    *        '  k_gB11.f: ',6X,A8,10X, 'k_gB12.f: ',6X,A8,/,5X,
+c    *        '  k_gB13.f: ',6X,A8,10X, 'k_gB14.f: ',6X,A8,/,5X,
+c    *        '  k_gB15.f: ',6X,A8,10X, 'k_gB16.f: ',6X,A8,/)
+
+
       STOP
       END
 
@@ -244,4 +273,23 @@ c
 
       RETURN
       END 
+
+      BLOCK DATA
+
+
+      COMMON /HVERSN/ HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *                HVDUM1(4),HVRUTL,HVREXT
+
+      CHARACTER*8 HVRRTM,HVRINI,HVRRT0,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+
+      DATA HVRRTM / '$Revision$' /,        HVRINI / 'NOT USED' /,
+     *     HVRRT0 / 'NOT USED' /,   HVRATM / 'NOT USED' /,
+     *     HVRSET / 'NOT USED' /,   HVRTAU / 'NOT USED' /,
+     *     HVDUM1 / 4*'NOT USED' /, HVRUTL / 'NOT USED' /,
+     *     HVREXT / 'NOT USED' /
+
+      END
+
+
 
