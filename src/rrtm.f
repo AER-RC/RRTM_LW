@@ -49,16 +49,12 @@ C        level and the heating rate for each layer
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
 
-      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
-      CHARACTER*8 HVRKG
-
       COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PRECISE/   ONEMINUS
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
-      COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
+      COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
@@ -67,6 +63,9 @@ C        level and the heating rate for each layer
      *                   HVDUM1(4),HVRUTL,HVREXT
       COMMON /HVRSNB/    HVRKG(NBANDS)
 
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVDUM1,HVRUTL,HVREXT
+      CHARACTER*8 HVRKG
       CHARACTER PAGE
 
       DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
@@ -126,15 +125,21 @@ C        that is specific to this atmosphere, especially some of the
 C        coefficients and indices needed to compute the optical depths
 C        by interpolating data from stored reference atmospheres. 
 
+         ICLD = 1
+         IF (ICLD .EQ. 1) CALL CLDPROP(ICLDATM)
+
          CALL SETCOEF
 
 C ***    Call the radiative transfer routine.
-         IF (NUMANGS .EQ. 0) THEN
-               CALL RTR
+         IF (NUMANGS .EQ. 0 .AND. ICLDATM .EQ. 0) THEN
+            CALL RTR
+         ELSEIF (NUMANGS .EQ. 0 .AND. ICLDATM .EQ. 1) THEN
+            CALL RTRCLD
+         ELSEIF (ICLDATM .EQ. 1) THEN
+            CALL RTREGCLD
          ELSE
             CALL RTREG
          ENDIF
-
          IF (IOUT .LT. 0) GO TO 4000
 
 C ***    Process output for this atmosphere.
@@ -233,7 +238,7 @@ C     Read in atmospheric profile.
 
       DIMENSION ALTZ(0:MXLAY),IXTRANS(14)
 
-      COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND
+      COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
@@ -266,9 +271,12 @@ C     Read in atmospheric profile.
       READ (IRD,9010,END=8800) CTEST
       IF (CTEST .NE. CDOLLAR) GO TO 1000
 
-      READ (IRD,9011) IATM, IXSECT, NUMANGS, IOUT
-      READ (IRD,9012) TBOUND
+      READ (IRD,9011) IATM, IXSECT, NUMANGS, IOUT, ICLD
 
+C     If clouds are present, read in appropriate input file, IN_CLD_RRTM.
+      IF (ICLD .EQ. 1) CALL READCLD
+
+      READ (IRD,9012) TBOUND
       IF (IATM .EQ. 0) THEN
          READ (IRD,9013) IFORM,NLAYERS,NMOL
          IF (NMOL.EQ.0) NMOL = 7                                    
@@ -287,7 +295,6 @@ C     Read in atmospheric profile.
          IF (IXSECT .EQ. 1) THEN                                 
             READ (IRD,9300) NXMOL0
             NXMOL = NXMOL0
-
             CALL XSIDENT(IRD)
             READ (IRD,9301) IFORMX
 C     
@@ -359,7 +366,7 @@ C     Test for mixing ratio input.
  9000 CONTINUE
 
  9010 FORMAT (A1)
- 9011 FORMAT (49X,I1,19X,I1,13X,I2,2X,I3)
+ 9011 FORMAT (49X,I1,19X,I1,13X,I2,2X,I3,4X,I1)
  9012 FORMAT (E10.3)
  9013 FORMAT (1X,I1,I3,I5)                                     
  9300 FORMAT (I5)
@@ -367,6 +374,57 @@ C     Test for mixing ratio input.
 
       RETURN
       END 
+
+C************************  SUBROUTINE READCLD  *****************************C
+
+      SUBROUTINE READCLD
+
+C     Purpose:  To read in IN_CLD_RRTM, the file that contains input 
+C               cloud properties.
+
+      PARAMETER (MXLAY=203)
+      PARAMETER (MXCBANDS = 5)
+
+      COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
+     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+      COMMON /CLOUDIN/   INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
+     &                   CLDDAT3(MXLAY)
+      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXCBANDS,MXLAY)
+
+      CHARACTER*1 CTEST, CPERCENT
+
+      DATA CPERCENT /'%'/
+      IRDCLD = 11
+
+      OPEN(IRDCLD,FILE='IN_CLD_RRTM',FORM='FORMATTED')
+
+C     Read in cloud input option.  
+      READ(IRDCLD,9050) INFLAG
+
+      DO 500 LAY = 1, NLAYERS
+         CLDFRAC(LAY) = 0.
+ 500  CONTINUE
+
+ 1000 CONTINUE
+C     For INFLAG = 0 or 1, for each cloudy layer only LAY, FRAC, and
+C     DAT1 are pertinent.  If CTEST = '%', then there are no more 
+C     cloudy layers to process.
+      READ (IRDCLD,9100,END=9000) CTEST,LAY,FRAC,DAT1,DAT2,DAT3
+      IF (CTEST .EQ. CPERCENT) GO TO 9000
+      CLDFRAC(LAY) = FRAC
+      CLDDAT1(LAY) = DAT1
+      CLDDAT2(LAY) = DAT2
+      CLDDAT3(LAY) = DAT3
+      GO TO 1000
+
+ 9000 CONTINUE
+      CLOSE(IRDCLD)
+
+ 9050 FORMAT (I2)
+ 9100 FORMAT (A1,1X,I3,4E10.5)
+
+      RETURN
+      END
 
 C************************  SUBROUTINE XSIDENT  *****************************C
 
