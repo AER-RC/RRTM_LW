@@ -486,7 +486,7 @@ C           Ice clouds and water clouds combined.
                TAUCLOUD(LAY,1) = CLDDAT1(LAY)
             ELSEIF(INFLAG .EQ. 1) THEN
                CWP = CLDDAT1(LAY)
-               TAUCLOUD(LAY,1) = ABSLIQ2 * CWP
+               TAUCLOUD(LAY,1) = ABSCLD1 * CWP
 
 C           Separate treatement of ice clouds and water clouds.
             ELSEIF(INFLAG .EQ. 2) THEN
@@ -534,7 +534,7 @@ C              Calculation of absorption coefficients due to water clouds.
                   LIQPAT = 0
                   IF (ICEPAT .EQ. 1) ICEPAT = 2
                ELSEIF (LIQFLAG .EQ. 0) THEN
-                  ABSCOLIQ(1) = FLIQ * ABSLIQ20
+                  ABSCOLIQ(1) = FLIQ * ABSLIQ0
                   LIQPAT = 0
                   IF (ICEPAT .EQ. 1) ICEPAT = 2
                ELSEIF (LIQFLAG .EQ. 1) THEN
