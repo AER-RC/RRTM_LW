@@ -85,8 +85,8 @@ C        level and the heating rate for each layer
       DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3000./,DELWAVE(16) /400./
 
       DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
-      DATA NSPA /1,1,7,7,7,1,9,1,11,1,1,9,9,1,9,9/
-      DATA NSPB /1,1,3,3,3,0,1,1, 1,1,1,0,0,1,0,0/
+      DATA NSPA /1,1,10,9,9,1,9,1,11,1,1,9,9,1,9,9/
+      DATA NSPB /1,1, 5,6,5,0,1,1, 1,1,1,0,0,1,0,0/
 
 C     HEATFAC is the factor by which one must multiply delta-flux/ 
 C     delta-pressure, with flux in w/m-2 and pressure in mbar, to get 
@@ -234,7 +234,7 @@ C     Read in atmospheric profile.
      &                 PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /SPECIES/ COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
      &                 NMOL
-      COMMON /IFIL/ IRD,IPR,IPU,DUM(15)
+      COMMON /IFIL/    IRD,IPR,IPU,DUM(15)
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
       CHARACTER*1 CTEST, CDOLLAR
@@ -255,7 +255,7 @@ C     Read in atmospheric profile.
       READ (IRD,9010,END=8800) CTEST
       IF (CTEST .NE. CDOLLAR) GO TO 1000
 
-      READ(IRD,9011) IATM, NUMANGS, IOUT
+      READ (IRD,9011) IATM, NUMANGS, IOUT
       READ (IRD,9012) TBOUND
 
       IF (IATM .EQ. 0) THEN
