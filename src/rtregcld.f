@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE RTREGCLD
 
 C *** This program calculates the upward fluxes, downward fluxes, and
@@ -11,14 +11,19 @@ C     properties,  and all needed Planck function information.  First
 C     order standard Gaussian quadrature is used for the angle 
 C     integration.
 
+C     Clouds are treated with random overlap scheme.
+
       PARAMETER (MG=16)
       PARAMETER (MXLAY=203)
       PARAMETER (MXANG = 4)
       PARAMETER (NBANDS = 16)
+      PARAMETER (NTBL = 10000,TBLINT = 10000.0)
 
       IMPLICIT DOUBLE PRECISION (V)                                     
 
-      COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
+      COMMON /CONSTANTS/ FLUXFAC,HEATFAC
+      COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
+     *                RADCN1,RADCN2 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
@@ -33,11 +38,16 @@ C     integration.
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
+      COMMON /RTTBL/     BPADE,
+     &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
+
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
       DIMENSION ATRANS(MXLAY,MXANG),BBUGAS(MXLAY,MXANG)
       DIMENSION ATOT(MXLAY,MXANG),ODCLD(MXLAY,NBANDS,MXANG)
@@ -49,6 +59,9 @@ C     integration.
       DIMENSION ABSCLD(MXLAY,NBANDS,MXANG)
       DIMENSION IPAT(16,0:2)
 
+C Dimensions for cloud 
+      DIMENSION ICLDLYR(MXLAY)
+
       DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1,
      &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5,
      &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16/
@@ -58,7 +71,6 @@ C     the method to approximate the integral over angles that yields
 C     flux from radiances, then SECREG(I,J) is the secant of the Ith  
 C     (out of a total of J angles) and WTREG(I,J) is the corresponding
 C     weight.
-      DATA SECDIFF / 1.66/
       DATA SECREG(1,1) / 1.5/
       DATA SECREG(2,2) / 2.81649655/, SECREG(1,2) / 1.18350343/
       DATA SECREG(3,3) / 4.70941630/, SECREG(2,3) / 1.69338507/
@@ -71,9 +83,8 @@ C     weight.
       DATA WTREG(1,3) /0.2009319137/
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
-
-      HVRRGC = '$Revision$'
-      
+      DATA REC_6 /0.166667/
+      HVRRGC = '$Revision'
       RADSUM = 0.
       NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
@@ -81,7 +92,7 @@ C *** Load angle data in arrays depending on angular quadrature scheme.
          SECANG(IANG) = SECREG(IANG,NUMANG)
          ANGWEIGH(IANG) = WTREG(IANG,NUMANG)
  100  CONTINUE
-      IF (NUMANGS .EQ. -1) SECANG(1) = SECDIFF
+
       
       TOTUFLUX(0) = 0.0
       TOTDFLUX(0) = 0.0
@@ -102,10 +113,12 @@ C *** Load angle data in arrays depending on angular quadrature scheme.
                   ABSCLD(LAY,IB,IANG) = 1. - TRANSCLD
                   EFCLFRAC(LAY,IB,IANG) = ABSCLD(LAY,IB,IANG) * 
      &                 CLDFRAC(LAY)
+                  ICLDLYR(LAY) = 1
                ELSE
                   ODCLD(LAY,IB,IANG) = 0.0
                   ABSCLD(LAY,IB,IANG) = 0.0
                   EFCLFRAC(LAY,IB,IANG) = 0.0
+                  ICLDLYR(LAY) = 0
                ENDIF
  150        CONTINUE
  180     CONTINUE
@@ -154,6 +167,7 @@ C *** Loop over frequency bands.
             CALL TAUGB16
          ENDIF
 
+         
 C ***    Loop over g-channels.
          IG = 1
  1000    CONTINUE
@@ -169,27 +183,104 @@ C ***       Downward radiative transfer.
                BLAY = PLANKLAY(LEV,IBAND)
                DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
                DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
-
                ODEPTH = SECANG(IANG) * TAUG(LEV,IG)
-               ATRANS(LEV,IANG) = 1. - EXP(-ODEPTH)
-               TFACGAS = ODEPTH/(5.+ODEPTH)
-               GASSRC = ATRANS(LEV,IANG) * PLFRAC * 
-     &              (BLAY + TFACGAS*DPLANKDN)
+               IF (ODEPTH .LT. 0.0) ODEPTH = 0.0
+               IF (ICLDLYR(LEV).EQ.1) THEN
+                  ODTOT = ODEPTH + ODCLD(LEV,IB,IANG)
+                  IF (ODTOT .LT. 0.06) THEN
+                     ATRANS(LEV,IANG) = ODEPTH - 
+     &                    0.5*ODEPTH*ODEPTH
+                     ODEPTH_REC = REC_6*ODEPTH
+                     GASSRC = PLFRAC*(BLAY+DPLANKDN*ODEPTH_REC)
+     &                    *ATRANS(LEV,IANG)
 
-               ODTOT = ODEPTH + ODCLD(LEV,IB,IANG)
-               TFACTOT = ODTOT/(5.+ODTOT)
-               BBDTOT = PLFRAC * (BLAY + TFACTOT*DPLANKDN)
-               ATOT(LEV,IANG) = ATRANS(LEV,IANG) + ABSCLD(LEV,IB,IANG) -
-     &              ATRANS(LEV,IANG) * ABSCLD(LEV,IB,IANG)
+                     ATOT(LEV,IANG) =  ODTOT - 0.5*ODTOT*ODTOT
+                     ODTOT_REC = REC_6*ODTOT
+                     BBDTOT =  PLFRAC * (BLAY+DPLANKDN*ODTOT_REC)
+                     RADLD = RADLD - RADLD * (ATRANS(LEV,IANG) +
+     &                    EFCLFRAC(LEV,IB,IANG) * 
+     &                    (1. - ATRANS(LEV,IANG))) +
+     &                    GASSRC + CLDFRAC(LEV) * 
+     &                    (BBDTOT * ATOT(LEV,IANG) - GASSRC)
+                     DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+                  
+                     BBUGAS(LEV,IANG) =  PLFRAC *
+     &                    (BLAY+DPLANKUP*ODEPTH_REC)
+                     BBUTOT(LEV,IANG) =  PLFRAC * 
+     &                    (BLAY+DPLANKUP*ODTOT_REC)
+                  ELSEIF (ODEPTH .LE. 0.06) THEN
+                     ATRANS(LEV,IANG) = ODEPTH -
+     &                    0.5*ODEPTH*ODEPTH
+                     ODEPTH_REC = REC_6*ODEPTH
+                     GASSRC = PLFRAC*(BLAY+DPLANKDN*ODEPTH_REC)
+     &                    *ATRANS(LEV,IANG)
 
-               RADLD = RADLD - RADLD * (ATRANS(LEV,IANG) +
-     &              EFCLFRAC(LEV,IB,IANG) * (1. - ATRANS(LEV,IANG))) +
-     &              GASSRC + CLDFRAC(LEV) * 
-     &              (BBDTOT * ATOT(LEV,IANG) - GASSRC)
-               DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+                     ODTOT = ODEPTH + ODCLD(LEV,IB,IANG)
+                     TBLIND = ODTOT/(BPADE+ODTOT)
+                     ITTOT = TBLINT*TBLIND + 0.5
+                     TFACTOT = TF(ITTOT)
+                     BBDTOT = PLFRAC * (BLAY + TFACTOT*DPLANKDN)
+                     ATOT(LEV,IANG) = 1. - TRANS(ITTOT)
 
-               BBUGAS(LEV,IANG) = PLFRAC * (BLAY + TFACGAS * DPLANKUP)
-               BBUTOT(LEV,IANG) = PLFRAC * (BLAY + TFACTOT * DPLANKUP)
+                     RADLD = RADLD - RADLD * (ATRANS(LEV,IANG) +
+     &                    EFCLFRAC(LEV,IB,IANG) * 
+     &                    (1. - ATRANS(LEV,IANG))) +
+     &                    GASSRC + CLDFRAC(LEV) * 
+     &                    (BBDTOT * ATOT(LEV,IANG) - GASSRC)
+                     DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+
+                     BBUGAS(LEV,IANG) = PLFRAC * 
+     &                    (BLAY + DPLANKUP*ODEPTH_REC)
+                     BBUTOT(LEV,IANG) = PLFRAC * 
+     &                    (BLAY + TFACTOT * DPLANKUP)
+                  ELSE
+                     TBLIND = ODEPTH/(BPADE+ODEPTH)
+                     ITGAS = TBLINT*TBLIND+0.5
+                     ODEPTH = TAUTBL(ITGAS)
+                     ATRANS(LEV,IANG) = 1. - TRANS(ITGAS)
+                     TFACGAS = TF(ITGAS)
+                     GASSRC = ATRANS(LEV,IANG) * PLFRAC * 
+     &                    (BLAY + TFACGAS*DPLANKDN)
+
+                     ODTOT = ODEPTH + ODCLD(LEV,IB,IANG)
+                     TBLIND = ODTOT/(BPADE+ODTOT)
+                     ITTOT = TBLINT*TBLIND + 0.5
+                     TFACTOT = TF(ITTOT)
+                     BBDTOT = PLFRAC * (BLAY + TFACTOT*DPLANKDN)
+                     ATOT(LEV,IANG) = 1. - TRANS(ITTOT)
+
+                     RADLD = RADLD - RADLD * (ATRANS(LEV,IANG) +
+     &                    EFCLFRAC(LEV,IB,IANG) * 
+     &                    (1. - ATRANS(LEV,IANG))) +
+     &                    GASSRC + CLDFRAC(LEV) * 
+     &                    (BBDTOT * ATOT(LEV,IANG) - GASSRC)
+                     DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+                     BBUGAS(LEV,IANG) = PLFRAC * 
+     &                    (BLAY + TFACGAS * DPLANKUP)
+                     BBUTOT(LEV,IANG) = PLFRAC * 
+     &                    (BLAY + TFACTOT * DPLANKUP)
+                  ENDIF
+               ELSE
+                  IF (ODEPTH .LE. 0.06) THEN
+                     IF (ODEPTH .LT. 0.0) ODEPTH = 0.0
+                     ATRANS(LEV,IANG) = ODEPTH-0.5*ODEPTH*ODEPTH
+                     ODEPTH = REC_6*ODEPTH
+                     BBD = PLFRAC*(BLAY+DPLANKDN*ODEPTH)
+                     BBUGAS(LEV,IANG) = PLFRAC*
+     &                    (BLAY+DPLANKUP*ODEPTH)
+                  ELSE
+                     TBLIND = ODEPTH/(BPADE+ODEPTH)
+                     ITR = TBLINT*TBLIND+0.5
+                     TRANSC = TRANS(ITR)
+                     ATRANS(LEV,IANG) = 1.-TRANSC
+                     TAUSFAC = TF(ITR)
+                     BBD = PLFRAC*(BLAY+TAUSFAC*DPLANKDN)
+                     BBUGAS(LEV,IANG) = PLFRAC * 
+     &                    (BLAY + TAUSFAC * DPLANKUP)
+                  ENDIF   
+                  RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
+                  DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+               ENDIF
  2500       CONTINUE
             RAD(IANG) = RADLD
             RADSUM = RADSUM + ANGWEIGH(IANG) * RADLD
@@ -209,12 +300,19 @@ C              Lambertian reflection.
             URAD(0,IANG) = URAD(0,IANG) + RADLU
 C ***       Upward radiative transfer.
             DO 2600 LEV = 1, NLAYERS
-               GASSRC = BBUGAS(LEV,IANG) * ATRANS(LEV,IANG)
-               RADLU = RADLU - RADLU * (ATRANS(LEV,IANG) +
-     &              EFCLFRAC(LEV,IB,IANG) * (1. - ATRANS(LEV,IANG))) +
-     &              GASSRC + CLDFRAC(LEV) * 
-     &              (BBUTOT(LEV,IANG) * ATOT(LEV,IANG) - GASSRC)
-               URAD(LEV,IANG) = URAD(LEV,IANG) + RADLU
+               IF (ICLDLYR(LEV) .EQ. 1) THEN
+                  GASSRC = BBUGAS(LEV,IANG) * ATRANS(LEV,IANG)
+                  RADLU = RADLU - RADLU * (ATRANS(LEV,IANG) +
+     &                 EFCLFRAC(LEV,IB,IANG) * 
+     &                 (1. - ATRANS(LEV,IANG))) +
+     &                 GASSRC + CLDFRAC(LEV) * 
+     &                 (BBUTOT(LEV,IANG) * ATOT(LEV,IANG) - GASSRC)
+                  URAD(LEV,IANG) = URAD(LEV,IANG) + RADLU
+               ELSE
+                  RADLU = RADLU + (BBUGAS(LEV,IANG)-RADLU)
+     &                 *ATRANS(LEV,IANG)
+                  URAD(LEV,IANG) = URAD(LEV,IANG) + RADLU                  
+               ENDIF
  2600       CONTINUE
  4000    CONTINUE 
          RADSUM = 0.
