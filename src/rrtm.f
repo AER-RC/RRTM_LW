@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
 ****************************************************************************
 *                                                                          *
 *                               RRTM                                       *
@@ -9,6 +9,7 @@ C     presently: %H%  %T%
 *                                                                          *
 *                                                                          *
 *                   A RAPID RADIATIVE TRANSFER MODEL                       *
+*                       FOR THE LONGWAVE REGION                            * 
 *                                                                          *
 *                                                                          *
 *            ATMOSPHERIC AND ENVIRONMENTAL RESEARCH, INC.                  *
@@ -48,19 +49,27 @@ C        level and the heating rate for each layer
       PARAMETER (MXLAY=203)
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
+      PARAMETER (NTBL = 10000,TBLINT=10000.0)
 
-      COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
+      COMMON /CONSTANTS/ FLUXFAC,HEATFAC
+      COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
+     *                RADCN1,RADCN2 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PRECISE/   ONEMINUS
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND, ICLD
+      COMMON /IFIL/      IRD,IPR,IPU,IDUM(15)
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
+      COMMON /RTTBL/     BPADE,
+     &                   TAUTBL(0:NTBL),TRANS(0:NTBL), TF(0:NTBL)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
+
       COMMON /HVRSN1/    HVRKG1
       COMMON /HVRSN2/    HVRKG2
       COMMON /HVRSN3/    HVRKG3
@@ -79,14 +88,15 @@ C        level and the heating rate for each layer
       COMMON /HVRSN16/   HVRKG16
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       CHARACTER*15 HVRKG1,HVRKG2,HVRKG3,HVRKG4,HVRKG5
       CHARACTER*15 HVRKG6,HVRKG7,HVRKG8,HVRKG9,HVRKG10,HVRKG11
       CHARACTER*15 HVRKG12,HVRKG13,HVRKG14,HVRKG15,HVRKG16
       CHARACTER PAGE
 
-C      DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
-C      DATA WAVENUM1(2) /250./, WAVENUM2(2) /500./, DELWAVE(2) /250./
+C      DATA WAVENUM1(1) /10./, WAVENUM2(1) /350./, DELWAVE(1) /340./
+C      DATA WAVENUM1(2) /350./, WAVENUM2(2) /500./, DELWAVE(2) /150./
 C      DATA WAVENUM1(3) /500./, WAVENUM2(3) /630./, DELWAVE(3) /130./
 C      DATA WAVENUM1(4) /630./, WAVENUM2(4) /700./, DELWAVE(4) /70./
 C      DATA WAVENUM1(5) /700./, WAVENUM2(5) /820./, DELWAVE(5) /120./
@@ -100,7 +110,7 @@ C      DATA WAVENUM1(12) /1800./,WAVENUM2(12) /2080./,DELWAVE(12) /280./
 C      DATA WAVENUM1(13) /2080./,WAVENUM2(13) /2250./,DELWAVE(13) /170./
 C      DATA WAVENUM1(14) /2250./,WAVENUM2(14) /2380./,DELWAVE(14) /130./
 C      DATA WAVENUM1(15) /2380./,WAVENUM2(15) /2600./,DELWAVE(15) /220./
-C      DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3000./,DELWAVE(16) /400./
+C      DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3250./,DELWAVE(16) /650./
 
 C      DATA NG  /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
 C      DATA NSPA /1, 1,10, 9, 9, 1, 9, 1,11, 1, 1, 9, 9, 1, 9, 9/
@@ -114,16 +124,49 @@ C        =  (9.8066)(3600)(1e-5)/(1.004)
 C      DATA HEATFAC /8.4391/
 
       ONEMINUS = 1. - 1.E-6
-      PI = 2.*ASIN(1.)
       FLUXFAC = PI * 2.D4  
 
       IWR = 10
       PAGE = CHAR(12)
-      
-C     Multiple atmospheres not yet implemented. 
-      NUMATMOS = 1
-      DO 4000 IATMOS = 1, NUMATMOS
 
+      HVRRTM = '$Revision$'
+
+C  Compute lookup tables for transmittance, tau transition function,
+C  and clear sky tau (for the cloudy sky radiative transfer).  Tau is 
+C  computed as a function of the tau transition function, transmittance 
+C  is calculated as a function of tau, and the tau transition function 
+C  is calculated using the linear in tau formulation at values of tau 
+C  above 0.01.  TF is approximated as tau/6 for tau < 0.01.  All tables 
+C  are computed at intervals of 0.001.  The inverse of the constant used
+C  in the Pade approximation to the tau transition function is set to b.
+
+      TAUTBL(0) = 0.0
+      TAUTBL(NTBL) = 1.E10
+      TRANS(0) = 1.0
+      TRANS(NTBL) = 0.0
+      TF(0) = 0.0
+      TF(NTBL) = 1.0
+      PADE  = 0.278
+      BPADE = 1.0/PADE
+      DO 500 ITR = 1,NTBL-1
+         TFN = ITR/FLOAT(NTBL)
+         TAUTBL(ITR) = BPADE*TFN/(1.-TFN)
+         TRANS(ITR) = EXP(-TAUTBL(ITR))
+         IF (TAUTBL(ITR) .LT. 0.06) THEN
+            TF(ITR) = TAUTBL(ITR)/6.
+         ELSE
+            TF(ITR) = 1.-
+     &           2.*((1./TAUTBL(ITR))-(TRANS(ITR)/(1.-TRANS(ITR))))
+         ENDIF
+ 500     CONTINUE
+
+C     Open the INPUT set of atmospheres
+      IRD = 9
+      OPEN (IRD,FILE='INPUT_RRTM',FORM='FORMATTED')
+
+c Multiple atmosphere option implemented      
+      NUMATMOS = 100000
+      DO 4000 IATMOS = 1, NUMATMOS
 C ***    Input atmospheric profile from INPUT_RRTM.
          CALL READPROF
 
@@ -142,18 +185,25 @@ C ***    Calculate information needed by the radiative transfer routine
 C        that is specific to this atmosphere, especially some of the 
 C        coefficients and indices needed to compute the optical depths
 C        by interpolating data from stored reference atmospheres. 
-
-         IF (ICLD .EQ. 1) CALL CLDPROP(ICLDATM)
+         ICLDATM = 0
+         IF (ICLD .GE. 1) CALL CLDPROP(ICLDATM)
 
          CALL SETCOEF
-
 C ***    Call the radiative transfer routine.
          IF (NUMANGS .EQ. 0 .AND. ICLDATM .EQ. 0) THEN
             CALL RTR
          ELSEIF (NUMANGS .EQ. 0 .AND. ICLDATM .EQ. 1) THEN
-            CALL RTRCLD
+            IF (ICLD .EQ. 2) THEN
+               CALL RTRCLDMR 
+            ELSE 
+               CALL RTRCLD
+            ENDIF
          ELSEIF (ICLDATM .EQ. 1) THEN
-            CALL RTREGCLD
+            IF (ICLD .EQ. 2) THEN
+               CALL RTREGCLDMR 
+            ELSE 
+               CALL RTREGCLD
+            ENDIF
          ELSE
             CALL RTREG
          ENDIF
@@ -161,7 +211,7 @@ C ***    Call the radiative transfer routine.
 
 C ***    Process output for this atmosphere.
          OPEN (IWR,FILE='OUTPUT_RRTM',FORM='FORMATTED')
-         WRITE(IWR,9899)WAVENUM1(ISTART),WAVENUM2(IEND)
+         WRITE(IWR,9899)WAVENUM1(ISTART),WAVENUM2(IEND),IATMOS
          WRITE(IWR,9900)
          WRITE(IWR,9901)
 C
@@ -204,13 +254,15 @@ C
 C ***    Output module version numbers
 C
          WRITE(IWR,9910) HVRRTM,HVRATM,HVRRTR,HVRRTC,HVRREG,HVRRGC,
-     *        HVRSET,HVRCLD,HVRUTL,HVRTAU,HVRKG1,HVRKG2,HVRKG3,
-     *        HVRKG4,HVRKG5,HVRKG6,HVRKG7,HVRKG8,HVRKG9,HVRKG10,
-     *        HVRKG11,HVRKG12,HVRKG13,HVRKG14,HVRKG15,HVRKG16
-         CLOSE(IWR)
+     *     HVRRTX,HVRRGX,HVRSET,HVRCLD,HVRUTL,HVRTAU,HVRKG1,HVRKG2,
+     *     HVRKG3,HVRKG4,HVRKG5,HVRKG6,HVRKG7,HVRKG8,HVRKG9,HVRKG10,
+     *     HVRKG11,HVRKG12,HVRKG13,HVRKG14,HVRKG15,HVRKG16
 
  4000 CONTINUE
 
+
+         CLOSE(IRD)
+         CLOSE(IWR)
 
  9952 FORMAT(1X,I3,9X,F7.6,3X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9953 FORMAT(1X,I3,9X,F6.5,4X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
@@ -219,7 +271,7 @@ C
  9956 FORMAT(1X,I3,7X,F5.2,7X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9957 FORMAT(1X,I3,6X,F5.1,8X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
  9958 FORMAT(1X,I3,5X,F5.0,9X,F8.4,6X,F8.4,6X,F9.4,10X,F9.5)
- 9899 FORMAT(1X,'Wavenumbers: ',F6.1,' - ',F6.1,' cm-1')
+ 9899 FORMAT(1X,'Wavenumbers: ',F6.1,' - ',F6.1,' cm-1, ATM ',i6)
  9900 FORMAT(1X,'LEVEL    PRESSURE   UPWARD FLUX   DOWNWARD FLUX    NET
      &FLUX       HEATING RATE')
  9901 FORMAT(1X,'            mb          W/m2          W/m2           W/
@@ -228,8 +280,9 @@ C
  9903 FORMAT(A)
  9910 FORMAT('  Modules and versions used in this calculation:',/,/,5X,
      *        '    rrtm.f: ',6X,A15,10X, 'rrtatm.f: ',6X,A15,/,5X,
-     *        '     rtr.f: ',6X,A15,10X, 'rtrcld.f: ',6X,A15,/,5X, 
+     *        '     rtr.f: ',6X,A15,10X, 'rtrcld.f: ',6X,A15,/,5X,
      *        '   rtreg.f: ',6X,A15,8X, 'rtregcld.f: ',6X,A15,/,5X, 
+     *        'rtrcldmr.f: ',6x,A15,8x, 'rtregcldmr.f:',5x,A15,/,5x,
      *        ' setcoef.f: ',6X,A15,9X, 'cldprop.f: ',6X,A15,/,5X,
      *        'util_xxx.f: ',6X,A15,10X, 'taumol.f: ',6X,A15,/,5X,
      *        '  k_gB01.f: ',6X,A15,10X, 'k_gB02.f: ',6X,A15,/,5X,
@@ -273,9 +326,10 @@ C     Read in atmospheric profile.
       COMMON /XRRTATM/  IXSECT
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
-      CHARACTER*1 CTEST, CDOLLAR, CDUM
+      CHARACTER*1 CTEST, CDOLLAR, CPRCNT,CDUM
 
       DATA CDOLLAR /'$'/
+      DATA CPRCNT /'%'/
       DATA IXTRANS /0,0,0,1,2,3,0,0,0,0,0,4,0,0/
 c      DATA WX /MAXPROD*0.0/
 
@@ -287,17 +341,19 @@ c      DATA WX /MAXPROD*0.0/
       FORM3(1) = '(8G15.7)'
 
       IXMAX = MAXINPX
-      IRD = 9
-      OPEN (IRD,FILE='INPUT_RRTM',FORM='FORMATTED')
 
  1000 CONTINUE
       READ (IRD,9010,END=8800) CTEST
+      IF (CTEST .EQ. CPRCNT) GO TO 8900 
       IF (CTEST .NE. CDOLLAR) GO TO 1000
 
       READ (IRD,9011) IATM, IXSECT, NUMANGS, IOUT, ICLD
+c     If numangs set to -1, reset to default rt code for
+c     backwards compatibility with original rrtm
+      IF (NUMANGS .EQ. -1) NUMANGS = 0
 
 C     If clouds are present, read in appropriate input file, IN_CLD_RRTM.
-      IF (ICLD .EQ. 1) CALL READCLD
+      IF (ICLD .GE. 1) CALL READCLD
 
 C     Read in surface information.
       READ (IRD,9012) TBOUND,IEMISS,IREFLECT,(SEMIS(I),I=1,16)
@@ -393,12 +449,10 @@ C     Test for mixing ratio input.
          ENDIF
  5000 CONTINUE
 
-      CLOSE(IRD)
       GO TO 9000
 
  8800 CONTINUE
-      STOP ' INVALID INPUT_RRTM '
-
+ 8900 IF (CTEST.EQ.'%') STOP 'END OF INPUT FILE'
  9000 CONTINUE
 
  9010 FORMAT (A1)
@@ -540,20 +594,24 @@ C        Left-justify all inputed names.
       PARAMETER (MAXXSEC=4)
       PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
-      COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
+      COMMON /CONSTANTS/ FLUXFAC,HEATFAC
+      COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
+     *                RADCN1,RADCN2 
       COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
-c
-      COMMON /HVERSN/ HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                HVDUM1(4),HVRUTL,HVREXT
+
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 
-      DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
-      DATA WAVENUM1(2) /250./, WAVENUM2(2) /500./, DELWAVE(2) /250./
+      DATA WAVENUM1(1) /10./, WAVENUM2(1) /350./, DELWAVE(1) /340./
+      DATA WAVENUM1(2) /350./, WAVENUM2(2) /500./, DELWAVE(2) /150./
       DATA WAVENUM1(3) /500./, WAVENUM2(3) /630./, DELWAVE(3) /130./
       DATA WAVENUM1(4) /630./, WAVENUM2(4) /700./, DELWAVE(4) /70./
       DATA WAVENUM1(5) /700./, WAVENUM2(5) /820./, DELWAVE(5) /120./
@@ -567,11 +625,11 @@ c
       DATA WAVENUM1(13) /2080./,WAVENUM2(13) /2250./,DELWAVE(13) /170./
       DATA WAVENUM1(14) /2250./,WAVENUM2(14) /2380./,DELWAVE(14) /130./
       DATA WAVENUM1(15) /2380./,WAVENUM2(15) /2600./,DELWAVE(15) /220./
-      DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3000./,DELWAVE(16) /400./
+      DATA WAVENUM1(16) /2600./,WAVENUM2(16) /3250./,DELWAVE(16) /650./
 
       DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
-      DATA NSPA /1,1,10,9,9,1,9,1,11,1,1,9,9,1,9,9/
-      DATA NSPB /1,1, 5,6,5,0,1,1, 1,1,1,0,0,1,0,0/
+      DATA NSPA /1,1,9,9,9,1,9,1,9,1,1,9,9,1,9,9/
+      DATA NSPB /1,1,5,5,5,0,1,1,1,1,1,0,0,1,0,0/
 
 C     HEATFAC is the factor by which one must multiply delta-flux/ 
 C     delta-pressure, with flux in w/m-2 and pressure in mbar, to get 
@@ -581,15 +639,43 @@ C        =  (9.8066)(3600)(1e-5)/(1.004)
       DATA HEATFAC /8.4391/
 
       DATA WX /MAXPROD*0.0/
-c
-      DATA HVRRTM / '$Revision$' /, HVRREG / 'NOT USED' /,
+
+      DATA HVRRTM / 'NOT USED' /,   HVRREG / 'NOT USED' /,
      *     HVRRTR / 'NOT USED' /,   HVRATM / 'NOT USED' /,
      *     HVRSET / 'NOT USED' /,   HVRTAU / 'NOT USED' /,
-     *     HVDUM1 / 4*'NOT USED' /, HVRUTL / 'NOT USED' /,
-     *     HVREXT / 'NOT USED' /
+     *     HVRUTL / 'NOT USED' /, HVREXT / 'NOT USED' /,
+     *     HVRRTC /'NOT USED'/, HVRRTX /'NOT USED'/,
+     *     HVRRGC /'NOT USED'/, HVRRGX /'NOT USED'/,
+     *     HVRCLD /'NOT USED'/
 
 
       END
+c**********************************************************************
+      Block Data phys_consts
+c
+      COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
+     *                RADCN1,RADCN2 
+c
+      DATA PI / 3.1415927410125732 /
+c
+c    Constants from NIST 01/11/2002
+c
+      DATA PLANCK / 6.62606876E-27 /, BOLTZ  / 1.3806503E-16 /,
+     *     CLIGHT / 2.99792458E+10 /, 
+     *     AVOGAD / 6.02214199E+23 /, ALOSMT / 2.6867775E+19 /,
+     *     GASCON / 8.314472  E+07 /
+     *     RADCN1 / 1.191042722E-12 /, RADCN2 / 1.4387752    /
+c
+c     Pi was obtained from   PI = 2.*ASIN(1.)                             A03980
+c
+c     units are genrally cgs
+c
+c     The first and second radiation constants are taken from NIST.
+c     They were previously obtained from the relations:
+c                            RADCN1 = 2.*PLANCK*CLIGHT*CLIGHT*1.E-07      A03990
+c                            RADCN2 = PLANCK*CLIGHT/BOLTZ                 A04000
+      end
+c
 
 
 
