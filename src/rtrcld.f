@@ -33,12 +33,10 @@ C     only one exponential is computed per layer per g-value per band.
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVDUM1(4),HVRUTL,HVREXT
-      COMMON /HVRSNB/    HVRKG(NBANDS)
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
 
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
-      CHARACTER*8 HVRKG
+     *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
                                        
       DIMENSION BBDGAS1(MXLAY),BBDGAS2(MXLAY),BBDGAS3(MXLAY)
       DIMENSION BBDTOT1(MXLAY),BBDTOT2(MXLAY),BBDTOT3(MXLAY)
@@ -53,7 +51,6 @@ C     only one exponential is computed per layer per g-value per band.
       DIMENSION EFCLFRAC1(MXLAY,MXCBANDS),ABSCLD3(MXLAY,MXCBANDS)
       DIMENSION EFCLFRAC2(MXLAY,MXCBANDS),EFCLFRAC3(MXLAY,MXCBANDS)
       DIMENSION ICEBNDA(NBANDS),ICEBNDB(NBANDS)
-      HVRRTR = '$Revision$'
 
 C     These arrays indicate the spectral 'region' (used in the 
 C     calculation of ice cloud optical depths) corresponding
@@ -67,6 +64,8 @@ C     quadrature is chosen.) Note that, using these angles,
 C     Trans_2 = (Trans_1) ** 2 and Trans_3 = (Trans_1) ** 3
       DATA WTNUM(3) /0.1084176674/, WTNUM(2) /0.0424353369/
       DATA WTNUM(1) /0.3491473794/
+
+      HVRRTC = '$Revision$'
 
 C *** SECANG is equal to the secant of the first angle.
       SECANG = 1.219512195

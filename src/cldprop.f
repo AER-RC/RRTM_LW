@@ -1,3 +1,7 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
       SUBROUTINE CLDPROP(ICLDATM)
 
 C     Purpose:  Compute the cloud optical depth(s) for each cloudy
@@ -12,7 +16,11 @@ C               layer.
       COMMON /CLOUDIN/   INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
      &                   CLDDAT3(MXLAY)
       COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,MXCBANDS)
+      COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
 
+      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+     *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
       DIMENSION ABSICE3(2), ABSICE4(2,MXCBANDS)
 
       DATA EPS /1.E-6/
@@ -58,6 +66,8 @@ C     (microns (m2/g)).
      &              0.0003, 1.338,
      &              0.0016, 1.166,
      &              0.0020, 1.118/
+
+      HVRCLD = '$Revision$'
 
       ICLDATM = 0
       NCBANDS = 1

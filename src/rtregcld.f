@@ -34,10 +34,10 @@ C     integration.
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVDUM1(4),HVRUTL,HVREXT
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
 
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
 
       DIMENSION ATRANS(MXLAY),BBDGAS(MXLAY),BBDTOT(MXLAY)
       DIMENSION ATOT(MXLAY),ODCLD(MXLAY,MXCBANDS,MXANG)
@@ -74,7 +74,7 @@ C     weight.
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
 
-      HVRREG = '$Revision$'
+      HVRRGC = '$Revision$'
       
       NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
