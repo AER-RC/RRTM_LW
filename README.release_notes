@@ -1,7 +1,13 @@
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
 
-September 2002:
+September 16 Archive Note:  
+	Removed all utilities from the RRTM CVS repository.  Now using CVS utility repository.
+	Note that the utilities in the release 3.0 and 3.01 were also from the CVS
+	utility repository AND NOT FROM THE ARCHIVED one.  This is important when
+	checking our Release_3_0 and Release_3_01.
+
+September 16, 2002:
 
 	Release_3_01
 		This version was released to the public on September 16 (aer_rrtm_v3.01.tar.Z).  
