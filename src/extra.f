@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE XSREAD (XV1,XV2)                                         E00010
 C                                                                         E00020
       IMPLICIT DOUBLE PRECISION (V)                                     ! E00030
@@ -39,10 +39,12 @@ C                                                                         E00280
      *                NTEMPF(5,35),NSPECR(35),IXFORM(5,35),               E00320
      *                XSMASS(35),XDOPLR(5,35),NUMXS,IXSBIN                E00325
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVDUM1(4),HVRUTL,HVREXT
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350
