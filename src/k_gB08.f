@@ -1,12 +1,12 @@
       PARAMETER (MG = 16)
       REAL KA(5,7,MG),KB(5,7:59,MG), SELFREF(10,MG)
 
-      COMMON /HVRSNB/ HVRKG(NBANDS)
+      COMMON /HVRSN8/ HVRKG8
       COMMON /K8/ KA ,KB, SELFREF
 
-      CHARACTER*8 HVRKG
+      CHARACTER*8 HVRKG8
 
-      DATA HVRKG(8)  / '$Revision$' /
+      DATA HVRKG8  / '$Revision$' /
 
 C     The array KA contains absorption coefs at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first
