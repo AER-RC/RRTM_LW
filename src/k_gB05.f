@@ -12,7 +12,7 @@ C     created:   $Date$
       COMMON /K5/ KA, KB, FORREF, SELFREF, KA_MO3
 
       CHARACTER*15 HVRKG5
-      DATA HVRKG5  / '$Revision' /
+      DATA HVRKG5  / '$Revision$' /
 
 
 C     The array KA contains absorption coefs for each of the 16 g-intervals
