@@ -521,7 +521,7 @@ C        Left-justify all inputed names.
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
 
-      DATA HVRRTM / '2.13' /,        HVRREG / 'NOT USED' /,
+      DATA HVRRTM / '$Revision$' /,        HVRREG / 'NOT USED' /,
      *     HVRRTR / 'NOT USED' /,   HVRATM / 'NOT USED' /,
      *     HVRSET / 'NOT USED' /,   HVRTAU / 'NOT USED' /,
      *     HVDUM1 / 4*'NOT USED' /, HVRUTL / 'NOT USED' /,
