@@ -198,6 +198,11 @@ C     foreign continuum is interpolated (in temperature) separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
+         PP = PAVEL(LAY)
+         CORRADJ =  1.
+         IF (PP .LT. 250.) THEN
+            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
+         ENDIF
 
          SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 2000 IG = 1, NG(1)
@@ -210,13 +215,13 @@ C     foreign continuum is interpolated (in temperature) separately.
             TAUN2 = SCALEN2*(KA_MN2(INDM,IG) +  
      &           MINORFRAC(LAY) *
      &           (KA_MN2(INDM+1,IG) - KA_MN2(INDM,IG)))
-            TAUG(LAY,IG) = COLH2O(LAY) * 
+            TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
      &           FAC11(LAY) * ABSA(IND1+1,IG))  
      &           + TAUSELF + TAUFOR
-     &           + TAUN2
+     &           + TAUN2)
              FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -226,6 +231,8 @@ C     foreign continuum is interpolated (in temperature) separately.
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(1) + 1
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
+         PP = PAVEL(LAY)
+         CORRADJ =  1. - 0.15 * (PP / 95.6)
 
          SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 3000 IG = 1, NG(1)
@@ -235,13 +242,13 @@ C     foreign continuum is interpolated (in temperature) separately.
             TAUN2 = SCALEN2*(KB_MN2(INDM,IG) +  
      &           MINORFRAC(LAY) *
      &           (KB_MN2(INDM+1,IG) - KB_MN2(INDM,IG)))
-            TAUG(LAY,IG) = COLH2O(LAY) * 
+            TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))   
      &           + TAUFOR
-     &           + TAUN2
+     &           + TAUN2)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -325,6 +332,8 @@ C     foreign continuum is interpolated (in temperature) separately.
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(2) + 1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
+         PP = PAVEL(LAY)
+         CORRADJ = 1. - .05 * (PP - 100.) / 900.
          DO 2000 IG = 1, NG(2)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -332,12 +341,12 @@ C     foreign continuum is interpolated (in temperature) separately.
             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
      &           FORREF(INDF,IG))) 
-            TAUG(LAY,IG) = COLH2O(LAY) *
+            TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
      &           FAC01(LAY) * ABSA(IND1,IG) + 
      &           FAC11(LAY) * ABSA(IND1+1,IG)) 
-     &           + TAUSELF + TAUFOR
+     &           + TAUSELF + TAUFOR)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -3931,7 +3940,7 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB16
 
-C     BAND 16:  2600-3250 cm-1 (low - H2O,CH4; high key - CH4)
+C     BAND 16:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
 
       PARAMETER (MG=16, MXLAY=203, NBANDS=16)
 
