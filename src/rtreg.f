@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
       SUBROUTINE RTREG
 
 C *** This program calculates the upward fluxes, downward fluxes,
@@ -14,10 +14,13 @@ C     is used for the angle integration.
       PARAMETER (MXLAY=203)
       PARAMETER (MXANG = 4)
       PARAMETER (NBANDS = 16)
+      PARAMETER (NTBL = 10000, TBLINT=10000.0)
 
       IMPLICIT DOUBLE PRECISION (V)                                     
 
-      COMMON /CONSTANTS/ PI,FLUXFAC,HEATFAC
+      COMMON /CONSTANTS/ FLUXFAC,HEATFAC
+      COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
+     *                RADCN1,RADCN2 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
@@ -31,12 +34,15 @@ C     is used for the angle integration.
       COMMON /TAUGCOM/   TAUG(MXLAY,MG)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
+      COMMON /RTTBL/     BPADE,
+     &                   TAUTBL(0:NTBL),TRANS(0:NTBL),TF(0:NTBL)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *                   HVDUM1(4),HVRUTL,HVREXT
+     *                   HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *                   HVRRTX,HVRRGX
 
       CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
-     *            HVDUM1,HVRUTL,HVREXT
-
+     *            HVRRGC,HVRRTC,HVRCLD,HVRUTL,HVREXT,
+     *            HVRRTX,HVRRGX
       DIMENSION ATRANS(MXLAY,MXANG),BBU(MXLAY,MXANG), RAD(MXANG)
       DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)
       DIMENSION DRAD(0:MXLAY-1,MXANG),URAD(0:MXLAY,MXANG)
@@ -61,17 +67,17 @@ C     weight.
       DATA WTREG(1,3) /0.2009319137/
       DATA WTREG(4,4) /0.0311809710/, WTREG(3,4) /0.1298475476/
       DATA WTREG(2,4) /0.2034645680/, WTREG(1,4) /0.1355069134/
+      DATA REC_6 /0.166667/
 
       HVRREG = '$Revision$'
-      
       RADSUM = 0.
       NUMANG = ABS(NUMANGS)
 C *** Load angle data in arrays depending on angular quadrature scheme.
+
       DO 100 IANG = 1, NUMANG
          SECANG(IANG) = SECREG(IANG,NUMANG)
          ANGWEIGH(IANG) = WTREG(IANG,NUMANG)
  100  CONTINUE
-      IF (NUMANGS .EQ. -1) SECANG(1) = SECDIFF
       
       DO 200 LAY = 0, NLAYERS
          TOTUFLUX(LAY) = 0.0
@@ -118,6 +124,7 @@ C *** Loop over frequency bands.
             CALL TAUGB16
          ENDIF
 
+
 C ***    Loop over g-channels.
          IG = 1
  1000    CONTINUE
@@ -131,14 +138,28 @@ C ***       Downward radiative transfer.
                BLAY = PLANKLAY(LEV,IBAND)
                PLFRAC = FRACS(LEV,IG)
                ODEPTH = SECANG(IANG) * TAUG(LEV,IG)
-               ATRANS(LEV,IANG) = 1. - EXP(-ODEPTH)
-               DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
-               DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
-               TAUSFAC = ODEPTH/(5.+ODEPTH)
-               BBD = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
-               RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
-               DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
-               BBU(LEV,IANG) = PLFRAC * (BLAY + TAUSFAC * DPLANKUP)
+               IF (ODEPTH .LE. 0.06) THEN
+                  IF (ODEPTH .LT. 0.0) ODEPTH = 0.0
+                  ATRANS(LEV,IANG) = ODEPTH - 0.5*ODEPTH*ODEPTH
+                  DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
+                  DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
+                  ODEPTH = REC_6*ODEPTH
+                  BBD = PLFRAC*(BLAY+DPLANKDN*ODEPTH)
+                  RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
+                  DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+                  BBU(LEV,IANG) = PLFRAC*(BLAY+DPLANKUP*ODEPTH)
+               ELSE
+                  TBLIND =  ODEPTH/(BPADE+ODEPTH)
+                  ITR = TBLINT*TBLIND + 0.5
+                  ATRANS(LEV,IANG) = 1. - TRANS(ITR)
+                  DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
+                  DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
+                  TAUSFAC = TF(ITR)
+                  BBD = PLFRAC * (BLAY + TAUSFAC * DPLANKDN)
+                  RADLD = RADLD + (BBD-RADLD)*ATRANS(LEV,IANG)
+                  DRAD(LEV-1,IANG) = DRAD(LEV-1,IANG) + RADLD
+                  BBU(LEV,IANG) = PLFRAC * (BLAY + TAUSFAC * DPLANKUP)
+               ENDIF   
  2500       CONTINUE
             RAD(IANG) = RADLD
             RADSUM = RADSUM + ANGWEIGH(IANG) * RADLD
