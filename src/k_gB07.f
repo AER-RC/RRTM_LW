@@ -11,22 +11,21 @@
 
       DATA HVRKG(7)  / '$Revision$' /
 
-C     The array KA contains absorption coef5s at the 16 chosen g-values 
-C     for a range of pressure levels> ~100mb, temperatures, and ratios
-C     of water vapor to CO2.  The first index in the array, JS, runs
-C     from 1 to 7, and corresponds to different water vapor to CO2 ratios.
-C     For instance, JS=1 refers to dry air, JS = 2 corresponds to a ratio
-C     given by the appropriate (i.e. for the given pressure) RATREF31, 
-C     JS = 3 corresponds to a ratio of 2xRATREF31, etc.  The second index
+C     The array KA contains absorption coefs at the 16 chosen g-values 
+C     for a range of pressure levels> ~100mb, temperatures, and binary
+C     species parameters (see taumol.f for definition).  The first 
+C     index in the array, JS, runs from 1 to 9, and corresponds to 
+C     different values of the binary species parameter.  For instance, 
+C     JS=1 refers to dry air, JS = 2 corresponds to the paramter value 1/8, 
+C     JS = 3 corresponds to the parameter value 2/8, etc.  The second index
 C     in the array, JT, which runs from 1 to 5, corresponds to different
 C     temperatures.  More specifically, JT = 3 means that the data are for
-C     the cooresponding TREF for this  pressure level, 
-C     JT = 2 refers to the temperature
-C     TREF-15, JT = 1 is for TREF-30, JT = 4 is for TREF+15, and JT = 5
+C     the reference temperature TREF for this  pressure level, JT = 2 refers
+C     to TREF-15, JT = 1 is for TREF-30, JT = 4 is for TREF+15, and JT = 5
 C     is for TREF+30.  The third index, JP, runs from 1 to 13 and refers
-C     to the corresponding pressure level in PREF (e.g. JP = 1 is for a
-C     pressure of 1053.63 mb).  The fourth index, IG, goes from 1 to 16,
-C     and tells us which "g-channel" the absorption coefficients are for.
+C     to the JPth reference pressure level (see taumol.f for these levels
+C     in mb).  The fourth index, IG, goes from 1 to 16, and indicates
+C     which g-interval the absorption coefficients are for.
       DATA ((KA(JS,JT, 1, 1),JS=1,9),JT=1,5) /
      &2.2177E-05,2.0513E-05,1.8414E-05,1.6282E-05,1.4597E-05,1.7000E-05,
      &3.1783E-05,2.9548E-05,2.0326E-05,2.9476E-05,2.7495E-05,2.4720E-05,
@@ -1900,22 +1899,17 @@ C     and tells us which "g-channel" the absorption coefficients are for.
      &4.0583E-03,1.0796E-02,2.0731E-02,2.9284E-02,3.5883E-02,4.0713E-02,
      &4.0964E-02,3.4894E-02,4.8770E+00/
 
-C     The array KB contains absorption coef5s at the 16 chosen g-values 
-C     for a range of pressure levels < ~100mb, temperatures, and ratios
-C     of H2O to CO2.  The first index in the array, JS, runs
-C     from 1 to 3, and corresponds to different H2O to CO2 ratios.
-C     For instance, JS=1 refers to no H2O, JS = 2 corresponds to a ratio
-C     given by the appropriate (i.e. for the given pressure) RATREF32, 
-C     JS = 3 corresponds to a ratio of 2xRATREF32, etc.  The second index
-C     in the array, JT, which runs from 1 to 5, corresponds to different
-C     temperatures.  More specifically, JT = 3 means that the data are for
-C     the cooresponding TREF for this  pressure level, 
-C     JT = 2 refers to the temperature
-C     TREF-15, JT = 1 is for TREF-30, JT = 4 is for TREF+15, and JT = 5
-C     is for TREF+30.  The third index, JP, runs from 13 to 59 and refers
-C     to the corresponding pressure level in PREF (e.g. JP = 13 is for a
-C     pressure of 95.5835 mb).  The fourth index, IG, goes from 1 to 16,
-C     and tells us which "g-channel" the absorption coefficients are for.
+C     The array KB contains absorption coefs at the 16 chosen g-values 
+C     for a range of pressure levels < ~100mb and temperatures. The first 
+C     index in the array, JT, which runs from 1 to 5, corresponds to 
+C     different temperatures.  More specifically, JT = 3 means that the 
+C     data are for the reference temperature TREF for this pressure 
+C     level, JT = 2 refers to the temperature TREF-15, JT = 1 is for
+C     TREF-30, JT = 4 is for TREF+15, and JT = 5 is for TREF+30.  
+C     The second index, JP, runs from 13 to 59 and refers to the JPth
+C     reference pressure level (see taumol.f for the value of these
+C     pressure levels in mb).  The third index, IG, goes from 1 to 16,
+C     and tells us which g-interval the absorption coefficients are for.
       DATA (KB(JT,13, 1),JT=1,5) /
      &5.1259E-02,7.3611E-02,1.0293E-01,1.3958E-01,1.8370E-01/
       DATA (KB(JT,14, 1),JT=1,5) /
