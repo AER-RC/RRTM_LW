@@ -8,7 +8,7 @@ C     presently: %H%  %T%
 *                                                                          *
 *                                                                          *
 *                                                                          *
-*                   RAPID RADIATIVE TRANSFER MODEL                         *
+*                   A RAPID RADIATIVE TRANSFER MODEL                       *
 *                                                                          *
 *                                                                          *
 *            ATMOSPHERIC AND ENVIRONMENTAL RESEARCH, INC.                  *
