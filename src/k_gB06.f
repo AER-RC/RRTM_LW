@@ -10,6 +10,13 @@ C     presently: %H%  %T%
 
       COMMON /K6/ KA ,SELFREF
 
+      COMMON /HVRSNB/ HVRKG(16)
+
+      CHARACTER*8 HVRKG
+
+      DATA HVRKG(6) / '$Revision$' /
+
+
 C     The array KA contains absorption coef5s at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first
 C     index in the array, JT, which runs from 1 to 5, corresponds to 
