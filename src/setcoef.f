@@ -22,7 +22,7 @@ C  Input
      &                  NMOL
 
 C  Output
-      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),
+      COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,COLH2O(MXLAY),
      &                  COLCO2(MXLAY),COLO3(MXLAY),COLN2O(MXLAY),
      &                  COLCH4(MXLAY),COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
@@ -92,7 +92,6 @@ C     pressures for the MLS standard atmosphere.
      &     2.0887E+02, 2.0340E+02, 1.9792E+02, 1.9290E+02, 1.8809E+02,
      &     1.8329E+02, 1.7849E+02, 1.7394E+02, 1.7212E+02/
 
-
 C ****************** START OF EXECUTABLE CODE ***************************
       HVRSET = '$Revision$'
 
@@ -105,8 +104,8 @@ C ****************** START OF EXECUTABLE CODE ***************************
 
       LAYTROP = 0
       LAYSWTCH = 0
+      LAYLOW = 0
       DO 7000 LAY = 1, NLAYERS
-
 C        Calculate the integrated Planck functions for each band at the
 C        surface, level, and layer temperatures.
          INDLAY = TAVEL(LAY) - 179.
@@ -222,6 +221,7 @@ C        set of species interpolations.
          LAYTROP =  LAYTROP + 1
 C        For one band, the "switch" occurs at ~300 mb. 
          IF (PLOG .GE. 5.76) LAYSWTCH = LAYSWTCH + 1
+         IF (PLOG .GE. 6.62) LAYLOW = LAYLOW + 1
 C
 C        Set up factors needed to separately include the water vapor
 C        self-continuum in the calculation of absorption coefficient.
@@ -240,6 +240,7 @@ C        Calculate needed column amounts.
          IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
+C        Using E = 1334.2 cm-1.
          CO2REG = 3.55E-24 * COLDRY(LAY)
          CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
      &        272.63*EXP(-1919.4/TAVEL(LAY))/(8.7604E-4*TAVEL(LAY))
@@ -252,13 +253,15 @@ C        Calculate needed column amounts.
          COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
          COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
          COLO3(LAY) = 1.E-20 * WKL(3,LAY)
-         COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         COLN2O(LAY) = 1.E-20 * WKL(4,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
-         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-12 * COLDRY(LAY)
+         COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
          CO2REG = 3.55E-24 * COLDRY(LAY)
          CO2MULT(LAY)= (COLCO2(LAY) - CO2REG) *
      &        272.63*EXP(-1919.4/TAVEL(LAY))/(8.7604E-4*TAVEL(LAY))
-
  5400    CONTINUE
 
 C        We have now isolated the layer ln pressure and temperature,
