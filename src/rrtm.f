@@ -13,11 +13,12 @@ C     created:   $Date$
 *                                                                          *
 *                                                                          *
 *            ATMOSPHERIC AND ENVIRONMENTAL RESEARCH, INC.                  *
-*                        840 MEMORIAL DRIVE                                *
-*                        CAMBRIDGE, MA 02139                               *
+*                        131 HARTWELL AVENUE                               *
+*                        LEXINGTON, MA 02421                               *
 *                                                                          *
 *                                                                          *
-*                           ELI J. MLAWER                                  *
+*                         ELI J. MLAWER                                    *
+*                         JENNIFER S. DELAMERE                             *
 *                         STEVEN J. TAUBMAN~                               *
 *                         SHEPARD A. CLOUGH                                *
 *                                                                          *
@@ -27,10 +28,11 @@ C     created:   $Date$
 *                                                                          *
 *                                                                          *
 *                       email:  mlawer@aer.com                             *
+*                       email:  jdelamer@aer.com                           *
 *                                                                          *
 *        The authors wish to acknowledge the contributions of the          *
-*        following people:  Patrick D. Brown, Michael J. Iacono,           *
-*        Ronald E. Farren, Luke Chen, Robert Bergstrom.                    *
+*        following people:  Karen Cady-Pereira, Patrick D. Brown,          *
+*        Michael J. Iacono, Ronald E. Farren, Luke Chen, Robert Bergstrom. *
 *                                                                          *
 ****************************************************************************
 
@@ -42,7 +44,11 @@ C     a) calls READPROF to read in the atmospheric profile
 C     b) calls SETCOEF to calculate various quantities needed for 
 C        the radiative transfer algorithm
 C     c) calls RTR or RTREG (depending on angular quadrature
-C         method) to do the radiative transfer calculation
+C         method) to do the radiative transfer calculation for clear sky 
+C         calculstions OR calls RTRCLD or RTREGCLD for calculations 
+C         with cloudy skies and a random cloud overlap scheme OR
+C         calls RTRCLDMR or RTREGCLDMR for calculations with cloud skies
+C         and a maximum/random cloud overlap scheme
 C     d) writes out the upward, downward, and net flux for each
 C        level and the heating rate for each layer
 
