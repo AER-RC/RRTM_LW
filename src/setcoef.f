@@ -97,9 +97,19 @@ C ****************** START OF EXECUTABLE CODE ***************************
       STPFAC = 296./1013.
 
       INDBOUND = TBOUND - 159.
-      TBNDFRAC = TBOUND - INT(TBOUND)
+      IF (INDBOUND .LT. 1) THEN
+         INDBOUND = 1
+      ELSEIF (INDBOUND .GT. 180) THEN
+         INDBOUND = 180
+      ENDIF
+      TBNDFRAC = TBOUND - 159. - FLOAT(INDBOUND)
       INDLEV0 = TZ(0) - 159.
-      T0FRAC = TZ(0) - INT(TZ(0))
+      IF (INDLEV0 .LT. 1) THEN
+         INDLEV0 = 1
+      ELSEIF (INDLEV0 .GT. 180) THEN
+         INDLEV0 = 180
+      ENDIF
+      T0FRAC = TZ(0) - 159. - FLOAT(INDLEV0)
       LAYTROP = 0
       LAYSWTCH = 0
       LAYLOW = 0
@@ -107,9 +117,19 @@ C ****************** START OF EXECUTABLE CODE ***************************
 C        Calculate the integrated Planck functions for each band at the
 C        surface, level, and layer temperatures.
          INDLAY = TAVEL(LAY) - 159.
-         TLAYFRAC = TAVEL(LAY) - INT(TAVEL(LAY))
+         IF (INDLAY .LT. 1) THEN
+            INDLAY = 1
+         ELSEIF (INDLAY .GT. 180) THEN
+            INDLAY = 180
+         ENDIF
+         TLAYFRAC = TAVEL(LAY) - 159. - FLOAT(INDLAY)
          INDLEV = TZ(LAY) - 159.
-         TLEVFRAC = TZ(LAY) - INT(TZ(LAY))
+         IF (INDLEV .LT. 1) THEN
+            INDLEV = 1
+         ELSEIF (INDLEV .GT. 180) THEN
+            INDLEV = 180
+         ENDIF
+         TLEVFRAC = TZ(LAY) - 159. - FLOAT(INDLEV)
          DO 3500 IBAND = 1, 15
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLNK(INDBOUND+1,IBAND)
