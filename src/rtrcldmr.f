@@ -423,7 +423,6 @@ C             GASSRC     source radiance due to gas only
                   CLRRADD = CLRRADD - RAD
                ELSE
                   IF (ODEPTH .LE. 0.06) THEN
-                     IF (ODEPTH .LT. 0.0) ODEPTH = 0.0
                      ATRANS(LEV) = ODEPTH-0.5*ODEPTH*ODEPTH
                      ODEPTH = REC_6*ODEPTH
                      BBD = PLFRAC*(BLAY+DPLANKDN*ODEPTH)
