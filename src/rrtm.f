@@ -246,7 +246,7 @@ C     Read in atmospheric profile.
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SURFACE/  TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
-     &                  NMOL
+     &                  COLMOL(MXLAY),NMOL
       COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
       COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)

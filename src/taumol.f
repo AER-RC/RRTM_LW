@@ -226,7 +226,7 @@ C  Input
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
-     &                  NMOL
+     &                  COLMOL(MXLAY),NMOL
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,LAYLOW,
      &                  COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
