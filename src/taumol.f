@@ -49,7 +49,7 @@ C     presently: %H%  %T%
 *    &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND                        *
 *     COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),         *
 *    &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),             *
-*    &                  CO2MULT(MXLAY)
+*    &                  COLO2(MXLAY),CO2MULT(MXLAY)
 *     COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            *
 *    &                  FAC10(MXLAY),FAC11(MXLAY)                             *
 *     COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)                        *
@@ -138,7 +138,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -230,7 +230,7 @@ C  Input
      &                  NMOL
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -310,6 +310,7 @@ C     pressure level.
      &    0.11252731,0.09521657,0.07885858,0.05927679,
      &    0.04050184,0.00440285,0.00365748,0.00286791,
      &    0.00207507,0.00129193,0.00046679,0.00006308/
+
 C     From P = 0.432 mb.
       DATA FRACREFB/
      &    0.17444289,0.16467269,0.15021490,0.12460902,
@@ -337,10 +338,10 @@ C     interpolated (in temperature) separately.
          RTFP = SQRT(FP)
          CORR1 = RTFP/FP
          CORR2 = (1.-RTFP)/(1.-FP)
-         FC00(LAY) = FAC00(LAY) * CORR2
-         FC10(LAY) = FAC10(LAY) * CORR2
-         FC01(LAY) = FAC01(LAY) * CORR1
-         FC11(LAY) = FAC11(LAY) * CORR1
+         FC00(LAY) = FAC00(LAY) * CORR2 
+         FC10(LAY) = FAC10(LAY) * CORR2 
+         FC01(LAY) = FAC01(LAY) * CORR1 
+         FC11(LAY) = FAC11(LAY) * CORR1 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(2) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(2) + 1
          INDS = INDSELF(LAY)
@@ -403,7 +404,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -587,7 +588,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -758,7 +759,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 5:  700-820 cm-1 (low - H2O,CO2; high - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
 C  Output
 
@@ -773,7 +774,8 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -781,7 +783,7 @@ C  Input
       COMMON /K5/       KA(9,5,13,MG), KB(5,5,13:59,MG) , SELFREF(10,MG)
 
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
-      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5), CCL4(MG)
 
       DATA FRACREFA/
 C     From P = 387.6 mb.
@@ -844,6 +846,12 @@ C     From P = 1.17 mb.
      &    0.04366570,0.00473087,0.00392539,0.00311238,
      &    0.00229865,0.00147572,0.00056517,0.00007939/
 
+      DATA CCL4/
+     &     26.1407,  53.9776,  63.8085,  36.1701,
+     &     15.4099, 10.23116,  4.82948,  5.03836,
+     &     1.75558,0.,0.,0.,
+     &     0.,0.,0.,0./
+
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
       REAL KA,KB
@@ -885,6 +893,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+     &           + WX(1,LAY) * CCL4(IG)
             FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
      &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
  2000    CONTINUE
@@ -917,6 +926,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           FAC101 * ABSB(IND1+1,IG) +
      &           FAC011 * ABSB(IND1+5,IG) +
      &           FAC111 * ABSB(IND1+6,IG))
+     &           + WX(1,LAY) * CCL4(IG)
             FRACS(LAY,IG) = FRACREFB(IG,JS) + FS *
      &           (FRACREFB(IG,JS+1) - FRACREFB(IG,JS))
  3000    CONTINUE
@@ -931,7 +941,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 6:  820-980 cm-1 (low - H2O; high - nothing)
 
-      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
 C  Output
 
@@ -945,7 +955,8 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -953,7 +964,7 @@ C  Input
       COMMON /K6/       KA(5,13,MG), SELFREF(10,MG)
 
       DIMENSION ABSA(65,MG)
-      DIMENSION FRACREFA(MG),STEP(16)
+      DIMENSION FRACREFA(MG),ABSCO2(MG), CFC11ADJ(MG), CFC12(MG)
 
 C     From P = 706 mb.
       DATA FRACREFA/
@@ -961,18 +972,36 @@ C     From P = 706 mb.
      &    0.12569460,0.11028396,0.08626066,0.06245148,
      &    0.04309394,0.00473551,0.00403920,0.00321695,
      &    0.00232470,0.00147662,0.00056095,0.00007373/
-      DATA STEP /0.,0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1./
+C      DATA CFC11/
+C     &     0., 0., 26.5435, 108.850,
+C     &     58.7804, 54.0875, 41.1065, 35.6120,
+C     &     41.2328, 47.7402, 79.1026, 64.3005,
+C     &     108.206, 141.617, 186.565, 58.4782/
+C     CFC11 is multiplied by 1.385 to account for the 1060-1107 cm-1 band.
+      DATA CFC11ADJ/
+     &     0.,  0., 36.7627,    150.757,    
+     &     81.4109, 74.9112, 56.9325, 49.3226,  
+     &     57.1074, 66.1202, 109.557, 89.0562,  
+     &     149.865, 196.140, 258.393, 80.9923/   
+      DATA CFC12/
+     &     62.8368, 43.2626, 26.7549, 22.2487,
+     &     23.5029, 34.8323, 26.2335, 23.2306,
+     &     18.4062, 13.9534, 22.6268, 24.2604,
+     &     30.0088, 26.3634, 15.8237, 57.5050/
+
+      DATA ABSCO2/
+     &     7.44852E-05, 6.29208E-05, 7.34031E-05, 6.65218E-05,
+     &     7.87511E-05, 1.22489E-04, 3.39785E-04, 9.33040E-04,
+     &     1.54323E-03, 4.07220E-04, 4.34332E-04, 8.76418E-05,
+     &     9.80381E-05, 3.51680E-05, 5.31766E-05, 1.01542E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
       REAL KA,KB
-      ABSCO2 = 6.207E-2/(160.*(1.-.693906))
-
 C     Compute the optical depth by interpolating in ln(pressure) and
 C     temperature. The water vapor self-continuum is interpolated
 C     (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
-         EXTRACO2 = CO2MULT(LAY) * ABSCO2
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(6) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(6) + 1
          INDS = INDSELF(LAY)
@@ -985,7 +1014,9 @@ C     (in temperature) separately.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY)*
      &           (SELFREF(INDS+1,IG)-SELFREF(INDS,IG))))
-     &           + EXTRACO2 * STEP(IG)
+     &           + WX(2,LAY) * CFC11ADJ(IG)
+     &           + WX(3,LAY) * CFC12(IG)
+     &           + CO2MULT(LAY) * ABSCO2(IG)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -993,8 +1024,10 @@ C     (in temperature) separately.
 C     Nothing important goes on above LAYTROP in this band.
       DO 3500 LAY = LAYTROP+1, NLAYERS
          DO 3000 IG = 1, NG(6)
-            TAUG(LAY,IG) = 0.0
-            FRACS(LAY,IG) = 0.0
+            TAUG(LAY,IG) = 0.0 
+     &           + WX(2,LAY) * CFC11ADJ(IG)
+     &           + WX(3,LAY) * CFC12(IG)
+            FRACS(LAY,IG) = FRACREFA(IG)
  3000    CONTINUE
  3500 CONTINUE
 
@@ -1022,7 +1055,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1030,7 +1063,7 @@ C  Input
       COMMON /K7/       KA(9,5,13,MG), KB(5,13:59,MG) , SELFREF(10,MG)
 
       DIMENSION ABSA(585,MG),ABSB(235,MG)
-      DIMENSION FRACREFA(MG,9),FRACREFB(MG),STEP(MG)
+      DIMENSION FRACREFA(MG,9),FRACREFB(MG),ABSCO2(MG)
 
       DATA FRACREFA/
      &  0.16461779, 0.14889984, 0.14233345, 0.13156526,
@@ -1076,19 +1109,21 @@ C  Input
      &    0.04164486,0.00451141,0.00372837,0.00294095,
      &    0.00215259,0.00136792,0.00051233,0.00007075/
 
-      DATA STEP/0.,0.,0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1./
+      DATA ABSCO2/
+     &     9.30038E-05, 1.74061E-04, 2.09293E-04, 2.52360E-04,
+     &     3.13404E-04, 4.16619E-04, 6.27394E-04, 1.29386E-03,
+     &     4.05192E-03, 3.97050E-03, 7.00634E-04, 6.06617E-04,
+     &     7.66978E-04, 6.70661E-04, 7.89971E-04, 7.55709E-04/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
       REAL KA,KB
       STRRAT1 = 8.21104E4
-      ABSCO2 = 8.788E-4/(1.-.575711)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
-         EXTRACO2 = CO2MULT(LAY) * ABSCO2
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLO3(LAY)
          SPECPARM = COLH2O(LAY)/SPECCOMB 
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
@@ -1120,7 +1155,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-     &           + EXTRACO2 * STEP(IG)
+     &           + CO2MULT(LAY) * ABSCO2(IG)
          FRACS(LAY,IG) = FRACREFA(IG,JS) + FS *
      &           (FRACREFA(IG,JS+1) - FRACREFA(IG,JS))
  2000    CONTINUE
@@ -1135,6 +1170,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
+     &           + CO2MULT(LAY) * ABSCO2(IG)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1148,7 +1184,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
 
 C     BAND 8:  1080-1180 cm-1 (low (i.e.>~300mb) - H2O; high - O3)
 
-      PARAMETER (MG=16, MXLAY=203, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, MAXXSEC=4, NBANDS=16)
 
 C  Output
 
@@ -1162,15 +1198,16 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
+      COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       COMMON /K8/       KA(5,7,MG), KB(5,7:59,MG), SELFREF(10,MG)
 
-      DIMENSION ABSA(35,MG),ABSB(265,MG)
-      DIMENSION FRACREFA(MG),FRACREFB(MG),STEP(16)
+      DIMENSION ABSA(35,MG),ABSB(265,MG),CFC12(MG),CFC22ADJ(MG)
+      DIMENSION FRACREFA(MG),FRACREFB(MG),ABSCO2(MG),ABSCO2B(MG)
 
 C     From P = 1053.6 mb.
       DATA FRACREFA/
@@ -1185,17 +1222,39 @@ C     From P = 28.9 mb.
      &    0.04394640,0.00481284,0.00397375,0.00315006,
      &    0.00228636,0.00144606,0.00054604,0.00007697/
 
-      DATA STEP/0.,0.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1./
+      DATA CFC12/
+     &     85.4027, 89.4696, 74.0959, 67.7480,
+     &     61.2444, 59.9073, 60.8296, 63.0998,
+     &     59.6110, 64.0735, 57.2622, 58.9721,
+     &     43.5505, 26.1192, 32.7023, 32.8667/
+C     Original CFC22 is multiplied by 1.485 to account for the 780-850 cm-1 
+C     and 1290-1335 cm-1 bands.
+      DATA CFC22ADJ/
+     &     135.335, 89.6642, 76.2375, 65.9748,
+     &     63.1164, 60.2935, 64.0299, 75.4264,
+     &     51.3018, 7.07911, 5.86928, 0.398693,
+     &     2.82885, 9.12751, 6.28271, 0./
+
+C     For lower atmosphere.
+      DATA ABSCO2/
+     &     1.11233E-05, 3.92400E-05, 6.62059E-05, 8.51687E-05,
+     &     7.79035E-05, 1.34058E-04, 2.82553E-04, 5.41741E-04,
+     &     1.47029E-05, 2.34982E-05, 6.91094E-08, 8.48917E-08,
+     &     6.58783E-08, 4.64849E-08, 3.62742E-08, 3.62742E-08/
+C     For upper atmosphere.
+      DATA ABSCO2B/
+     &     4.10977E-09, 5.65200E-08, 1.70800E-07, 4.16840E-07,
+     &     9.53684E-07, 2.36468E-06, 7.29502E-06, 4.93883E-05, 
+     &     5.10440E-04, 9.75248E-04, 1.36495E-03, 2.40451E-03,
+     &     4.50277E-03, 2.24486E-02, 4.06756E-02, 2.17447E-10/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
       REAL KA,KB
-      ABSCO2 = 2.050E-4/(1.-.301926)
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  
       DO 2500 LAY = 1, LAYSWTCH
-         EXTRACO2 = CO2MULT(LAY) * ABSCO2
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(8) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(8) + 1
          INDS = INDSELF(LAY)
@@ -1208,7 +1267,9 @@ C     temperature.
      &           SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG))))
-     &           + EXTRACO2 * STEP(IG)
+     &           + WX(3,LAY) * CFC12(IG)
+     &           + WX(4,LAY) * CFC22ADJ(IG)
+     &           + CO2MULT(LAY) * ABSCO2(IG)
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -1222,6 +1283,9 @@ C     temperature.
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
+     &           + WX(3,LAY) * CFC12(IG)
+     &           + WX(4,LAY) * CFC22ADJ(IG)
+     &           + CO2MULT(LAY) * ABSCO2B(IG)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -1242,9 +1306,6 @@ C  Output
       COMMON /TAUGCOM/  TAUG(MXLAY,MG)
       COMMON /PLANKG/   FRACS(MXLAY,MG)                                       
 
-      DIMENSION ABSA(715,MG),ABSB(235,MG)
-      DIMENSION FRACREFA(MG,9), FRACREFB(MG)
-
 C  Input
 
       COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
@@ -1253,12 +1314,15 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K9/       KA(11,5,13,MG),KB(5,13:59,MG),SELFREF(10,MG)
+
+      DIMENSION ABSA(715,MG),ABSB(235,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
       DATA FRACREFA/
 C     From P = 1053.6 mb.
@@ -1315,7 +1379,7 @@ C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum is interpolated (in temperature) separately.  
       DO 2500 LAY = 1, LAYTROP
          SPECCOMB = COLH2O(LAY) + STRRAT1*COLCH4(LAY)
-         SPECPARM = COLH2O(LAY)/SPECCOMB 
+         SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
@@ -1405,7 +1469,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1482,7 +1546,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1566,7 +1630,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1691,7 +1755,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1815,7 +1879,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1899,7 +1963,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -2005,6 +2069,7 @@ C     vapor self-continuum is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
+
       SUBROUTINE TAUGB16
 
 C     BAND 16:  2600-3000 cm-1 (low - H2O,CH4; high - nothing)
@@ -2024,7 +2089,7 @@ C  Input
      &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
       COMMON /PROFDATA/ LAYTROP,LAYSWTCH,COLH2O(MXLAY),COLCO2(MXLAY),
      &                  COLO3(MXLAY),COLN2O(MXLAY),COLCH4(MXLAY),
-     &                  CO2MULT(MXLAY)
+     &                  COLO2(MXLAY),CO2MULT(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
