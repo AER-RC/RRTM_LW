@@ -34,7 +34,7 @@ C     COMMON BLOCKS AND PARAMETERS FOR THE PROFILES AND DENSITIES         E00250
 C     FOR THE CROSS-SECTION MOLECULES.                                    E00260
 C     XSNAME=NAMES, ALIAS=ALIASES OF THE CROSS-SECTION MOLECULES          E00270
 C                                                                         E00280
-      CHARACTER*10 XSFILE,XSNAME,ALIAS,XNAME,XFILS(6),BLANK               E00290
+      CHARACTER*10 XSFILE,XSNAME,ALIAS,BLANK                              E00290
       COMMON /XSECTF/ XSFILE(6,5,35),XSNAME(35),ALIAS(4,35)               E00300
       COMMON /XSECTR/ V1FX(5,35),V2FX(5,35),DVFX(5,35),WXM(35),           E00310
      *                NTEMPF(5,35),NSPECR(35),IXFORM(5,35),               E00320
@@ -50,7 +50,7 @@ C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350
       CHARACTER*120 XSREC                                                 E00360
-      CHARACTER*1 CFLG,CASTSK,CPRCNT,CFRM,CN,CF                           E00370
+      CHARACTER*1 CFLG,CASTSK,CPRCNT,CN,CF                                E00370
       EQUIVALENCE (CFLG,XSREC)                                            E00380
 C                                                                         E00390
       DATA CASTSK / '*'/,CPRCNT / '%'/,CN / 'N'/,CF / 'F'/                E00400
