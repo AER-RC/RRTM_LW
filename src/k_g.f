@@ -1,7 +1,7 @@
-C     path:      %P%
+C     path:      $Source$
+C     author:    $Author$
 C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     created:   $Date$
 ****************************************************************************
 
       BLOCK DATA KGB1
@@ -22,7 +22,7 @@ C     presently: %H%  %T%
       BLOCK DATA KGB4
       PARAMETER (NBANDS = 16)
       INCLUDE 'k_gB04.f'
-      END
+      END  
 
       BLOCK DATA KGB5
       PARAMETER (NBANDS = 16)
