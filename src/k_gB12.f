@@ -5,7 +5,7 @@
       COMMON /HVRSN12/ HVRKG12
       COMMON /K12/ KA, SELFREF
 
-      CHARACTER*8 HVRKG12
+      CHARACTER*15 HVRKG12
 
       DATA HVRKG12  / '$Revision$' /
 

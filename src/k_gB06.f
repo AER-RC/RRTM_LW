@@ -5,7 +5,7 @@
       COMMON /HVRSN6/ HVRKG6
       COMMON /K6/ KA ,SELFREF
 
-      CHARACTER*8 HVRKG6
+      CHARACTER*15 HVRKG6
 
       DATA HVRKG6  / '$Revision$' /
 

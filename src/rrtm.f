@@ -78,11 +78,11 @@ C        level and the heating rate for each layer
       COMMON /HVRSN15/   HVRKG15
       COMMON /HVRSN16/   HVRKG16
 
-      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVRRGC,HVRRTC,HVRCLD,HVRDUM,HVRUTL,HVREXT
-      CHARACTER*8 HVRKG1,HVRKG2,HVRKG3,HVRKG4,HVRKG5
-      CHARACTER*8 HVRKG6,HVRKG7,HVRKG8,HVRKG9,HVRKG10,HVRKG11
-      CHARACTER*8 HVRKG12,HVRKG13,HVRKG14,HVRKG15,HVRKG16
+      CHARACTER*15 HVRKG1,HVRKG2,HVRKG3,HVRKG4,HVRKG5
+      CHARACTER*15 HVRKG6,HVRKG7,HVRKG8,HVRKG9,HVRKG10,HVRKG11
+      CHARACTER*15 HVRKG12,HVRKG13,HVRKG14,HVRKG15,HVRKG16
       CHARACTER PAGE
 
 C      DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
@@ -227,19 +227,19 @@ C
  9902 FORMAT(1X,I3,3X,F11.6,4X,1P,2(G12.6,2X),G13.6,3X,G16.9,0P)
  9903 FORMAT(A)
  9910 FORMAT('  Modules and versions used in this calculation:',/,/,5X,
-     *        '    rrtm.f: ',6X,A8,10X, 'rrtatm.f: ',6X,A8,/,5X,
-     *        '     rtr.f: ',6X,A8,10X, 'rtrcld.f: ',6X,A8,/,5X, 
-     *        '   rtreg.f: ',6X,A8,8X, 'rtregcld.f: ',6X,A8,/,5X, 
-     *        ' setcoef.f: ',6X,A8,9X, 'cldprop.f: ',6X,A8,/,5X,
-     *        'util_xxx.f: ',6X,A8,10X, 'taumol.f: ',6X,A8,/,5X,
-     *        '  k_gB01.f: ',6X,A8,10X, 'k_gB02.f: ',6X,A8,/,5X,
-     *        '  k_gB03.f: ',6X,A8,10X, 'k_gB04.f: ',6X,A8,/,5X,
-     *        '  k_gB05.f: ',6X,A8,10X, 'k_gB06.f: ',6X,A8,/,5X,
-     *        '  k_gB07.f: ',6X,A8,10X, 'k_gB08.f: ',6X,A8,/,5X,
-     *        '  k_gB09.f: ',6X,A8,10X, 'k_gB10.f: ',6X,A8,/,5X,
-     *        '  k_gB11.f: ',6X,A8,10X, 'k_gB12.f: ',6X,A8,/,5X,
-     *        '  k_gB13.f: ',6X,A8,10X, 'k_gB14.f: ',6X,A8,/,5X,
-     *        '  k_gB15.f: ',6X,A8,10X, 'k_gB16.f: ',6X,A8,/)
+     *        '    rrtm.f: ',6X,A15,10X, 'rrtatm.f: ',6X,A15,/,5X,
+     *        '     rtr.f: ',6X,A15,10X, 'rtrcld.f: ',6X,A15,/,5X, 
+     *        '   rtreg.f: ',6X,A15,8X, 'rtregcld.f: ',6X,A15,/,5X, 
+     *        ' setcoef.f: ',6X,A15,9X, 'cldprop.f: ',6X,A15,/,5X,
+     *        'util_xxx.f: ',6X,A15,10X, 'taumol.f: ',6X,A15,/,5X,
+     *        '  k_gB01.f: ',6X,A15,10X, 'k_gB02.f: ',6X,A15,/,5X,
+     *        '  k_gB03.f: ',6X,A15,10X, 'k_gB04.f: ',6X,A15,/,5X,
+     *        '  k_gB05.f: ',6X,A15,10X, 'k_gB06.f: ',6X,A15,/,5X,
+     *        '  k_gB07.f: ',6X,A15,10X, 'k_gB08.f: ',6X,A15,/,5X,
+     *        '  k_gB09.f: ',6X,A15,10X, 'k_gB10.f: ',6X,A15,/,5X,
+     *        '  k_gB11.f: ',6X,A15,10X, 'k_gB12.f: ',6X,A15,/,5X,
+     *        '  k_gB13.f: ',6X,A15,10X, 'k_gB14.f: ',6X,A15,/,5X,
+     *        '  k_gB15.f: ',6X,A15,10X, 'k_gB16.f: ',6X,A15,/)
 
       STOP
       END
@@ -549,7 +549,7 @@ c
       COMMON /HVERSN/ HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                HVDUM1(4),HVRUTL,HVREXT
 
-      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
 
       DATA WAVENUM1(1) /10./, WAVENUM2(1) /250./, DELWAVE(1) /240./
@@ -582,7 +582,7 @@ C        =  (9.8066)(3600)(1e-5)/(1.004)
 
       DATA WX /MAXPROD*0.0/
 c
-      DATA HVRRTM / '$Revision$' /,        HVRREG / 'NOT USED' /,
+      DATA HVRRTM / '$Revision$' /, HVRREG / 'NOT USED' /,
      *     HVRRTR / 'NOT USED' /,   HVRATM / 'NOT USED' /,
      *     HVRSET / 'NOT USED' /,   HVRTAU / 'NOT USED' /,
      *     HVDUM1 / 4*'NOT USED' /, HVRUTL / 'NOT USED' /,

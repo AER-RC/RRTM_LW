@@ -99,7 +99,7 @@ C                                                                        FA00730
       COMMON /HMOLS/ HMOLS(MXMOL),JUNIT(MXMOL),WMOL(MXMOL),JUNITP,       FA00740
      *               JUNITT                                              FA00750
       COMMON /HMOLC/ HMOLC(MXMOL)                                        FA00760
-      CHARACTER*8 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,             
+      CHARACTER*15 HVRLBL,HVRCNT,HVRFFT,HVRATM,HVRLOW,HVRNCG,HVROPR,             
      *            HVRPLT,HVRPST,HVRTST,HVRUTL,HVRXMR                            
       CHARACTER*8 HMOLC                                                  FA00770
       character*4 ht1,ht2                                                       

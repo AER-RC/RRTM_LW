@@ -41,7 +41,7 @@ C                                                                         E00280
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                   HVDUM1(4),HVRUTL,HVREXT
 
-      CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
+      CHARACTER*15 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
