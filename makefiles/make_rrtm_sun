@@ -8,14 +8,16 @@ SHELL = /bin/sh
 ###############################
 
 PLATFORM = sun
-VERSION = v3.0
+VERSION = v3.1
 
 FC = f90
-FCFLAG =  -fast 
-OUTPUT = rrtm_$(PLATFORM)_$(VERSION)
+FCFLAG =  -fast -xtypemap=real:64,double:64,integer:64
+OUTPUT = rrtm_$(VERSION)_$(PLATFORM)
+
 CPATH = src
-CDOTO = $(PLATFORM)_$(FC)_sgl.o
-    
+CDOTO = $(PLATFORM)_$(FC)_dbl.o
+
+   
 CRTM = rrtm
 CREG = rtreg
 CRTR = rtr
@@ -30,6 +32,11 @@ CRTX = rtrcldmr
 CRGX = rtregcldmr
 CKGS = k_g
 CCLD = cldprop
+CRDS = rtrdis
+CR1M = RDI1MACH
+CERR = ErrPack
+CLPK = LINPAK
+CDIS = disort
 
 OBJFIL = $(CRTM).o \
 	 $(CREG).o \
@@ -44,7 +51,12 @@ OBJFIL = $(CRTM).o \
 	 $(CRTX).o \
 	 $(CRGX).o \
 	 $(CCLD).o \
-	 $(CKGS).o 
+	 $(CKGS).o \
+	 $(CRDS).o \
+	 $(CR1M).o \
+	 $(CERR).o \
+	 $(CLPK).o \
+	 $(CDIS).o 
 
 OBPATH = $(CDOTO)/$(CRTM).o \
 	 $(CDOTO)/$(CREG).o \
@@ -59,7 +71,12 @@ OBPATH = $(CDOTO)/$(CRTM).o \
 	 $(CDOTO)/$(CRTX).o \
 	 $(CDOTO)/$(CRGX).o \
 	 $(CDOTO)/$(CCLD).o \
-	 $(CDOTO)/$(CKGS).o 
+	 $(CDOTO)/$(CKGS).o \
+	 $(CDOTO)/$(CRDS).o \
+	 $(CDOTO)/$(CR1M).o \
+	 $(CDOTO)/$(CERR).o \
+	 $(CDOTO)/$(CLPK).o \
+	 $(CDOTO)/$(CDIS).o 
 
 MODULE = $(CPATH)/$(CRTM).o \
 	 $(CPATH)/$(CREG).o \
@@ -74,7 +91,12 @@ MODULE = $(CPATH)/$(CRTM).o \
 	 $(CPATH)/$(CRTX).o \
 	 $(CPATH)/$(CRGX).o \
 	 $(CPATH)/$(CCLD).o \
-	 $(CPATH)/$(CKGS).o 
+	 $(CPATH)/$(CKGS).o \
+	 $(CPATH)/$(CRDS).o \
+	 $(CPATH)/$(CR1M).o \
+	 $(CPATH)/$(CERR).o \
+	 $(CPATH)/$(CLPK).o \
+	 $(CPATH)/$(CDIS).o 
 
 ###############################
 # Load line
@@ -143,6 +165,26 @@ $(CDOTO)/$(CCLD).o : $(CPATH)/$(CCLD).f
 $(CDOTO)/$(CKGS).o : $(CPATH)/$(CKGS).f
 	$(FC) $(FCFLAG) -c $(CPATH)/$(CKGS).f
 	\mv $(CKGS).o $(CDOTO)
+
+$(CDOTO)/$(CERR).o : $(CPATH)/$(CERR).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CERR).f
+	\mv $(CERR).o $(CDOTO)
+
+$(CDOTO)/$(CRDS).o : $(CPATH)/$(CRDS).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CRDS).f
+	\mv $(CRDS).o $(CDOTO)
+
+$(CDOTO)/$(CR1M).o : $(CPATH)/$(CR1M).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CR1M).f
+	\mv $(CR1M).o $(CDOTO)
+
+$(CDOTO)/$(CLPK).o : $(CPATH)/$(CLPK).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CLPK).f
+	\mv $(CLPK).o $(CDOTO)
+
+$(CDOTO)/$(CDIS).o : $(CPATH)/$(CDIS).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CDIS).f
+	\mv $(CDIS).o $(CDOTO)
 
 ###############################
 # Create object file directory

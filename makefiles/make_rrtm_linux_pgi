@@ -1,5 +1,5 @@
 # $Id$
-# Makefile for rrtm - SGI platform
+# Makefile for rrtm - LINUX platform
 
 SHELL = /bin/sh
 
@@ -7,16 +7,16 @@ SHELL = /bin/sh
 # Set variables
 ###############################
 
-PLATFORM = sgi
+PLATFORM = linux_pgi
 VERSION = v3.1
 
-FC = f90
-FCFLAG =  -mips4 -r10000 -lfastm -O3 -64 -r8 -i8 -TENV:X=0
+FC = pgf90
+FCFLAG =  -fast -r8 -i8 
 OUTPUT = rrtm_$(VERSION)_$(PLATFORM)
 
 CPATH = src
 CDOTO = $(PLATFORM)_$(FC)_dbl.o
-   
+
 CRTM = rrtm
 CREG = rtreg
 CRTR = rtr
