@@ -23,10 +23,11 @@ C     created:   $Date$
 *                                                                             *
 *                                                                             *
 *                       email:  mlawer@aer.com                                *
+*                       email:  jdelamer@aer.com                              *
 *                                                                             *
 *        The authors wish to acknowledge the contributions of the             *
-*        following people:  Patrick D. Brown, Michael J. Iacono,              *
-*        Ronald E. Farren, Luke Chen, Robert Bergstrom.                       *
+*        following people:  Karen Cady-Pereira, Patrick D. Brown,             *  
+*        Michael J. Iacono, Ronald E. Farren, Luke Chen, Robert Bergstrom.    *
 *                                                                             *
 *******************************************************************************
 *     TAUMOL                                                                  *
@@ -90,25 +91,39 @@ C     created:   $Date$
 *     JT, JT1 - the indices of the lower of the two appropriate reference     *
 *               temperatures needed for interpolation (for pressure           *
 *               levels JP and JP+1, respectively)                             *
-*     SELFFAC - scale factor needed to water vapor self-continuum, equals     *
+*     SELFFAC - scale factor needed for water vapor self-continuum, equals    *
 *               (water vapor density)/(atmospheric density at 296K and        *
 *               1013 mb)                                                      *
 *     SELFFRAC - factor needed for temperature interpolation of reference     *
 *                water vapor self-continuum data                              *
 *     INDSELF - index of the lower of the two appropriate reference           *
 *               temperatures needed for the self-continuum interpolation      *
+*     FORFAC  - scale factor needed for water vapor foreign-continuum.        *
+*     FORFRAC - factor needed for temperature interpolation of reference      *
+*                water vapor foreign-continuum data                           *
+*     INDFOR  - index of the lower of the two appropriate reference           *
+*               temperatures needed for the foreign-continuum interpolation   *
 *                                                                             *
 *  Data input                                                                 *
-*     COMMON /Kn/ KA(NSPA(n),5,13,MG), KB(NSPB(n),5,13:59,MG), SELFREF(10,MG) *
-*        (note:  n is the band number)                                        *
+*     COMMON /Kn/ KA(NSPA(n),5,13,MG), KB(NSPB(n),5,13:59,MG), SELFREF(10,MG),*
+*                 FORREF(4,MG), KA_M'MGAS', KB_M'MGAS'                        *
+*        (note:  n is the band number,'MGAS' is the species name of the minor *
+*         gas)                                                                *
 *                                                                             *
 *     Description:                                                            *
-*     KA - k-values for low reference atmospheres (no water vapor             *
-*          self-continuum) (units: cm**2/molecule)                            *
-*     KB - k-values for high reference atmospheres (all sources)              *
+*     KA - k-values for low reference atmospheres (key-species only)          *
+*          (units: cm**2/molecule)                                            *
+*     KB - k-values for high reference atmospheres (key-species only)         *
+*          (units: cm**2/molecule)                                            *
+*     KA_M'MGAS' - k-values for low reference atmosphere minor species        *
+*          (units: cm**2/molecule)                                            *
+*     KB_M'MGAS' - k-values for high reference atmosphere minor species       *
 *          (units: cm**2/molecule)                                            *
 *     SELFREF - k-values for water vapor self-continuum for reference         *
 *               atmospheres (used below LAYTROP)                              *
+*               (units: cm**2/molecule)                                       *
+*     FORREF  - k-values for water vapor foreign-continuum for reference      *
+*               atmospheres (used below/above LAYTROP)                        *
 *               (units: cm**2/molecule)                                       *
 *                                                                             *
 *     DIMENSION ABSA(65*NSPA(n),MG), ABSB(235*NSPB(n),MG)                     *
@@ -3984,48 +3999,48 @@ C  Input
       DIMENSION ABSA(585,MG), ABSB(235,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
-C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
+C Planck fraction mapping level: P = 387.6100 mbar, T = 250.17 K
       DATA (FRACREFA(IG, 1),IG=1,16) /
-     &1.1626E-01,2.1062E-01,2.0986E-01,1.4338E-01,1.0358E-01,7.9637E-02,
-     &6.2090E-02,4.1683E-02,2.4574E-02,2.5630E-03,2.1297E-03,1.5811E-03,
-     &1.0876E-03,6.7512E-04,2.4334E-04,3.4252E-05/
+     &1.1593E-01,2.3390E-01,1.9120E-01,1.3121E-01,1.0590E-01,8.4852E-02,
+     &6.4168E-02,4.2537E-02,2.3220E-02,2.1767E-03,1.8203E-03,1.3724E-03,
+     &9.5452E-04,5.5015E-04,1.9348E-04,2.7344E-05/
       DATA (FRACREFA(IG, 2),IG=1,16) /
-     &2.7943E-01,2.7274E-01,1.6359E-01,9.2089E-02,6.0422E-02,4.4132E-02,
-     &3.5890E-02,2.7620E-02,1.7960E-02,1.8267E-03,1.5055E-03,1.2170E-03,
-     &8.6273E-04,5.1470E-04,1.7475E-04,1.6802E-05/
+     &2.8101E-01,1.9773E-01,1.4749E-01,1.1399E-01,8.8190E-02,7.0531E-02,
+     &4.6356E-02,3.0774E-02,1.7332E-02,2.0054E-03,1.5950E-03,1.2760E-03,
+     &9.5034E-04,5.4992E-04,1.9349E-04,2.7309E-05/
       DATA (FRACREFA(IG, 3),IG=1,16) /
-     &2.8258E-01,2.7794E-01,1.5844E-01,9.4327E-02,5.7472E-02,4.4010E-02,
-     &3.5128E-02,2.6843E-02,1.7179E-02,1.8134E-03,1.4992E-03,1.2131E-03,
-     &8.5991E-04,5.1034E-04,1.7419E-04,1.6802E-05/
+     &2.9054E-01,2.1263E-01,1.4133E-01,1.1083E-01,8.5107E-02,6.5247E-02,
+     &4.4542E-02,2.7205E-02,1.6495E-02,1.8453E-03,1.5222E-03,1.1884E-03,
+     &8.1094E-04,4.9173E-04,1.9344E-04,2.7286E-05/
       DATA (FRACREFA(IG, 4),IG=1,16) /
-     &2.8477E-01,2.7914E-01,1.5632E-01,9.4997E-02,5.6924E-02,4.3913E-02,
-     &3.4671E-02,2.6260E-02,1.6938E-02,1.8110E-03,1.4957E-03,1.2116E-03,
-     &8.5720E-04,5.1007E-04,1.7371E-04,1.6802E-05/
+     &2.9641E-01,2.1738E-01,1.4228E-01,1.0830E-01,8.2837E-02,6.1359E-02,
+     &4.4683E-02,2.5027E-02,1.6057E-02,1.7558E-03,1.4193E-03,1.0970E-03,
+     &7.8281E-04,4.3260E-04,1.4837E-04,2.2958E-05/
       DATA (FRACREFA(IG, 5),IG=1,16) /
-     &2.8524E-01,2.8038E-01,1.5515E-01,9.5642E-02,5.6712E-02,4.3862E-02,
-     &3.4257E-02,2.5784E-02,1.6901E-02,1.8139E-03,1.4918E-03,1.2097E-03,
-     &8.5496E-04,5.1024E-04,1.7283E-04,1.6802E-05/
+     &2.9553E-01,2.2139E-01,1.4816E-01,1.0601E-01,8.0048E-02,6.0082E-02,
+     &4.3952E-02,2.3788E-02,1.5734E-02,1.6586E-03,1.3434E-03,1.0281E-03,
+     &7.0256E-04,4.2577E-04,1.2803E-04,1.3315E-05/
       DATA (FRACREFA(IG, 6),IG=1,16) /
-     &2.7971E-01,2.8636E-01,1.5512E-01,9.6683E-02,5.6246E-02,4.3701E-02,
-     &3.3742E-02,2.5487E-02,1.6893E-02,1.8178E-03,1.4820E-03,1.2121E-03,
-     &8.5231E-04,5.1136E-04,1.7142E-04,1.6802E-05/
+     &2.9313E-01,2.2476E-01,1.5470E-01,1.0322E-01,7.8904E-02,5.8175E-02,
+     &4.3097E-02,2.3618E-02,1.5385E-02,1.5942E-03,1.2702E-03,9.5566E-04,
+     &6.5421E-04,4.0165E-04,1.2805E-04,1.3355E-05/
       DATA (FRACREFA(IG, 7),IG=1,16) /
-     &2.6050E-01,3.0261E-01,1.5843E-01,9.7788E-02,5.5813E-02,4.3260E-02,
-     &3.3321E-02,2.5382E-02,1.6853E-02,1.8068E-03,1.4735E-03,1.2220E-03,
-     &8.4671E-04,5.1418E-04,1.6845E-04,1.6802E-05/
+     &2.9069E-01,2.2823E-01,1.5995E-01,1.0170E-01,7.7287E-02,5.6780E-02,
+     &4.1752E-02,2.3899E-02,1.4937E-02,1.4916E-03,1.1909E-03,9.1307E-04,
+     &6.3518E-04,3.9866E-04,1.2805E-04,1.3298E-05/
       DATA (FRACREFA(IG, 8),IG=1,16) /
-     &2.3305E-01,3.0712E-01,1.8186E-01,9.9369E-02,5.5250E-02,4.2378E-02,
-     &3.2851E-02,2.5343E-02,1.6758E-02,1.7844E-03,1.5010E-03,1.2010E-03,
-     &8.2094E-04,5.3304E-04,1.5841E-04,1.6802E-05/
+     &2.8446E-01,2.2651E-01,1.7133E-01,1.0299E-01,7.4231E-02,5.6031E-02,
+     &4.1368E-02,2.4318E-02,1.4135E-02,1.4216E-03,1.1465E-03,8.9800E-04,
+     &6.3553E-04,3.9536E-04,1.2749E-04,1.3298E-05/
       DATA (FRACREFA(IG, 9),IG=1,16) /
-     &2.6946E-01,2.7691E-01,1.7390E-01,9.8279E-02,5.7196E-02,4.2943E-02,
-     &3.2931E-02,2.5436E-02,1.6881E-02,1.8124E-03,1.4922E-03,1.2089E-03,
-     &8.5357E-04,5.0962E-04,1.7283E-04,1.6802E-05/
+     &2.0568E-01,2.5049E-01,2.0568E-01,1.1781E-01,7.5579E-02,5.8136E-02,
+     &4.2397E-02,2.6544E-02,1.3067E-02,1.4061E-03,1.1455E-03,8.9408E-04,
+     &6.3652E-04,3.9450E-04,1.2841E-04,1.3315E-05/
 
 C Planck fraction mapping level : P=95.58350 mb, T = 215.70 K
       DATA FRACREFB /
-     &1.8535E-01,2.2718E-01,1.6065E-01,1.1705E-01,9.7691E-02,7.9920E-02,
-     &6.1503E-02,4.1673E-02,2.2976E-02,1.9263E-03,1.4694E-03,1.1498E-03,
+     &1.8111E-01,2.2612E-01,1.6226E-01,1.1872E-01,9.9048E-02,8.0390E-02,
+     &6.1648E-02,4.1704E-02,2.2976E-02,1.9263E-03,1.4694E-03,1.1498E-03,
      &7.9906E-04,4.8310E-04,1.6188E-04,2.2651E-05/
 
       EQUIVALENCE (KA,ABSA), (KB,ABSB)
@@ -4035,8 +4050,8 @@ C Planck fraction mapping level : P=95.58350 mb, T = 215.70 K
 C     Calculate reference ratio to be used in calculation of Planck
 C     fraction in lower atmosphere.
 
-C     P = 1013. mb (Level 1)
-      REFRAT_PLANCK_A = CHI_MLS(1,1)/CHI_MLS(6,1)
+C     P = 387. mb (Level 6)
+      REFRAT_PLANCK_A = CHI_MLS(1,6)/CHI_MLS(6,6)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature,and appropriate species.  Below LAYTROP, the water
