@@ -14,7 +14,6 @@ C**********************************************************************   E00090
 C                                                                         E00100
 C     IFIL CARRIES FILE INFORMATION                                       E00110
 C                                                                         E00120
-      PARAMETER (NBANDS = 16)
       PARAMETER (MXFSC=200, MXLAY=MXFSC+3,MXZMD=3400,
      *           MXPDIM=MXLAY+MXZMD,IM2=MXPDIM-2,MXMOL=35,MXTRAC=22)
 C
@@ -41,11 +40,9 @@ C                                                                         E00280
      *                XSMASS(35),XDOPLR(5,35),NUMXS,IXSBIN                E00325
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *                   HVDUM1(4),HVRUTL,HVREXT
-      COMMON /HVRSNB/    HVRKG(NBANDS)
 
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
-      CHARACTER*8 HVRKG
 C                                                                         E00330
       DIMENSION IXFLG(35)                                                 E00340
 C                                                                         E00350
