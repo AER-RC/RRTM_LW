@@ -24,7 +24,8 @@ C     per g-value per band.
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                   PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /PLNKDAT/   PLANKLAY(MXLAY,NBANDS),
      &                   PLANKLEV(0:MXLAY,NBANDS),PLANKBND(NBANDS)
       COMMON /PLANKG/    FRACS(MXLAY,MG)
@@ -37,7 +38,7 @@ C     per g-value per band.
       CHARACTER*8 HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
      *            HVDUM1,HVRUTL,HVREXT
                                        
-      DIMENSION BBD1(MXLAY),BBD2(MXLAY),BBD3(MXLAY)
+      DIMENSION BBU1(MXLAY),BBU2(MXLAY),BBU3(MXLAY)
       DIMENSION ATRANS1(MXLAY),ATRANS2(MXLAY),ATRANS3(MXLAY)
       DIMENSION UFLUX(0:MXLAY),DFLUX(0:MXLAY)
       DIMENSION DRAD1(0:MXLAY),URAD1(0:MXLAY)
@@ -106,19 +107,15 @@ C ***    Loop over g-channels.
          IG = 1
  1000    CONTINUE
 C ***    Radiative transfer starts here.
-         RADLU1 = FRACS(1,IG) * PLANKBND(IBAND)
-         RADLU2 = RADLU1
-         RADLU3 = RADLU1
-         URAD1(0) = URAD1(0) + RADLU1
          RADLD1 = 0.
          RADLD2 = 0.
          RADLD3 = 0.
-C ***    Upward radiative transfer.  Due to the simple form taken by
+C ***    Downward radiative transfer.  Due to the simple form taken by
 C        certain equations when the optical depth is either small or large, 
 C        these conditions are tested for.  In this section, the labels 
 C        1, 2, and 3 refer to the three angles.
-         BGLEV = FRACS(1,IG) * PLANKLEV(0,IBAND)
-         DO 2500 LEV = 1, NLAYERS
+         BGLEV = FRACS(NLAYERS,IG) * PLANKLEV(NLAYERS,IBAND)
+         DO 2500 LEV = NLAYERS, 1, -1
             BLAY = PLANKLAY(LEV,IBAND)
             PLFRAC = FRACS(LEV,IG)
             BGLAY = PLFRAC * BLAY
@@ -127,77 +124,93 @@ C        1, 2, and 3 refer to the three angles.
                ATRANS1(LEV) = ODEPTH
                ATRANS2(LEV) = ODEPTH + ODEPTH
                ATRANS3(LEV) = ATRANS2(LEV) + ODEPTH
-               BBD1(LEV) = BGLAY
-               BBD2(LEV) = BGLAY
-               BBD3(LEV) = BGLAY
-               RADLU1 = RADLU1 + (BGLAY-RADLU1)*ATRANS1(LEV)
-               RADLU2 = RADLU2 + (BGLAY-RADLU2)*ATRANS2(LEV)
-               RADLU3 = RADLU3 + (BGLAY-RADLU3)*ATRANS3(LEV)
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
+               BBU1(LEV) = BGLAY
+               BBU2(LEV) = BGLAY
+               BBU3(LEV) = BGLAY
+               RADLD1 = RADLD1 + (BGLAY-RADLD1)*ATRANS1(LEV)
+               RADLD2 = RADLD2 + (BGLAY-RADLD2)*ATRANS2(LEV)
+               RADLD3 = RADLD3 + (BGLAY-RADLD3)*ATRANS3(LEV)
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
             ELSEIF (ODEPTH .GE. 10.) THEN
                ATRANS1(LEV) = 1.
                ATRANS2(LEV) = 1.
                ATRANS3(LEV) = 1.
-               DELBGDN = BGLEV - BGLAY
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
                DELBGUP = BGLEV - BGLAY
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
                TAUSFAC = ODEPTH/(5.+ODEPTH)
-               BBD1(LEV) = BGLAY + TAUSFAC * DELBGDN
-               RADLU1 = BGLAY + TAUSFAC * DELBGUP
+               BBU1(LEV) = BGLAY + TAUSFAC * DELBGUP
+               RADLD1 = BGLAY + TAUSFAC * DELBGDN
                TAUSFAC = ODEPTH/(2.5+ODEPTH)
-               BBD2(LEV) = BGLAY + TAUSFAC * DELBGDN
-               RADLU2 = BGLAY + TAUSFAC * DELBGUP
+               BBU2(LEV) = BGLAY + TAUSFAC * DELBGUP
+               RADLD2 = BGLAY + TAUSFAC * DELBGDN
                TAUSFAC = ODEPTH/(1.666667+ODEPTH)
-               BBD3(LEV) = BGLAY + TAUSFAC * DELBGDN
-               RADLU3 = BGLAY + TAUSFAC * DELBGUP
+               BBU3(LEV) = BGLAY + TAUSFAC * DELBGUP
+               RADLD3 = BGLAY + TAUSFAC * DELBGDN
             ELSE
                TRANS1 = EXP(-ODEPTH)
                ATRANS1(LEV) = 1. - TRANS1
                ATRANS2(LEV) = 1. - TRANS1*TRANS1
                ATRANS3(LEV) = ATRANS1(LEV) + TRANS1*ATRANS2(LEV)
-               DELBGDN = BGLEV - BGLAY
-               BGLEV = PLFRAC * PLANKLEV(LEV,IBAND)
                DELBGUP = BGLEV - BGLAY
+               BGLEV = PLFRAC * PLANKLEV(LEV-1,IBAND)
+               DELBGDN = BGLEV - BGLAY
 
 C ***          TAUSFAC is needed for the Pade approximation for
 C              the Planck function.
                TAUSFAC = ODEPTH/(5.+ODEPTH)
-               BBU = BGLAY + TAUSFAC * DELBGUP
-               RADLU1 = RADLU1 + (BBU-RADLU1)*ATRANS1(LEV)
-               BBD1(LEV) = BGLAY + TAUSFAC * DELBGDN
+               BBD = BGLAY + TAUSFAC * DELBGDN
+               RADLD1 = RADLD1 + (BBD-RADLD1)*ATRANS1(LEV)
+               BBU1(LEV) = BGLAY + TAUSFAC * DELBGUP
 
                TAUSFAC = ODEPTH/(2.5+ODEPTH)
-               BBU = BGLAY + TAUSFAC * DELBGUP
-               RADLU2 = RADLU2 + (BBU-RADLU2)*ATRANS2(LEV)
-               BBD2(LEV) = BGLAY + TAUSFAC * DELBGDN
+               BBD = BGLAY + TAUSFAC * DELBGDN
+               RADLD2 = RADLD2 + (BBD-RADLD2)*ATRANS2(LEV)
+               BBU2(LEV) = BGLAY + TAUSFAC * DELBGUP
 
                TAUSFAC = ODEPTH/(1.6666667+ODEPTH)
-               BBU = BGLAY + TAUSFAC * DELBGUP
-               RADLU3 = RADLU3 + (BBU-RADLU3)*ATRANS3(LEV)
-               BBD3(LEV) = BGLAY + TAUSFAC * DELBGDN
+               BBD = BGLAY + TAUSFAC * DELBGDN
+               RADLD3 = RADLD3 + (BBD-RADLD3)*ATRANS3(LEV)
+               BBU3(LEV) = BGLAY + TAUSFAC * DELBGUP
             ENDIF
+            DRAD1(LEV-1) = DRAD1(LEV-1) + RADLD1
+            DRAD2(LEV-1) = DRAD2(LEV-1) + RADLD2
+            DRAD3(LEV-1) = DRAD3(LEV-1) + RADLD3
+ 2500    CONTINUE
+
+C ***    Upward radiative transfer.
+         RAD0 = FRACS(1,IG) * PLANKBND(IBAND)
+C        Add in reflection of surface downward radiance.
+         REFLECT = 1. - SEMISS(IBAND)
+         IF (IREFLECT .EQ. 1) THEN
+C           Specular reflection.
+            RADLU1 = RAD0 + REFLECT * RADLD1
+            RADLU2 = RAD0 + REFLECT * RADLD2
+            RADLU3 = RAD0 + REFLECT * RADLD3
+         ELSE
+C           Lambertian reflection.
+            RAD = 2. * (RADLD1*WTNUM(1) + RADLD2*WTNUM(2) + 
+     &           RADLD3*WTNUM(3))
+            RADLU1 = RAD0 + REFLECT * RAD
+            RADLU2 = RADLU1
+            RADLU3 = RADLU1
+         ENDIF
+         URAD1(0) = URAD1(0) + RADLU1
+         URAD2(0) = URAD2(0) + RADLU2
+         URAD3(0) = URAD3(0) + RADLU3
+         DO 2600 LEV = 1, NLAYERS
+            RADLU1 = RADLU1 + (BBU1(LEV)-RADLU1)*ATRANS1(LEV)
+            RADLU2 = RADLU2 + (BBU2(LEV)-RADLU2)*ATRANS2(LEV)
+            RADLU3 = RADLU3 + (BBU3(LEV)-RADLU3)*ATRANS3(LEV)
             URAD1(LEV) = URAD1(LEV) + RADLU1
             URAD2(LEV) = URAD2(LEV) + RADLU2
             URAD3(LEV) = URAD3(LEV) + RADLU3
- 2500    CONTINUE
-
-C ***    Downward radiative transfer.
-         DO 2600 LEV = NLAYERS-1, 0, -1
-            RADLD1 = RADLD1 + (BBD1(LEV+1)-RADLD1)*ATRANS1(LEV+1)
-            RADLD2 = RADLD2 + (BBD2(LEV+1)-RADLD2)*ATRANS2(LEV+1)
-            RADLD3 = RADLD3 + (BBD3(LEV+1)-RADLD3)*ATRANS3(LEV+1)
-            DRAD1(LEV) = DRAD1(LEV) + RADLD1
-            DRAD2(LEV) = DRAD2(LEV) + RADLD2
-            DRAD3(LEV) = DRAD3(LEV) + RADLD3
  2600    CONTINUE
  4000    CONTINUE
          IG = IG + 1
          IF (IG .LE. NG(IBAND)) GO TO 1000
          
 C ***    Process longwave output from band.
-C ***    First level radiance is independent of angle.
-         URAD2(0) = URAD1(0)
-         URAD3(0) = URAD1(0)
 C ***    Calculate upward, downward, and net flux.
          DO 5000 LEV = NLAYERS, 0, -1
             UFLUX(LEV) = URAD1(LEV)*WTNUM(1) + URAD2(LEV)*WTNUM(2) + 
