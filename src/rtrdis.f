@@ -82,7 +82,7 @@ c     Ensure all cloud properties are equal to 0.0
          XMOM(:,:,:) = 0.0
       ENDIF
          
-      HVRRDS = '$Revision$
+      HVRRDS = '$Revision$'
       HEADER = ''
       USRTAU = .FALSE.
       USRANG = .FALSE.
