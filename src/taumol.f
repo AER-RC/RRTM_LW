@@ -175,7 +175,7 @@ C  Input
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
-      HVRTAU = '$Revision$'
+      HVRTAU = '2.13'
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum 
@@ -434,6 +434,7 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY)
       COMMON /K3/       KA(10,5,13,MG), KB(5,5,13:59,MG), SELFREF(10,MG)
 
+      REAL KA,KB,N2OMULT,N2OREF
       DIMENSION ABSA(650,MG),ABSB(1175,MG),FORREF(MG)
       DIMENSION ABSN2OA(MG),ABSN2OB(MG)
       DIMENSION FRACREFA(MG,10), FRACREFB(MG,5)
@@ -552,7 +553,6 @@ C     From P = 64.1 mb.
 
   
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL KA,KB,N2OMULT,N2OREF
       STRRAT = 1.19268
 
 C     Compute the optical depth by interpolating in ln(pressure), 
@@ -1311,6 +1311,7 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       COMMON /K8/       KA(5,7,MG), KB(5,7:59,MG), SELFREF(10,MG)
 
+      REAL KA,KB,N2OMULT,N2OREF
       DIMENSION ABSA(35,MG),ABSB(265,MG),CFC12(MG),CFC22ADJ(MG)
       DIMENSION ABSN2OA(MG),ABSN2OB(MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG),ABSCO2A(MG),ABSCO2B(MG)
@@ -1404,7 +1405,6 @@ C     and 1290-1335 cm-1 bands.
      &     1.95821E-07,1.98004E-07,2.06442E-07,2.81546E-07/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL KA,KB,N2OMULT,N2OREF
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  
@@ -1494,6 +1494,7 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K9/       KA(11,5,13,MG),KB(5,13:59,MG),SELFREF(10,MG)
 
+      REAL KA,KB,N2OREF,N2OMULT
       DIMENSION ABSA(715,MG),ABSB(235,MG),ABSN2O(3*MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
       DIMENSION N2OREF(13),H2OREF(13),CH4REF(13),ETAREF(11)
@@ -1577,7 +1578,6 @@ C     From P=313.
      &     4.31888E-01,4.82523E-06,5.74747E-11,0./
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL KA,KB,N2OREF,N2OMULT
       STRRAT = 21.6282
       IOFF = 0
 
