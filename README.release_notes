@@ -4,9 +4,12 @@ NOTE:
 September 2002:
 
 	Release_3_01
-		This version was released to the public on September 16.  It is 
-		nearly identical to v3.0 EXCEPT for a change to the SUN makefile and
-		a minor modification to the instruction file.
+		This version was released to the public on September 16 (aer_rrtm_v3.01.tar.Z).  
+		It is 
+		nearly identical to v3.0 EXCEPT for a change to the SUN/SGI makefiles, a
+		a minor modification to the instruction file, and a minor modification
+		to the sample_runs directory in the tar file.
+
 August 2002: 
 
 	Release_3_0
