@@ -310,9 +310,9 @@ C             GASSRC     source radiance due to gas only
                ATOT1(LEV) = ATRANS1(LEV) + ABSCLD1(LEV,IB) -
      &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
                ATOT2(LEV) = ATRANS2(LEV) + ABSCLD2(LEV,IB) -
-     &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
+     &              ATRANS2(LEV) * ABSCLD2(LEV,IB)
                ATOT3(LEV) = ATRANS3(LEV) + ABSCLD3(LEV,IB) -
-     &              ATRANS1(LEV) * ABSCLD1(LEV,IB)
+     &              ATRANS3(LEV) * ABSCLD3(LEV,IB)
                GASSRC1 = (BGLAY + TFACGAS1*DELBGDN) * ATRANS1(LEV)
                GASSRC2 = (BGLAY + TFACGAS2*DELBGDN) * ATRANS2(LEV)
                GASSRC3 = (BGLAY + TFACGAS3*DELBGDN) * ATRANS3(LEV)
