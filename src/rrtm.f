@@ -56,7 +56,7 @@ C        level and the heating rate for each layer
      &                   DELWAVE(NBANDS)
       COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /HVERSN/    HVRRTM,HVRREG,HVRRTR,HVRATM,HVRSET,HVRTAU,
@@ -232,15 +232,17 @@ C     Read in atmospheric profile.
       IMPLICIT DOUBLE PRECISION (V)                                      
                                                                          
       PARAMETER (MXLAY=203)
+      PARAMETER (NBANDS = 16)
       PARAMETER (MAXINPX=35)
       PARAMETER (MAXXSEC=4)
       PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
-      DIMENSION ALTZ(0:MXLAY),IXTRANS(14)
+      DIMENSION ALTZ(0:MXLAY),IXTRANS(14),SEMIS(NBANDS)
 
       COMMON /CONTROL/  NUMANGS, IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                  PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /SURFACE/  TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(35,MXLAY),WBRODL(MXLAY),
      &                  NMOL
       COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
@@ -276,7 +278,19 @@ C     Read in atmospheric profile.
 C     If clouds are present, read in appropriate input file, IN_CLD_RRTM.
       IF (ICLD .EQ. 1) CALL READCLD
 
-      READ (IRD,9012) TBOUND
+C     Read in surface information.
+      READ (IRD,9012) TBOUND,IEMISS,IREFLECT,(SEMIS(I),I=1,16)
+      DO 1500 IBAND = 1, NBANDS
+         SEMISS(IBAND) = 1.0
+         IF (IEMISS .EQ. 1 .AND. SEMIS(1) .NE. 0.) THEN
+            SEMISS(IBAND) = SEMIS(1)
+         ELSEIF (IEMISS .EQ. 2) THEN
+            IF (SEMIS(IBAND) .NE. 0.) THEN
+               SEMISS(IBAND) = SEMIS(IBAND)
+            ENDIF
+         ENDIF
+ 1500 CONTINUE
+
       IF (IATM .EQ. 0) THEN
          READ (IRD,9013) IFORM,NLAYERS,NMOL
          IF (NMOL.EQ.0) NMOL = 7                                    
@@ -316,6 +330,7 @@ C
  3300       CONTINUE
          ENDIF
       ENDIF
+      IF (TBOUND .LT. 0) TBOUND = TZ(0)
 
 C     Test for mixing ratio input.
       IMIX = 1
@@ -367,7 +382,7 @@ C     Test for mixing ratio input.
 
  9010 FORMAT (A1)
  9011 FORMAT (49X,I1,19X,I1,13X,I2,2X,I3,4X,I1)
- 9012 FORMAT (E10.3)
+ 9012 FORMAT (E10.3,1X,I1,2X,I1,16E5.3)
  9013 FORMAT (1X,I1,I3,I5)                                     
  9300 FORMAT (I5)
  9301 FORMAT (1X,I1)
@@ -386,7 +401,7 @@ C               cloud properties.
       PARAMETER (MXCBANDS = 5)
 
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
-     &                   PZ(0:MXLAY),TZ(0:MXLAY),TBOUND
+     &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /CLOUDIN/   INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
      &                   CLDDAT3(MXLAY)
       COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXCBANDS,MXLAY)
