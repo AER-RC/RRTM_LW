@@ -1,5 +1,19 @@
 Update Note for AER RRTM
 
+July 1, 2005
+
+	Release_3_2
+
+	Not publicly released at this time.  
+
+	- Fixed bug in rtrdis.f: heating rate calculation needed a "-" in front
+		of variable heatfac to produce appropriate sign (Note: RRTM_LW and RRTM_SW
+		were designed to keep the net flux positive for both spectral regimes, thereby
+		necessitating the "-" sign for the LW heating rate calculations).
+	- Fixed minor bugs in taumol, setcoef, k_gB15 
+	- Fixed other minor bugs
+	- Added Absoft Pro Fortran Compiler makefile for MAC OS_X
+
 July 29, 2004
 
 	Release_3_1
