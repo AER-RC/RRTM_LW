@@ -227,7 +227,7 @@ C ***    Downward radiative transfer.
       HTR(NLAYERS) = 0.
       DO 3951 LEV = NLAYERS-1, 0, -1
          FNET(LEV) = TOTUFLUX(LEV) - TOTDFLUX(LEV)
-         HTR(LEV) = -HEATFAC * (FNET(LEV) -FNET(LEV+1)) /
+         HTR(LEV) = HEATFAC * (FNET(LEV) -FNET(LEV+1)) /
      &        (PZ(LEV) - PZ(LEV+1))
  3951 CONTINUE
 
