@@ -23,7 +23,7 @@ C  --------------------------------------------------------------------------
 
        CHARACTER*18 HVRKG12
 
-       CHARACTER*18 HNAMKG12,HVRKG12
+       CHARACTER*18 HNAMKG12
 
        DATA HVRKG12 /'$Revision$'/
        DATA HNAMKG12 / '         k_gB12.f:' /
