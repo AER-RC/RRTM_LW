@@ -103,7 +103,7 @@ MODULE = $(CPATH)/$(CRTM).o \
 
 $(OUTPUT) : \
 	intro makedir $(OBPATH) conclude
-	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBPATH) -LApplications/Absoft/lib -lU77
+	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBPATH) -L/Applications/Absoft/lib -lU77
 
 ###############################
 # Object compile lines
