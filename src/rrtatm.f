@@ -4,13 +4,13 @@ C     created:   $Date$
 C     presently: %H%  %T%                                                       
       SUBROUTINE RRTATM
 C       This routine has been modified from lblatm.f 
-C       (cvs revision 8.1) for use with RRTM,
-C      using the translation code, lbl2r_v8.1.f
+C       (cvs revision 9.3) for use with RRTM,
+C      using the translation code, lbl2r_v9.3.f
 C
 C                                                                               
 C  --------------------------------------------------------------------------   
 C |                                                                          |  
-C |  Copyright 2002, 2003, Atmospheric & Environmental Research, Inc. (AER). |  
+C |  Copyright 2002 - 2004, Atmospheric & Environmental Research, Inc. (AER).|  
 C |  This software may be used, copied, or redistributed as long as it is    |  
 C |  not sold and this copyright notice is reproduced on each copy made.     |  
 C |  This model is provided as is without any express or implied warranties. |  
@@ -93,9 +93,8 @@ C                                                                        FA00630
       CHARACTER*8      XID,       HMOLID,      YID                              
       Real*8               SECANT,       XALTZ                                  
 C                                                                        FA00650
-      COMMON /CVRATM/    HNAMATM,HVRATM
+      COMMON /CVRATM/ HNAMATM,HVRATM
       CHARACTER*18 HNAMATM,HVRATM
-
       COMMON /FILHDR/ XID(10),SECANT,PAVE,TAVE,HMOLID(60),XALTZ(4),      FA00660
      *                WK(60),PZL,PZU,TZL,TZU,WN2   ,DV ,V1 ,V2 ,TBOUND,  FA00670
      *           EMISIV,FSCDID(17),nmol_flhdr,LAYER ,YI1,YID(10),LSTWDF         
@@ -472,6 +471,10 @@ C                                                                        FA03820
       DIMENSION X1(NX1),X2(NX2),X3(NX3)
       DIMENSION TTMP(2),WVTMP(2),PTMP(2),ZTMP(2)                                
                                                                                 
+c common block for layer-to-level analytical jacobians                          
+      common /dlaydlev/ilevdq,imoldq,iupdwn,                                    
+     &    dqdL(mxlay,0:mxmol),dqdU(mxlay,0:mxmol)                               
+      COMMON /IADFLG/ IANDER,NSPCRT,IMRGSAV                                     
       dimension densave(mxzmd)                                                  
 C                                                                        FA03980
       EQUIVALENCE (ZOUT(1),XZOUT(1))
@@ -1467,6 +1470,79 @@ C                                                                        FA10260
 C                                                                        FA10300
       ENDIF                                                              FA10310
 C                                                                        FA10320
+c-----------------------------------------------------------                    
+c compute layer-to-level conversion for analytical jacobians                    
+c pbar,tbar                                                                     
+c only go into this if imoldq was set in lblrtm                                 
+c                                                                               
+c note that the dqdl and dqdu arrays are indexed by mol-id                      
+c number with the "0" index eserved for temperature                             
+c                                                                               
+      if (imoldq.eq.-99) then                                                   
+c          write(*,*) 'lay2lev in lblatm: ',ibmax,nmol                          
+          ilevdq=ibmax-1                                                        
+          imoldq=nmol                                                           
+          do 500 i=1,ilevdq                                                     
+                                                                                
+              rhoU=pbnd(i+1)/(tbnd(i+1)*1.3806503E-19)                          
+              rhoL=pbnd(i)/(tbnd(i)*1.3806503E-19)                              
+              alpha=rhoU/rhoL                                                   
+              alphaT=-(tbnd(i+1)-tbnd(i))/alog(alpha)                           
+                                                                                
+c molecules                                                                     
+              do 501 k=1,nmol                                                   
+                                                                                
+                  if (denm(k,i).ne.0.0) then                                    
+                                                                                
+                      ratU=denm(k,i+1)/rhoU                                     
+                      ratL=denm(k,i)/rhoL                                       
+                                                                                
+                      dqdL(i,k)=(ratL/(ratL-alpha*ratU))                        
+     &                    +1.0/alog(alpha*ratU/ratL)                            
+                                                                                
+                      dqdU(i,k)=((-alpha*ratU)/(ratL-alpha*ratU))               
+     &                    -1.0/alog(alpha*ratU/ratL)                            
+                                                                                
+c                      write(*,*) i,k,((dqdL(i,k)*ratL)                         
+c     &                    +(dqdU(i,k)*ratU)),                                  
+c     &                    ratL,ratU                                            
+c                      write(*,*) '      ',denm(k,i+1),rhoU                     
+c                      write(*,*) '      ',denm(k,i),rhoL                       
+                                                                                
+                  else                                                          
+                      dqdL(i,k)=0.0                                             
+                      dqdU(i,k)=0.0                                             
+                                                                                
+                                                                                
+c check to be sure molecular amount non-zero for molecular jacobian             
+                      if (k.eq.nspcrt) then                                     
+                          write(*,*) ' --- FATAL ERROR ---'                     
+                          write(*,*) 'molecular amount for species ',k          
+                          write(*,*) '     must be non-zero '                   
+                          write(*,*) 'for analytic jacobian #',nspcrt           
+                          write(*,*) ' -------------------'                     
+                          STOP                                                  
+                      endif                                                     
+                                                                                
+                  endif                                                         
+                                                                                
+  501         continue                                                          
+                                                                                
+c temperature                                                                   
+              dqdL(i,0)=((tbar(i)-alphaT)/tbnd(i))                              
+     &            *(rhoL/(rhoL-rhoU))                                           
+     &            +(1.0-alphaT/tbnd(i))/alog(alpha)                             
+                                                                                
+              dqdU(i,0)=((tbar(i)-alphaT)/tbnd(i+1))                            
+     &                  *(-rhoU/(rhoL-rhoU))                                    
+     &            -(1.0-alphaT/tbnd(i+1))/alog(alpha)                           
+                                                                                
+c              write(*,*) 'T: ',dqdl(i,0),dqdu(i,0)                             
+                                                                                
+  500     continue                                                              
+      endif                                                                     
+c-----------------------------------------------------------                    
+                                                                                
       RETURN                                                             FA10330
 C                                                                        FA10340
 C     ERROR MESSAGES                                                     FA10350
@@ -1555,17 +1631,17 @@ C                                                                        FA10530
      *        ' BOUNDARY = ',F10.2,' ATMOSPHERE =',F10.2,/,              FA10990
      *        ' RESET BOUNDARY GT THAN ATMOSPHERE')                      FA11000
   948 FORMAT ('1ATMOSPHERIC PROFILE SELECTED IS: M = ',I3,5X,3A8)        FA11010
-  950 FORMAT (/,T4,'I',T11,'Z',T20,'P',T29,'T',T35,'REFRACT',T73,        FA11020
-     *        'DENSITY  (MOLS CM-3)',/,T35,'INDEX-1',/,T10,'(KM)',T19,   FA11030
-     *        '(MB)',T28,'(K)',T35,'*1.0E6',T47,'AIR',(T54,8(1X,A9)))    FA11040
- 951  FORMAT (/,T4,'I',T11,'Z',T20,'P',T29,'T',T35,'REFRACT',T45,               
+  950 FORMAT (/,T4,'I',T13,'Z',T22,'P',T34,'T',T42,'REFRACT',T73,        FA11020
+     *        'DENSITY  (MOLS CM-3)',/,T42,'INDEX-1',/,T12,'(KM)',T21,   FA11030
+     *        '(MB)',T33,'(K)',T42,'*1.0E6',T59,'AIR',(T64,8(6X,A9)))    FA11040
+ 951  FORMAT (/,T4,'I',T13,'Z',T22,'P',T34,'T',T42,'REFRACT',T55,               
      *        'DENSITY',T70,'MIXING RATIO (BASED UPON DRY AIR) (ppmv)',/,       
-     *        T35,'INDEX-1',T44,                                                
-     *        '(MOL CM-3)'/,T10,                                                
-     *        '(KM)',T19,                                                       
-     *        '(MB)',T28,'(K)',T35,'*1.0E6',T47,'AIR',(T54,8(1X,A9)))    FA11040
+     *        T42,'INDEX-1',T52,                                                
+     *        '(MOL CM-3)'/,T12,                                                
+     *        '(KM)',T21,                                                       
+     *        '(MB)',T33,'(K)',T42,'*1.0E6',T57,'AIR',(T64,8(6X,A9)))    FA11040
   952 FORMAT (/)                                                         FA11050
-  954 FORMAT (I4,F9.3,F11.5,F8.2,6PF9.2,1X,1P9E10.3,/,(52X,1P8E10.3))    FA11060
+  954 FORMAT (I4,F11.5,F11.5,F11.5,6P,F11.5,1P,E15.7,(T64,1P,8E15.7))           
   956 FORMAT (///,' HALFWIDTH INFORMATION ON THE USER SUPPLIED ',        FA11070
      *        'LBLRTM BOUNDARIES',/,' THE FOLLOWING VALUES ARE ',        FA11080
      *        'ASSUMED:')                                                FA11090
@@ -1582,8 +1658,8 @@ C                                                                        FA10530
      *        'I  LAYER BOUNDARIES',T55,'INTEGRATED AMOUNTS ',           FA11200
      *        '(MOL CM-2)',/,T11,'FROM',T22,'TO',T29,'AIR',T36,          FA11210
      *        8(1X,A8,1X),/,T11,'(KM)',T21,'(KM)',(T37,8A10))            FA11220
-  964 FORMAT (I5,2F10.3,1P9E10.3,/,(35X,1P8E10.3))                       FA11230
-  966 FORMAT ('0TOTAL',F9.3,F10.3,1P9E10.3,/,(35X,1P8E10.3))             FA11240
+  964 FORMAT (I5,2F10.3,1P,E10.3,(T36,1P,8E10.3))                               
+  966 FORMAT ('0TOTAL',F9.3,F10.3,1PE10.3,(T35,1P8E10.3))                       
   968 FORMAT ('1 SUMMARY OF THE GEOMETRY CALCULATION',//,10X,            FA11250
      *        'MODEL   = ',4X,3A8,/10X,'H1      = ',F12.6,' KM',/,10X,   FA11260
      *        'H2      = ',F12.6,' KM',/,10X,'ANGLE   = ',F12.6,' DEG',  FA11270
@@ -1616,7 +1692,7 @@ C                                                                        FA10530
      *        T25,'H',T31,'(MB)',T41,'(K)',T53,'AIR',(T59,8(6X,A9)))            
   974 FORMAT ('0',I3,2F8.3,A3,I2,F11.5,F8.2,1X,1P9E15.7)                 FA11480
   976 FORMAT ('0',I3,2F8.3,A3,I2,F11.5,F8.2,1X,1P9E15.7,/,                      
-     *            (52X,1P8E15.7))                                        FA11490
+     *            (60X,1P8E15.7))                                        FA11490
   978 FORMAT (1P8E15.7)                                                  FA11500
   980 FORMAT ('0',/,'0',T4,'L  PATH BOUNDARIES',T28,'PBAR',T37,'TBAR',   FA11510
      *        T65,'ACCUMULATED MOLECULAR AMOUNTS FOR TOTAL PATH',/,T9,   FA11520
@@ -2864,6 +2940,9 @@ C                                                                        FA23620
                                                                                 
       COMMON /c_drive/ ref_lat,hobs,co2mx,ibmax_b,immax_b,                      
      *                 lvl_1_2,jchar_st(10,2),wm(mxzmd)                         
+c common block for layer-to-level analytical jacobians                          
+      common /dlaydlev/ilevdq,imoldq,iupdwn,                                    
+     &    dqdL(mxlay,0:mxmol),dqdU(mxlay,0:mxmol)                               
 c                                                                               
       character*1 jchar_st                                                      
 c                                                                               
@@ -2932,6 +3011,15 @@ C                                                                        FA24180
 C                                                                        FA24210
    40 CALL NSMDL (ITYPE,MDL)                                                    
 C                                                                        FA24230
+      if (imoldq.eq.-99) then                                                   
+          if (immax.ne.ibmax) then                                              
+              write(ipr,*) 'Error in Atmosphere Specification:'                 
+              write(ipr,*) '   Desired levels must match input grid'            
+              write(ipr,*) '   for analytic jacobian calculation'               
+              stop 'error in level grid:  see TAPE6'                            
+          endif                                                                 
+      endif                                                                     
+                                                                                
    50 ZMIN = ZMDL(1)                                                     FA24240
 C                                                                        FA24250
       DO 70 I = 1, IMMAX                                                 FA24260
@@ -6662,6 +6750,7 @@ C F1(P) = INTERPOLATION IN LN(P), F2(P) = HYDROSTATIC CALCULATION
                IF (PX(IP) .EQ. PM(LIP-1)) THEN                                  
                   ZX(IP) = ZMDL(LIP-1)                                          
                ELSE                                                             
+                                                                                
                   IF(PX(IP) .EQ. PM(LIP)) THEN                                  
                      ZX(IP) = ZMDL(LIP)                                         
                   ELSE                                                          
@@ -6700,6 +6789,7 @@ C     COMBINE THE INTERPOLATION AND THE HYDROSTATIC CALCULATION
                      A = RATP**3                                                
                                                                                 
                      ZX(IP) = A*ZINT + (1-A)*ZTMP(2)                            
+                                                                                
                   ENDIF                                                         
                ENDIF                                                            
                                                                                 
@@ -6739,7 +6829,7 @@ C                                                                        FX04860
                                                                                 
 C ERROR MESSAGES                                                                
   300 WRITE(IPR,988) (ZX(I),I=1,LAYX)                                           
-      PRINT 988,(ZX(I),I=1,IBMAX)                                               
+      PRINT 988,(ZX(I),I=1,IP)                                                  
                                                                                 
       STOP 'ZX IN XPROFL'                                                       
 C                                                                        FX04880
@@ -6755,7 +6845,7 @@ C                                                                        FX04880
   925 FORMAT (F10.3,5X,38A1)                                             FX04980
   930 FORMAT (2X,F10.3,5X,38A1)                                           FX0499
   935 FORMAT (8E10.3)                                                    FX05000
-  940 FORMAT (2X,8E10.3)                                                 FX05010
+  940 FORMAT (2X,1p,8E12.3)                                                 FX05
   988 FORMAT (///,' ERROR: BOUNDARY ALTITUDES FOR CROSS_SECTION LEVELS',        
      *        'ARE NEGATIVE OR NOT IN ASCENDING ORDER',//,5X,' ZX ',            
      *        /,(10F10.4))                                                      
@@ -7772,7 +7862,7 @@ C IDEAL GAS LAW
          TOTAL_AIR = PM(J)*1.0E-4/(BTZ*TM(J))                                   
          DRY_AIR = TOTAL_AIR - DENW(J)                                          
          H2O_MIXRAT(J) = DENW(J)/DRY_AIR                                        
-         CHIM = 0.6223*H2O_MIXRAT(J)                                            
+         CHIM = XMASS_RATIO*H2O_MIXRAT(J)                                       
          COMP_FACTOR(J) = 1. - (PM(J)*100/TM(J))*                               
      *        (CA0 + CA1*DT + CA2*DT**2 +                                       
      *        (CB0 + CB1*DT)*CHIM + (CC0 + CC1*DT)*CHIM**2) +                   
