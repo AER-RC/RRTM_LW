@@ -1,5 +1,5 @@
 # $Id$
-# Makefile for rrtm - SGI platform
+# Makefile for rrtm - OS X (Absoft) platform
 
 SHELL = /bin/sh
 
@@ -7,11 +7,11 @@ SHELL = /bin/sh
 # Set variables
 ###############################
 
-PLATFORM = sgi
+PLATFORM = OS_X
 VERSION = v3.2
 
 FC = f90
-FCFLAG =  -mips4 -r10000 -lfastm -O3 -64 -r8 -i8 -TENV:X=0
+FCFLAG =  -s -O -N11 -i8 -N113
 OUTPUT = rrtm_$(VERSION)_$(PLATFORM)
 
 CPATH = src
@@ -95,7 +95,7 @@ MODULE = $(CPATH)/$(CRTM).o \
 	 $(CPATH)/$(CR1M).o \
 	 $(CPATH)/$(CERR).o \
 	 $(CPATH)/$(CLPK).o \
-	 $(CPATH)/$(CDIS).o 
+	 $(CPATH)/$(CDIS).o /
 
 ###############################
 # Load line
@@ -103,7 +103,7 @@ MODULE = $(CPATH)/$(CRTM).o \
 
 $(OUTPUT) : \
 	intro makedir $(OBPATH) conclude
-	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBPATH)
+	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBPATH) -LApplications/Absoft/lib -lU77
 
 ###############################
 # Object compile lines
