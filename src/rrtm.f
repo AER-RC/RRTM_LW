@@ -379,7 +379,7 @@ C     Read in atmospheric profile.
       COMMON /XRRTATM/  IXSECT
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
-      CHARACTER*1 CTEST, CDOLLAR, DUM
+      CHARACTER*1 CTEST, CDOLLAR, CDUM
 
       DATA CDOLLAR /'$'/
       DATA IXTRANS /0,0,0,1,2,3,0,0,0,0,0,4,0,0/
