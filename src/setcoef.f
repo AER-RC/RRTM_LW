@@ -133,6 +133,7 @@ C        this band, use integrated Planck values up to 3250 cm-1.
 C        If radiative transfer will be performed across all 16 bands,
 C        then include in the integrated Planck values for this band
 C        contributions from 2600 cm-1 to infinity.
+         IBAND = 16
          IF (ISTART .EQ. 16) THEN
             IF (LAY.EQ.1) THEN
                DBDTLEV = TOTPLK16(INDBOUND+1) - TOTPLK16(INDBOUND)
