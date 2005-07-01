@@ -1454,8 +1454,6 @@ C     interpolated (in temperature) separately.
      &              FAC000 * ABSA(IND0+1,IG) +
      &              FAC210 * ABSA(IND0+8,IG) +
      &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
      &              FAC010 * ABSA(IND0+10,IG))
      &              + SPECCOMB1 *
      &              (FAC201 * ABSA(IND1-1,IG) +
@@ -3491,6 +3489,7 @@ c     to obtain the proper contribution.
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
+         INDM = INDMINOR(LAY)
          DO 3000 IG = 1, NG(13)
             ABSO3 = KB_MO3(INDM,IG) + 
      &           MINORFRAC(LAY) *
