@@ -10,10 +10,11 @@ July 1, 2005
 		of variable heatfac to produce appropriate sign (Note: RRTM_LW and RRTM_SW
 		were designed to keep the net flux positive for both spectral regimes, thereby
 		necessitating the "-" sign for the LW heating rate calculations).
-	- Fixed minor bugs in taumol, setcoef, k_gB15 as reported by NCEP  
+	- Fixed minor bugs in taumol, setcoef, as reported by NCEP  
+	- Added WV continuum coefficients inadvertently left out of the original v3.0 release
 	- Fixed other minor bugs
 	- Added Absoft Pro Fortran Compiler makefile for MAC OS_X
-
+	- Upgraded rrtatm.f to be compatible with CVS revision 9.3 lblatm.f
 
 July 29, 2004
 
