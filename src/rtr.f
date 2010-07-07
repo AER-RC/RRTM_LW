@@ -22,7 +22,7 @@ C     information.  Only one angle is used from standard
 C     Gaussian quadrature.
 
       PARAMETER (MG=16)
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (MXANG = 4)
       PARAMETER (NBANDS = 16)
       PARAMETER (NTBL = 10000,TBLINT=10000.0)
@@ -31,7 +31,7 @@ C     Gaussian quadrature.
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     *                RADCN1,RADCN2 
+     *                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
@@ -112,6 +112,7 @@ C ***    Loop over g-channels.
  1000    CONTINUE
 C ***    Radiative transfer starts here.
 
+
          RADLD1 = 0.
 C ***    Downward radiative transfer.  Due to the simple form taken by
 C        certain equations when the optical depth is small,
@@ -122,6 +123,10 @@ C        these conditions are tested for.
             DPLANKUP = PLANKLEV(LEV,IBAND) - BLAY
             DPLANKDN = PLANKLEV(LEV-1,IBAND) - BLAY
             ODEPTH1 = SECDIFF*TAUG(LEV,IG)
+c           if(lev.ge.1.and.lev.le.4) then
+c             write (*,*)
+c             write(*,'(2i3,3e10.3)') lev,ig,taug(lev,ig),blay,plfrac
+c           end if
             IF (ODEPTH1 .LE. 0.06) THEN
                IF (ODEPTH1 .LT. 0.0) ODEPTH1 = 0.0
                ATRANS1(LEV) = ODEPTH1-0.5*ODEPTH1*ODEPTH1

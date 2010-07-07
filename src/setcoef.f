@@ -20,7 +20,7 @@ C     fractions related to the pressure and temperature interpolations.
 C     Also calculate the values of the integrated Planck functions 
 C     for each band at the level and layer temperatures.
 
-      PARAMETER (MXLAY = 203, MXMOL = 38)
+      PARAMETER (MXLAY=603, MXMOL=39)
       PARAMETER (NBANDS = 16)
       PARAMETER (NBANDSLG = 16)
       PARAMETER (MG =16)

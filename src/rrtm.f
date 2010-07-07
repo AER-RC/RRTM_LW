@@ -63,14 +63,14 @@ C         and a maximum/random cloud overlap scheme
 C     d) writes out the upward, downward, and net flux for each
 C        level and the heating rate for each layer
 
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
       PARAMETER (NTBL = 10000,TBLINT=10000.0)
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     *                RADCN1,RADCN2 
+     *                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /PRECISE/   ONEMINUS
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
@@ -80,6 +80,15 @@ C        level and the heating rate for each layer
       COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /CLOUDIN/   ICD,ICLDATM,INFLAG,
+     &     CLDDAT1(MXLAY),CLDDAT2(MXLAY),
+     &     ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
+      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),
+     &     TAUCLOUD(MXLAY,NBANDS),
+     &     SSACLOUD(MXLAY,NBANDS),
+     &     XMOM(0:16,MXLAY,NBANDS),
+     &     TAUTOT(NBANDS)
+
       COMMON /OUTPUT/    TOTUFLUX(0:MXLAY), TOTDFLUX(0:MXLAY),
      &                   FNET(0:MXLAY), HTR(0:MXLAY)
       COMMON /RTTBL/     BPADE,
@@ -170,48 +179,22 @@ C     delta-pressure, with flux in w/m-2 and pressure in mbar, to get
 C     the heating rate in units of degrees/day.  It is equal to 
 C           (g)x(#sec/day)x(1e-5)/(specific heat of air at const. p)
 C        =  (9.8066)(3600)(1e-5)/(1.004)
-C      DATA HEATFAC /8.4391/
+C     (ORIGINAL RRTM VALUE) DATA HEATFAC /8.4391/
 
+C     Calculated value:
+C     (grav) x (#sec/day) / (specific heat of dry air at const. p x 1.e2)
+C     Here, cpdair is in units of J g-1 K-1; grav is cm sec-2; 
+C     and a constant (1.e2) converts mb to Pa when heatfac 
+C     is multiplied by W m-2 mb-1. 
+
+      HEATFAC = 1.0E-7*(GRAV * SECDY)/(CPDAIR)
       ONEMINUS = 1. - 1.E-6
       FLUXFAC = PI * 2.D4  
-
+      
       IWR = 10
       PAGE = CHAR(12)
 
       HVRRTM = '$Revision$'
-
-C  Compute lookup tables for transmittance, tau transition function,
-C  and clear sky tau (for the cloudy sky radiative transfer).  Tau is 
-C  computed as a function of the tau transition function, transmittance 
-C  is calculated as a function of tau, and the tau transition function 
-C  is calculated using the linear in tau formulation at values of tau 
-C  above 0.01.  TF is approximated as tau/6 for tau < 0.01.  All tables 
-C  are computed at intervals of 0.001.  The inverse of the constant used
-C  in the Pade approximation to the tau transition function is set to b.
-C  These values are not necessary when using DISORT as the RT solver.
-
-      IF (ISCAT .EQ. 0) THEN
-         TAUTBL(0) = 0.0
-         TAUTBL(NTBL) = 1.E10
-         TRANS(0) = 1.0
-         TRANS(NTBL) = 0.0
-         TF(0) = 0.0
-         TF(NTBL) = 1.0
-         PADE  = 0.278
-         BPADE = 1.0/PADE
-         DO 500 ITR = 1,NTBL-1
-            TFN = ITR/FLOAT(NTBL)
-            TAUTBL(ITR) = BPADE*TFN/(1.-TFN)
-            TRANS(ITR) = EXP(-TAUTBL(ITR))
-            IF (TAUTBL(ITR) .LT. 0.06) THEN
-               TF(ITR) = TAUTBL(ITR)/6.
-            ELSE
-               TF(ITR) = 1.-
-     &              2.*((1./TAUTBL(ITR))-
-     &              (TRANS(ITR)/(1.-TRANS(ITR))))
-            ENDIF
- 500     CONTINUE
-      ENDIF
 
 C     Open the INPUT set of atmospheres
       IRD = 9
@@ -223,8 +206,41 @@ c Multiple atmosphere option not yet implemented
 C ***    Input atmospheric profile from INPUT_RRTM.
          CALL READPROF
 
-         ICLDATM = 0
-         IF (ICLD .GE. 1) CALL CLDPROP(ICLDATM)
+         IF (ISCAT .EQ. 0) THEN
+C  Compute lookup tables for transmittance, tau transition function,
+C  and clear sky tau (for the cloudy sky radiative transfer).  Tau is 
+C  computed as a function of the tau transition function, transmittance 
+C  is calculated as a function of tau, and the tau transition function 
+C  is calculated using the linear in tau formulation at values of tau 
+C  above 0.01.  TF is approximated as tau/6 for tau < 0.01.  All tables 
+C  are computed at intervals of 0.001.  The inverse of the constant used
+C  in the Pade approximation to the tau transition function is set to b.
+C  These values are not necessary when using DISORT as the RT solver.
+
+            TAUTBL(0) = 0.0
+            TAUTBL(NTBL) = 1.E10
+            TRANS(0) = 1.0
+            TRANS(NTBL) = 0.0
+            TF(0) = 0.0
+            TF(NTBL) = 1.0
+            PADE  = 0.278
+            BPADE = 1.0/PADE
+            DO 500 ITR = 1,NTBL-1
+               TFN = ITR/FLOAT(NTBL)
+               TAUTBL(ITR) = BPADE*TFN/(1.-TFN)
+               TRANS(ITR) = EXP(-TAUTBL(ITR))
+               IF (TAUTBL(ITR) .LT. 0.06) THEN
+                  TF(ITR) = TAUTBL(ITR)/6.
+               ELSE
+                  TF(ITR) = 1.-
+     &                 2.*((1./TAUTBL(ITR))-
+     &                 (TRANS(ITR)/(1.-TRANS(ITR))))
+               ENDIF
+ 500        CONTINUE
+         ENDIF
+         
+         IF (ICLD .GE. 1 .AND. INFLAG .NE. 0 .AND. INFLAG .NE. 10) 
+     &        CALL CLDPROP
 
          ISTART = 1
          IEND = 16
@@ -244,6 +260,7 @@ C        by interpolating data from stored reference atmospheres.
 
          CALL SETCOEF
 C    ***    Call the radiative transfer routine.
+
          IF (ISCAT .EQ. 0) THEN
             IF (NUMANGS .EQ. 0 .AND. ICLDATM .EQ. 0) THEN
                CALL RTR
@@ -266,7 +283,7 @@ C    ***    Call the radiative transfer routine.
             CALL RTRDIS
          ENDIF
          IF (IOUT .LT. 0) GO TO 4000
-
+         
 
 C ***    Process output for this atmosphere.
          OPEN (IWR,FILE='OUTPUT_RRTM',FORM='FORMATTED')
@@ -299,7 +316,8 @@ C
             ENDIF
  3000    CONTINUE
          WRITE(IWR,9903)PAGE
-         
+
+
          IF (IOUT .LE. 40 .OR. IFLAG .EQ. 16) GO TO 3500
          IF (IFLAG .EQ. 99) THEN
             IFLAG = 1
@@ -329,6 +347,7 @@ C
 
          CLOSE(IRD)
          CLOSE(IWR)
+         CLOSE(ICD)
 
  9952 FORMAT(1X,I3,9X,F7.6,3X,F8.4,6X,F8.4,6X,F12.7,10X,F9.5)
  9953 FORMAT(1X,I3,9X,F6.5,4X,F8.4,6X,F8.4,6X,F12.7,10X,F9.5)
@@ -342,7 +361,7 @@ C
      &FLUX       HEATING RATE')
  9901 FORMAT(1X,'            mb          W/m2          W/m2           W/
      &m2          degree/day')
- 9902 FORMAT(1X,I3,3X,F11.6,4X,1P,2(G12.6,2X),G13.6,3X,G16.9,0P)
+c 9902 FORMAT(1X,I3,3X,F11.6,4X,1P,2(G12.6,2X),G13.6,3X,G16.9,0P)
  9903 FORMAT(A)
  9910 FORMAT('  Modules and versions used in this calculation:',/,/,
      *         17(5X,a18,2X,A18,10X, a18,2X,A18,/))
@@ -351,13 +370,13 @@ C
 
 C************************  SUBROUTINE READPROF  *****************************C
 
-      SUBROUTINE READPROF                                                     
+      SUBROUTINE READPROF   
                                                                          
 C     Read in atmospheric profile.
 
-      IMPLICIT DOUBLE PRECISION (V)                                      
+      IMPLICIT DOUBLE PRECISION (V) 
                                                                          
-      PARAMETER (MXLAY=203, MXMOL=38)
+      PARAMETER (MXLAY=603, MXMOL=39)
       PARAMETER (NBANDS = 16)
       PARAMETER (MAXINPX=MXMOL)
       PARAMETER (MAXXSEC=4)
@@ -367,15 +386,20 @@ C     Read in atmospheric profile.
 
       COMMON /CONTROL/  NUMANGS, ISCAT, NSTR, 
      &                  IOUT, ISTART, IEND, ICLD
+      COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
+     &                   DELWAVE(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /CLOUDIN/   ICD,ICLDATM,INFLAG,
+     &     CLDDAT1(MXLAY),CLDDAT2(MXLAY),
+     &     ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
       COMMON /SURFACE/  TBOUND,IREFLECT,SEMISS(NBANDS)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBRODL(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
       COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
-      COMMON /PATHX/    IXMAX,NXMOL0,IXINDX0(MAXINPX),WX0(MAXINPX,MXLAY)    
+      COMMON /PATHX/    IXMAX,NXMOL0,IXINDX0(MAXINPX),WX0(MAXINPX,MXLAY)
       COMMON /XRRTATM/  IXSECT
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
@@ -419,8 +443,6 @@ c     backwards compatibility with original rrtm
                ENDIF
       ENDIF
          
-
-
 C     If clouds are present, read in appropriate input file, IN_CLD_RRTM.
       IF (ICLD .GE. 1) CALL READCLD
 
@@ -450,7 +472,7 @@ C     Read in surface information.
      &           IPTHRK,ALTZ(L),PZ(L),TZ(L)
             READ (IRD,FORM3(IFORM)) (WKL(M,L),M=1,7), WBRODL(L)
             IF(NMOL .GT. 7) READ (IRD,FORM3(IFORM)) (WKL(M,L),M=8,NMOL)
- 2000    CONTINUE                                                            
+ 2000    CONTINUE   
            
          IF (IXSECT .EQ. 1) THEN                                 
             READ (IRD,9300) NXMOL0
@@ -541,52 +563,171 @@ C************************  SUBROUTINE READCLD  *****************************C
 C     Purpose:  To read in IN_CLD_RRTM, the file that contains input 
 C               cloud properties.
 
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (NBANDS = 16)
+      PARAMETER (NDAT = 19)
 
+      DIMENSION DAT(NDAT)
+
+      COMMON /CONTROL/  NUMANGS, ISCAT, NSTR, 
+     &                  IOUT, ISTART, IEND, ICLD
+      COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
+     &                   DELWAVE(NBANDS)
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /CLOUDIN/   INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
-     &                   ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
-      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),TAUCLOUD(MXLAY,NBANDS)
+      COMMON /CLOUDIN/   ICD,ICLDATM,INFLAG,
+     &     CLDDAT1(MXLAY),CLDDAT2(MXLAY),
+     &     ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
+      COMMON /CLOUDDAT/  NCBANDS,CLDFRAC(MXLAY),
+     &     TAUCLOUD(MXLAY,NBANDS),
+     &     SSACLOUD(MXLAY,NBANDS),
+     &     XMOM(0:16,MXLAY,NBANDS),
+     &     TAUTOT(NBANDS)
 
       CHARACTER*1 CTEST, CPERCENT
 
+      DATA EPS /1.E-6/
       DATA CPERCENT /'%'/
+
       IRDCLD = 11
 
+c Initialize cloud property variable
+      TAUCLOUD(:,:) = 0.0
+      SSACLOUD(:,:) = 0.0
+      XMOM(:,:,:) = 0.0
+      TAUTOT(:) = 0.0
+      CLDFRAC(:) = 0.0
+      NRD = 4
+
+C Open OUT_CLD_RRTM to output the cloud optical properties
+      ICD = 25
+      OPEN (ICD,FILE='OUT_CLD_RRTM',FORM='FORMATTED')
+
+      WRITE(ICD,8894) NUMANGS
+      WRITE(ICD,8895) NSTR
+
+C Open Cloud Input File
       OPEN(IRDCLD,FILE='IN_CLD_RRTM',FORM='FORMATTED')
 
 C     Read in cloud input option.  
+      
       READ(IRDCLD,9050) INFLAG, ICEFLAG, LIQFLAG
-      DO 500 LAY = 1, NLAYERS
-         CLDFRAC(LAY) = 0.
- 500  CONTINUE
 
- 1000 CONTINUE
+      IF (INFLAG .EQ. 0 .OR. INFLAG .EQ. 10) THEN 
+         IF (ISCAT .EQ. 0 .OR. ISCAT .EQ. 1) THEN 
+            NRD = 1
+            WRITE(ICD,8900) '  LAY','  BAND  ',
+     &           '  WVN1  ','  WVN2  ',
+     &           '   ABS OD    ','SUM(ABS OD)  '
+            WRITE(ICD,8901) ' BY BLOCK    '
+         ELSE
+            NRD = 2 + (NSTR+1)
+            WRITE(ICD,8902) '  LAY','  BAND  ',
+     &           '  WVN1  ','  WVN2  ',
+     &           '    EXT OD   ',' SUM(EXT OD) ',
+     &           '     SSA     ','  ASYM  FAC  '
+            WRITE(ICD,8903) '   BY BLOCK  '
+         ENDIF
+      ENDIF
+
+      NPRELAY = 0
       LAY = 0
-C     For INFLAG = 0 or 1, for each cloudy layer only LAY, FRAC, and
-C     DAT1 are pertinent.  If CTEST = '%', then there are no more 
-C     cloudy layers to process.
+ 1000 CONTINUE
+
       NPRELAY = LAY
-      READ (IRDCLD,9100,END=9000) CTEST,LAY,FRAC,DAT1,DAT2,DAT3,DAT4
+      DAT(1:NDAT) = 0.0
+
+      READ (IRDCLD,9100,END=9000) CTEST,LAY,FRAC,(DAT(IDAT),IDAT=1,NRD)
 
       IF (CTEST .EQ. CPERCENT) GO TO 9000
 
       IF (LAY .LE. NPRELAY) STOP 'CLD LAYERS NOT IN ASCENDING ORDER'
 
+      IF (LAY .NE. NPRELAY+1) TAUTOT(:) = 0.0
+
+      NPRELAY = LAY
+
       CLDFRAC(LAY) = FRAC
-      CLDDAT1(LAY) = DAT1
-      CLDDAT2(LAY) = DAT2
-      CLDDAT3(LAY) = DAT3
-      CLDDAT4(LAY) = DAT4
+
+      IF (CLDFRAC(LAY) .NE. 1.0 .AND. ISCAT .GE. 1) 
+     &     STOP 'CLDFRAC MUST BE 1 WHEN USING DISORT'
+
+      IF (CLDFRAC(LAY) .GE. EPS ) THEN
+         ICLDATM = 1
+         IF (INFLAG .EQ. 0) THEN
+	    NCBANDS = 16		
+            DO 1040 IB = 1,NCBANDS
+               TAUCLOUD(LAY,IB) = DAT(1)
+               SSACLOUD(LAY,IB) = DAT(2)
+               XMOM(0:16,LAY,IB) = DAT(3:19)            
+               TAUTOT(IB) = TAUTOT(IB) + 
+     &              TAUCLOUD(LAY,IB)
+               IF (ISCAT .EQ. 0 .OR. ISCAT .EQ. 1) THEN
+                  WRITE(ICD,8975) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+     &                 TAUCLOUD(LAY,IB),
+     &                 TAUTOT(IB)
+               ELSE
+                  WRITE(ICD,8976) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+     &                 TAUCLOUD(LAY,IB),
+     &                 TAUTOT(IB),SSACLOUD(LAY,IB),
+     &                 XMOM(1,LAY,IB)
+               ENDIF
+ 1040       CONTINUE
+         ELSE IF (INFLAG .EQ. 10) THEN
+	    NCBANDS = 16
+            TAUCLOUD(LAY,1) = DAT(1)
+            SSACLOUD(LAY,1) = DAT(2)
+            XMOM(0:16,LAY,1) = DAT(3:19)
+            TAUTOT(1) = TAUTOT(1) + 
+     &           TAUCLOUD(LAY,1)
+
+            DO 1050 IB = 1,NCBANDS
+               IF (IB .GT. 1) THEN 
+                  READ (IRDCLD,9105,END=9000) 
+     &                 (DAT(IDAT),IDAT=1,NRD)
+                  TAUCLOUD(LAY,IB) = DAT(1)
+                  SSACLOUD(LAY,IB) = DAT(2)
+                  XMOM(0:16,LAY,IB) = DAT(3:19)
+                  TAUTOT(IB) = TAUTOT(IB) + 
+     &                 TAUCLOUD(LAY,IB)
+               ENDIF
+               IF (ISCAT .EQ. 0 .OR. ISCAT .EQ. 1) THEN
+                  WRITE(ICD,8975) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+     &                 TAUCLOUD(LAY,IB),
+     &                 TAUTOT(IB)
+               ELSE
+                  WRITE(ICD,8976) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+     &                 TAUCLOUD(LAY,IB),
+     &                 TAUTOT(IB),SSACLOUD(LAY,IB),
+     &                 XMOM(1,LAY,IB)
+               ENDIF
+ 1050       ENDDO
+         ELSE IF (INFLAG .EQ. 1 .OR. INFLAG .EQ. 2) THEN
+            CLDDAT1(LAY) = DAT(1)
+            CLDDAT2(LAY) = DAT(2)
+            CLDDAT3(LAY) = DAT(3)
+            CLDDAT4(LAY) = DAT(4)
+         ENDIF
+      ENDIF
       GO TO 1000
 
  9000 CONTINUE
-      CLOSE(IRDCLD)
+      CLOSE (IRDCLD)
+ 8894 FORMAT('NUMANGS: ',i2)
+ 8895 FORMAT('NSTR: ',i2)
+ 8975 FORMAT(2X,I3,1X,I3,1X,2(F7.1,1X),2(E12.5,1X))
+ 8976 FORMAT(2X,I3,1X,I3,1X,2(F7.1,1X),4(E12.5,1X))
+ 8900 FORMAT(A5,A6,A8,A8,2(A13))
+ 8901 FORMAT(2X,3X,1X,4X,1X,7X,1X,7X,1X,
+     &     1(12X,1X),A13)
+ 8902 FORMAT(A5,A6,A9,A8,1X,4(A12,1X))
+ 8903 FORMAT(2X,3X,1X,4X,1X,7X,1X,7X,1X,
+     &     12X,1X,12X,1X,12X,1X,A12)
+
 
  9050 FORMAT (3X,I2,4X,I1,4X,I1)
- 9100 FORMAT (A1,1X,I3,5E10.5)
+ 9100 FORMAT (A1,1X,I3,1E10.5,19E10.5)
+ 9105 FORMAT (15X,19E10.5)
 
       RETURN
       END
@@ -600,7 +741,7 @@ C     This subroutine identifies which cross-sections are to be used.
       PARAMETER (MAXINPX=35)
       PARAMETER (MAXXSEC=4)
 
-      IMPLICIT DOUBLE PRECISION (V)                                     ! 
+      IMPLICIT DOUBLE PRECISION (V) 
 C                                                                         
       COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
 C                                                                         
@@ -620,31 +761,31 @@ C
       DATA (ALIAS(1,I),I=1,4)/                                           
      *    'CCL4      ', 'CCL3F     ', 'CCL2F2    ', 'CHCLF2    '/ 
       DATA (ALIAS(2,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'CFCL3     ', 'CF2CL2    ', 'CHF2CL    '/         
+     *    ' ZZZZZZZZ ', 'CFCL3     ', 'CF2CL2    ', 'CHF2CL    '/
       DATA (ALIAS(3,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'CFC11     ', 'CFC12     ', 'CFC22     '/         
+     *    ' ZZZZZZZZ ', 'CFC11     ', 'CFC12     ', 'CFC22     '/
       DATA (ALIAS(4,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'F11       ', 'F12       ', 'F22       '/        
+     *    ' ZZZZZZZZ ', 'F11       ', 'F12       ', 'F22       '/
 
-      DATA BLANK / '          '/                                          
+      DATA BLANK / '          '/  
 C                                                                         
-      DO 10 I = 1, NXMOL                                                 
-         XSNAME(I) = BLANK                                                
-   10 CONTINUE                                                            
+      DO 10 I = 1, NXMOL
+         XSNAME(I) = BLANK 
+   10 CONTINUE
 C                                                                         
 C     READ IN THE NAMES OF THE MOLECULES                                  
 C                                                                         
-      IF (NXMOL.GT.7) THEN                                               
-         READ (IRD,'(7A10)') (XSNAME(I),I=1,7)                            
-         READ (IRD,'(8A10)') (XSNAME(I),I=8,NXMOL)                       
-      ELSE                                                                
-         READ (IRD,'(7A10)') (XSNAME(I),I=1,NXMOL)                       
-      ENDIF                                                               
+      IF (NXMOL.GT.7) THEN  
+         READ (IRD,'(7A10)') (XSNAME(I),I=1,7)  
+         READ (IRD,'(8A10)') (XSNAME(I),I=8,NXMOL)
+      ELSE
+         READ (IRD,'(7A10)') (XSNAME(I),I=1,NXMOL)
+      ENDIF         
 C                                                                         
 C     MATCH THE NAMES READ IN AGAINST THE NAMES STORED IN ALIAS           
 C     AND DETERMINE THE INDEX VALUE.  
-      IXMAX = 4                                                          
-      DO 40 I = 1, NXMOL                                                 
+      IXMAX = 4         
+      DO 40 I = 1, NXMOL
 C        Left-justify all inputed names.                                      
          CALL CLJUST (XSNAME(I),10)
          IXINDX(I) = 0
@@ -652,11 +793,11 @@ C        Left-justify all inputed names.
             IF ((XSNAME(I).EQ.ALIAS(1,J)) .OR.                            
      *          (XSNAME(I).EQ.ALIAS(2,J)) .OR.                            
      *          (XSNAME(I).EQ.ALIAS(3,J)) .OR.                            
-     *          (XSNAME(I).EQ.ALIAS(4,J))) THEN                           
-               IXINDX(I) = J                                              
-            ENDIF                                                         
+     *          (XSNAME(I).EQ.ALIAS(4,J))) THEN   
+               IXINDX(I) = J       
+            ENDIF 
    20    CONTINUE
-   40 CONTINUE                                                            
+   40 CONTINUE
 
       RETURN
       END
@@ -665,13 +806,13 @@ C        Left-justify all inputed names.
 
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (MAXXSEC=4)
       PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     *                RADCN1,RADCN2 
+     *                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
       COMMON /FEATURES/  NG(NBANDS),NSPA(MG),NSPB(MG)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      *                   DELWAVE(NBANDS)
@@ -785,13 +926,6 @@ C        Left-justify all inputed names.
       DATA NSPA /1,1,9,9,9,1,9,1,9,1,1,9,9,1,9,9/
       DATA NSPB /1,1,5,5,5,0,1,1,1,1,1,0,0,1,0,0/
 
-C     HEATFAC is the factor by which one must multiply delta-flux/ 
-C     delta-pressure, with flux in w/m-2 and pressure in mbar, to get 
-C     the heating rate in units of degrees/day.  It is equal to 
-C           (g)x(#sec/day)x(1e-5)/(specific heat of air at const. p)
-C        =  (9.8066)(3600)(1e-5)/(1.004)
-      DATA HEATFAC /8.4391/
-
       DATA WX /MAXPROD*0.0/
 
       END
@@ -799,18 +933,22 @@ c**********************************************************************
       Block Data phys_consts
 c
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     *                RADCN1,RADCN2 
+     *                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
 c
       DATA PI / 3.1415926535 /
 
 c
-c    Constants from NIST 01/11/2002
+c    Constants from NIST May 2010 (and other constants that will need modification
+c    when moving to other atmospheres)
 c
       DATA PLANCK / 6.62606876E-27 /, BOLTZ  / 1.3806503E-16 /,
      *     CLIGHT / 2.99792458E+10 /, 
      *     AVOGAD / 6.02214199E+23 /, ALOSMT / 2.6867775E+19 /,
-     *     GASCON / 8.314472  E+07 /
-     *     RADCN1 / 1.191042722E-12 /, RADCN2 / 1.4387752    /
+     *     GASCON / 8.314472E+07 /
+     *     RADCN1 / 1.191042722E-12 /, RADCN2 / 1.4387752    /,
+     *     GRAV   / 9.80665E+02/, CPDAIR /1.00464/,
+     *     AIRMWT / 28.964/, SECDY /8.64E+04/
+
 c
 c     Pi was obtained from   PI = 2.*ASIN(1.)                             A03980
 c

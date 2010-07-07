@@ -14,8 +14,9 @@ C**********************************************************************   E00090
 C                                                                         E00100
 C     IFIL CARRIES FILE INFORMATION                                       E00110
 C                                                                         E00120
-      PARAMETER (MXFSC=200, MXLAY=MXFSC+3,MXZMD=3400,
-     *           MXPDIM=MXLAY+MXZMD,IM2=MXPDIM-2,MXMOL=38,MXTRAC=22)
+      PARAMETER (MXFSC=600, MXLAY=MXFSC+3,MXZMD=6000,
+     *           MXPDIM=MXLAY+MXZMD,IM2=MXPDIM-2,MXMOL=39,
+     *           MX_XS=38,MXTRAC=22)
 C
       COMMON /IFIL/ IRD,IPR,IPU,NOPR,NFHDRF,NPHDRF,NFHDRL,NPHDRL,         E00130
      *              NLNGTH,KFILE,KPANEL,LINFIL,NFILE,IAFIL,IEXFIL,        E00140
@@ -27,24 +28,24 @@ C     (E.G. 1=CLONO2), XAMNT(I,L)=LAYER AMOUNTS FOR I'TH MOLECULE FOR     E00190
 C     L'TH LAYER, ANALOGOUS TO AMOUNT IN /PATHD/ FOR THE STANDARD         E00200
 C     MOLECULES.                                                          E00210
 C                                                                         E00220
-      COMMON /PATHX/ IXMAX,IXMOLS,IXINDX(MXMOL),XAMNT(MXMOL,MXLAY)        E00230
+      COMMON /PATHX/ IXMAX,IXMOLS,IXINDX(MX_XS),XAMNT(MX_XS,MXLAY)        E00230
 C                                                                         E00240
 C     COMMON BLOCKS AND PARAMETERS FOR THE PROFILES AND DENSITIES         E00250
 C     FOR THE CROSS-SECTION MOLECULES.                                    E00260
 C     XSNAME=NAMES, ALIAS=ALIASES OF THE CROSS-SECTION MOLECULES          E00270
 C                                                                         E00280
       CHARACTER*10 XSFILE,XSNAME,ALIAS,BLANK                              E00290
-      COMMON /XSECTF/ XSFILE(6,5,MXMOL),XSNAME(MXMOL),ALIAS(4,MXMOL)      E00300
-      COMMON /XSECTR/ V1FX(5,MXMOL),V2FX(5,MXMOL),DVFX(5,MXMOL),
-     *                WXM(MXMOL),NTEMPF(5,MXMOL),NSPECR(MXMOL),
-     *                IXFORM(5,MXMOL),
-     *                XSMASS(MXMOL),XDOPLR(5,MXMOL),NUMXS,IXSBIN          E00325
+      COMMON /XSECTF/ XSFILE(6,5,MX_XS),XSNAME(MX_XS),ALIAS(4,MX_XS)      E00300
+      COMMON /XSECTR/ V1FX(5,MX_XS),V2FX(5,MX_XS),DVFX(5,MX_XS),
+     *                WXM(MX_XS),NTEMPF(5,MX_XS),NSPECR(MX_XS),
+     *                IXFORM(5,MX_XS),
+     *                XSMASS(MX_XS),XDOPLR(5,MX_XS),NUMXS,IXSBIN          E00325
 
       COMMON /CVREXT/    HNAMEXT,HVREXT
 
       CHARACTER*18       HNAMEXT,HVREXT
 C                                                                         E00330
-      DIMENSION IXFLG(MXMOL)                                              E00340
+      DIMENSION IXFLG(MX_XS)                                              E00340
 C                                                                         E00350
       CHARACTER*120 XSREC                                                 E00360
       CHARACTER*1 CFLG,CASTSK,CPRCNT,CN,CF                                E00370
@@ -59,7 +60,7 @@ C                                                                         E00413
 C
       HVREXT = '$Revision$'
 C                                                                         E00420
-      IXMAX = MXMOL                                                       E00430
+      IXMAX = MX_XS                                                       E00430
       DO 10 I = 1, IXMAX                                                  E00440
          XSNAME(I) = BLANK                                                E00450
    10 CONTINUE                                                            E00460
@@ -127,36 +128,36 @@ C                                                                         E01660
 C**   XSNAME=NAMES, ALIAS=ALIASES OF THE CROSS-SECTION MOLECULES          E01670
 C**            (NOTE: ALL NAMES ARE LEFT-JUSTIFIED)                       E01680
 C                                                                         E01690
-      PARAMETER(MXMOL=38)
+      PARAMETER(MX_XS=38)
       CHARACTER*10 XSFILE,XSNAME,ALIAS                                    E01700
-      COMMON /XSECTI/ XSMAX(6,5,MXMOL),XSTEMP(6,5,MXMOL),
-     *                NPTSFX(5,MXMOL),NFILEX(5,MXMOL),NLIMX  
-      COMMON /XSECTF/ XSFILE(6,5,MXMOL),XSNAME(MXMOL),ALIAS(4,MXMOL)
-      COMMON /XSECTR/ V1FX(5,MXMOL),V2FX(5,MXMOL),DVFX(5,MXMOL),
-     *                WXM(MXMOL),NTEMPF(5,MXMOL),NSPECR(MXMOL),
-     *                IXFORM(5,MXMOL),  
-     *                XSMASS(MXMOL),XDOPLR(5,MXMOL),NUMXS,IXSBIN    
+      COMMON /XSECTI/ XSMAX(6,5,MX_XS),XSTEMP(6,5,MX_XS),
+     *                NPTSFX(5,MX_XS),NFILEX(5,MX_XS),NLIMX  
+      COMMON /XSECTF/ XSFILE(6,5,MX_XS),XSNAME(MX_XS),ALIAS(4,MX_XS)
+      COMMON /XSECTR/ V1FX(5,MX_XS),V2FX(5,MX_XS),DVFX(5,MX_XS),
+     *                WXM(MX_XS),NTEMPF(5,MX_XS),NSPECR(MX_XS),
+     *                IXFORM(5,MX_XS),  
+     *                XSMASS(MX_XS),XDOPLR(5,MX_XS),NUMXS,IXSBIN    
       COMMON /XSECTS/ JINPUT,NMODES,NPANEL,NDUM,V1XS,V2XS,DVXS,NPTSXS     E02870
 C                                                                         E01750
       DATA NMODES / 1 /,NPANEL / 0 /,V1XS / 0.0 /,V2XS / 0.0 /,           E02990
      *     DVXS / 0.0 /,NPTSXS / 0 /                                      E03000
       DATA XSMAX / 1140*0.0 /                                             E03010
-      DATA (ALIAS(1,I),I=1,MXMOL)/                                        E01760
+      DATA (ALIAS(1,I),I=1,MX_XS)/                                        E01760
      *    'CLONO2    ', 'HNO4      ', 'CHCL2F    ', 'CCL4      ',         E01770
      *    'CCL3F     ', 'CCL2F2    ', 'C2CL2F4   ', 'C2CL3F3   ',         E01780
      *    'N2O5      ', 'HNO3      ', 'CF4       ', 'CHCLF2    ',         E01790
      *    'CCLF3     ', 'C2CLF5    ', 24*' ZZZZZZZZ ' /                   E01800
-      DATA (ALIAS(2,I),I=1,MXMOL)/                                        E01810
+      DATA (ALIAS(2,I),I=1,MX_XS)/                                        E01810
      *    'CLNO3     ', ' ZZZZZZZZ ', 'CFC21     ', ' ZZZZZZZZ ',         E01820
      *    'CFCL3     ', 'CF2CL2    ', 'C2F4CL2   ', 'C2F3CL3   ',         E01830
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CHF2CL    ',         E01840
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 24*' ZZZZZZZZ ' /                   E01850
-      DATA (ALIAS(3,I),I=1,MXMOL)/                                        E01860
+      DATA (ALIAS(3,I),I=1,MX_XS)/                                        E01860
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CFC21     ', ' ZZZZZZZZ ',         E01870
      *    'CFC11     ', 'CFC12     ', 'CFC114    ', 'CFC113    ',         E01880
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CFC14     ', 'CFC22     ',         E01890
      *    'CFC13     ', 'CFC115    ', 24*' ZZZZZZZZ ' /                   E01900
-      DATA (ALIAS(4,I),I=1,MXMOL)/                                        E01910
+      DATA (ALIAS(4,I),I=1,MX_XS)/                                        E01910
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'F21       ', ' ZZZZZZZZ ',         E01920
      *    'F11       ', 'F12       ', 'F114      ', 'F113      ',         E01930
      *    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'F14       ', 'F22       ',         E01940

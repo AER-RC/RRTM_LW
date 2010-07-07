@@ -13,12 +13,12 @@ C |                       (http://www.rtweb.aer.com/)                        |
 C |                                                                          |
 C  --------------------------------------------------------------------------
 
-      Subroutine CLDPROP(ICLDATM)
+      Subroutine CLDPROP
 
 C     Purpose:  Compute the cloud optical depth(s) for each cloudy
 C               layer.
 
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (NBANDS = 16)
 
       COMMON /CONTROL/  NUMANGS, ISCAT, NSTR, 
@@ -28,20 +28,20 @@ C               layer.
      &                   DELWAVE(NBANDS)
       COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                  PZ(0:MXLAY),TZ(0:MXLAY)
-      COMMON /CLOUDIN/  INFLAG,CLDDAT1(MXLAY),CLDDAT2(MXLAY),
-     &                  ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
+      COMMON /CLOUDIN/   ICD,ICLDATM,INFLAG,
+     &     CLDDAT1(MXLAY),CLDDAT2(MXLAY),
+     &     ICEFLAG,LIQFLAG,CLDDAT3(MXLAY),CLDDAT4(MXLAY)
       COMMON /CLOUDDAT/ NCBANDS,CLDFRAC(MXLAY),
-     &                  TAUCLOUD(MXLAY,NBANDS), 
-     &                  SSACLOUD(MXLAY,NBANDS),
-     &                  XMOM(0:16,MXLAY,NBANDS)
+     &     TAUCLOUD(MXLAY,NBANDS), 
+     &     SSACLOUD(MXLAY,NBANDS),
+     &     XMOM(0:16,MXLAY,NBANDS),
+     &     TAUTOT(NBANDS)
 
       COMMON / CLDOPTPROPS /ABSCLD1, ABSLIQ0,ABSICE0(2), 
      &     ABSICE1(2,5), ABSICE2(43,16), ABSICE3(46,16),
      &     ABSLIQ1(58,16),
      &     EXTICE2(43,16),SSAICE2(43,16),ASYICE2(43,16),
      &     EXTICE3(46,16),SSAICE3(46,16),ASYICE3(46,16)
-
-      DIMENSION TAUTOT(NBANDS)
 
       COMMON /CVRCLD/    HNAMCLD,HVRCLD
 
@@ -64,9 +64,10 @@ C     Explanation of the method for each value of INFLAG.  Values of
 C     0 or 1 for INFLAG do not distingish being liquid and ice clouds.
 C     INFLAG = 2 does distinguish between liquid and ice clouds, and
 C     requires further user input to specify the method to be used to 
-C     compute the aborption due to each.
+C     compute the aborption due to each
 C     INFLAG = 0:  For each cloudy layer, the cloud fraction and (gray)
-C                  optical depth are input.  
+C                  cloud optical depth (and if ISCAT=2) single-scattering albedo,
+C                  and phase-function moments are input.	 
 C     INFLAG = 1:  For each cloudy layer, the cloud fraction and cloud
 C                  water path (g/m2) are input.  The (gray) cloud optical 
 C                  depth is computed as in CCM2.
@@ -112,23 +113,32 @@ C                     range of effective radii by an averaging procedure
 C                     based on the work of J. Pinto (private communication).
 C                     Linear interpolation is used to get the absorption 
 C                     coefficients for the input effective radius.
-      
+C     INFLAG = 10:  For each cloudy layer, the cloud fraction and 
+C                   cloud optical depth (and if ISCAT=2) single-scattering albedo,
+C                   and phase-function moments are input for each band.	 
+
+
       HVRCLD = '$Revision$'
 
       ICLDATM = 0
       NCBANDS = 1
 
-c Initialize cloud property variable
-      TAUCLOUD(:,:) = 0.0
-      SSACLOUD(:,:) = 0.0
-      XMOM(:,:,:) = 0.0
-      TAUTOT(:) = 0.0
-c Open OUT_CLD_RRTM to output the cloud optical properties
-      ICD = 25
-      OPEN (ICD,FILE='OUT_CLD_RRTM',FORM='FORMATTED')
-      WRITE(ICD,8900)
-
       IF (ISCAT .EQ. 0 .OR. ISCAT .EQ. 1) THEN
+         
+         IF (INFLAG .EQ. 1) THEN 
+            WRITE(ICD,7998) '  LAY','  BAND  ',
+     &           '  WVN1  ','  WVN2  ',
+     &           '   ABS OD    ','SUM(ABS OD)  '
+            WRITE(ICD,7999) ' BY BLOCK    '
+         ELSEIF (INFLAG .EQ. 2) THEN
+            WRITE(ICD,8900) '  LAY','  BAND  ',
+     &           '  WVN1  ','  WVN2  ',
+     &           '   ICE OD    ','   LIQ OD    ',
+     &           '  TOT ABS OD ','  TOT ABS OD '
+
+            WRITE(ICD,8901) '  BY BLOCK  '
+         ENDIF
+
          NPRELAY = 0
          DO 3000 LAY = 1, NLAYERS
             IF (CLDFRAC(LAY) .GE. EPS) THEN
@@ -137,11 +147,17 @@ c Open OUT_CLD_RRTM to output the cloud optical properties
                ICLDATM = 1
 
 C           Ice clouds and water clouds combined.
-               IF (INFLAG .EQ. 0) THEN
-                  TAUCLOUD(LAY,1) = CLDDAT1(LAY)
-               ELSEIF(INFLAG .EQ. 1) THEN
+               IF(INFLAG .EQ. 1) THEN
                   CWP = CLDDAT1(LAY)
-                  TAUCLOUD(LAY,1) = ABSCLD1 * CWP
+		  NCBANDS = 16
+                  DO 1000 IB = 1, NCBANDS                  
+                     TAUCLOUD(LAY,IB) = ABSCLD1 * CWP
+                     TAUTOT(IB) = TAUTOT(IB) + 
+     &                    TAUCLOUD(LAY,IB)                     
+                     WRITE(ICD,9002) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+     &                    TAUCLOUD(LAY,IB),
+     &                    TAUTOT(IB)
+ 1000             CONTINUE
                   
 C           Separate treatement of ice clouds and water clouds.
                ELSEIF(INFLAG .EQ. 2) THEN
@@ -211,7 +227,7 @@ C     Calculation of absorption coefficients due to water clouds.
                      IF (ICEPAT .EQ. 1) ICEPAT = 2
                   ELSEIF (LIQFLAG .EQ. 1) THEN
                      RADLIQ = CLDDAT4(LAY)
-                     IF (RADLIQ .LT. 1.5 .OR. RADLIQ .GT. 60.) STOP
+                     IF (RADLIQ .LT. 2.5 .OR. RADLIQ .GT. 60.) STOP
      &                    'LIQUID EFFECTIVE RADIUS OUT OF BOUNDS'
                      INDEX = RADLIQ - 1.5
                      IF (INDEX .EQ. 58) INDEX = 57
@@ -239,10 +255,31 @@ C A CLEAR LAYER SEPARATES CLOUDY LAYERS, RESET COUNTER
      &                    TAUICE
                      TAUTOT(IB) = TAUTOT(IB) + 
      &                    TAUCLOUD(LAY,IB)
-                     WRITE(ICD,9000) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
-     &                    TAUICE,TAULIQ,
-     &                    TAUCLOUD(LAY,IB),
-     &                    TAUTOT(IB),0.0,0.0,0.0,0.0
+                     IF (NCBANDS .EQ. 1) THEN
+                         DO 2600 IBPR =1, 16                             
+                             WRITE(ICD,9000) LAY,IBPR,
+     &                           WAVENUM1(IBPR),WAVENUM2(IBPR),
+     &                           TAUICE,TAULIQ,
+     &                           TAUCLOUD(LAY,IB),
+     &                           TAUTOT(IB)
+ 2600                    CONTINUE
+                     ELSEIF (NCBANDS .EQ. 5) THEN
+                         DO 2700 IBPR = 1, 16
+                             IF (IPAT(IBPR,1) .EQ. IB) THEN
+                                 WRITE(ICD,9000) LAY,IBPR,
+     &                               WAVENUM1(IBPR),WAVENUM2(IBPR),
+     &                               TAUICE,TAULIQ,
+     &                               TAUCLOUD(LAY,IB),
+     &                               TAUTOT(IB)
+                             ENDIF
+ 2700                    CONTINUE
+                     ELSE
+                         WRITE(ICD,9000) LAY,IB,
+     &                       WAVENUM1(IB),WAVENUM2(IB),
+     &                       TAUICE,TAULIQ,
+     &                       TAUCLOUD(LAY,IB),
+     &                       TAUTOT(IB)
+                     ENDIF
  2800             CONTINUE
                ENDIF
                NPRELAY = LAY
@@ -250,20 +287,29 @@ C A CLEAR LAYER SEPARATES CLOUDY LAYERS, RESET COUNTER
  3000    CONTINUE
 
       ELSEIF (ISCAT .EQ. 2) THEN
+         WRITE(ICD,8902) '  LAY','  BAND  ',
+     &        '  WVN1  ','  WVN2  ',
+     &        '   ICE OD    ','   LIQ OD   ',
+     &        '  TOT EXT OD ',' TOT EXT OD ',
+     &        '  ICE SSA    ',' LIQ  SSA   ',
+     &        '     ICE     ','    LIQ     '
+         WRITE(ICD,8903) '   BY BLOCK  ','  ASYM  FAC  ',
+     &        '  ASYM  FAC  '
+
          NPRELAY = 0
          DO 6000 LAY = 1, NLAYERS
 
             IF (CLDFRAC(LAY) .GE. EPS) THEN
                IF (CLDFRAC(LAY) .NE. 1.0 ) 
-     &              STOP 'CLDFRAC MUST BE 1 WHEN USING DISORT'
+     &              STOP 'CLDFRAC MUST BE 1 WHEN ISCAT=1,2'
                ICLDATM = 1
                
-               IF (INFLAG .EQ. 0 .OR. INFLAG .EQ. 1) THEN
-                  PRINT*,'INFLAG OPTION 0 OR 1 NOT ALLOWED'
+               IF (INFLAG .EQ. 1) THEN
+                  PRINT*,'INFLAG OPTION 1 NOT ALLOWED WITH ISCAT=2'
                   STOP
                ENDIF
                
-C     Separate treatement of ice clouds and water clouds.
+C     Separate treatment of ice clouds and water clouds.
                IF (INFLAG .EQ. 2) THEN
                   CWP = CLDDAT1(LAY)
                   FICE = CLDDAT2(LAY)
@@ -313,15 +359,15 @@ C     Separate treatement of ice clouds and water clouds.
                      FINT = FACTOR - FLOAT(INDEX)
                      DO 5300 IB = 1, NCBANDS
                         EXTCOICE(IB) = FICE * 
-     &                       (EXTICE2(INDEX,IB) + FINT *
-     &                       (EXTICE2(INDEX+1,IB) - 
-     &                       EXTICE2(INDEX,IB)))
-                        SSACOICE(IB) = SSAICE2(INDEX,IB) + FINT *
-     &                       (SSAICE2(INDEX+1,IB) - 
-     &                       SSAICE2(INDEX,IB))
-                        GICE(IB) = ASYICE2(INDEX,IB) + FINT *
-     &                       (ASYICE2(INDEX+1,IB) - 
-     &                       ASYICE2(INDEX,IB))
+     &                       (EXTICE3(INDEX,IB) + FINT *
+     &                       (EXTICE3(INDEX+1,IB) - 
+     &                       EXTICE3(INDEX,IB)))
+                        SSACOICE(IB) = SSAICE3(INDEX,IB) + FINT *
+     &                       (SSAICE3(INDEX+1,IB) - 
+     &                       SSAICE3(INDEX,IB))
+                        GICE(IB) = ASYICE3(INDEX,IB) + FINT *
+     &                       (ASYICE3(INDEX+1,IB) - 
+     &                       ASYICE3(INDEX,IB))
  5300                CONTINUE
                      ICEPAT = 2
                   ENDIF
@@ -348,7 +394,7 @@ c     Calculation of optical properties of ice-only cloud.
  5750              CONTINUE
                    TAUTOT(IB) = TAUTOT(IB) + 
      &                  TAUCLOUD(LAY,IB)
-                   WRITE(ICD,9000) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
+                   WRITE(ICD,9001) LAY,IB,WAVENUM1(IB),WAVENUM2(IB),
      &                  TAUCLOUD(LAY,IB),0.0,TAUCLOUD(LAY,IB),
      &                  TAUTOT(IB),SSACLOUD(LAY,IB),
      &                  0.0,GICE(IB),0.0
@@ -359,13 +405,21 @@ c     Calculation of optical properties of ice-only cloud.
  6000  CONTINUE
       ENDIF
 
-      CLOSE(ICD)
- 8900 FORMAT(2X,'LAY',1X,'BND ',1X,'WVN1    ','WVN2    ',
-     &     'TAUICE       ','TAULIQ       ',
-     &     'TAUTOT       ','CUMTAU       ','SSAICE       ',
-     &     'SSALIQ       ',
-     &     'GICE         ','GLIQ         ' )
- 9000 FORMAT(2X,   I3,1X,I3,1X,2(F7.1,1X),8(E12.5,1X))
+ 7998 FORMAT(A5,A6,A8,A8,2(A13))
+ 7999 FORMAT(2X,3X,1X,4X,1X,7X,1X,7X,1X,
+     &     1(12X,1X),A13)
+ 8900 FORMAT(A5,A6,A8,A8,4(A13))
+ 8901 FORMAT(2X,3X,1X,4X,1X,7X,1X,7X,1X,
+     &     12X,1X,12X,1X,12X,1X,A13)
+ 8902 FORMAT(A5,A6,A8,A8,8(A13))
+ 8903 FORMAT((2X,3X),(1X,4X,1X),2(7X,1X),
+     &     3(12X,1X),A13,2(12X,1X),A13,A13)
+
+ 9000 FORMAT((2X,I3),(1X,I4,1X),2(F7.1,1X),4(E12.5,1X))
+ 9001 FORMAT(2X,I3,1X,I4,1X,2(F7.1,1X),4(E12.5,1X),
+     &     4(E12.5,1X))
+ 9002 FORMAT((2X,I3),(1X,I4,1X),2(F7.1,1X),2(E12.5,1X))
+
       RETURN
       END
 

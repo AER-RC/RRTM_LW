@@ -13,7 +13,7 @@ C     angle integration, i.e. only one exponential is computed per layer
 C     per g-value per band.
 
       IMPLICIT DOUBLE PRECISION (V)
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
       PARAMETER (MXANG = 4)
@@ -24,7 +24,7 @@ C     per g-value per band.
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     &                RADCN1,RADCN2 
+     &                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
@@ -51,11 +51,8 @@ C     per g-value per band.
       CHARACTER*18       HNAMRDS,HVRRDS
 
                                        
-      DIMENSION BBD1(MXLAY),BBD2(MXLAY),BBD3(MXLAY)
-      DIMENSION WTNUM(MXANG)
-
-      CHARACTER HEADER*127
-      LOGICAL   DELTAM, LAMBER, ONLYFL, PLANK, USRANG, USRTAU
+      Character HEADER*127
+      LOGICAL   LAMBER, ONLYFL, PLANK, USRANG, USRTAU
       INTEGER   IBCND, MAXCLY, MAXCMU, MAXPHI, MAXULV, MAXUMU, 
      &          NPHI, NSTR, NTAU, NUMU
       REAL      ACCUR, ALBEDO, BTEMP, FBEAM, FISOT, PHI0, TEMIS, TTEMP,

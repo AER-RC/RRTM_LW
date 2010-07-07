@@ -22,7 +22,7 @@ C     function information.  First-order standard Gaussian quadrature
 C     is used for the angle integration.
 
       PARAMETER (MG=16)
-      PARAMETER (MXLAY=203)
+      PARAMETER (MXLAY=603)
       PARAMETER (MXANG = 4)
       PARAMETER (NBANDS = 16)
       PARAMETER (NTBL = 10000, TBLINT=10000.0)
@@ -31,7 +31,7 @@ C     is used for the angle integration.
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOGAD,ALOSMT,GASCON,
-     *                RADCN1,RADCN2 
+     *                RADCN1,RADCN2,GRAV,CPDAIR,AIRMWT,SECDY 
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
