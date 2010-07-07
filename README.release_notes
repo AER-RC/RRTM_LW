@@ -1,8 +1,70 @@
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
+
+June 2010
+
+Release_3_3
+
+     - Modify rrtm_instructions to reflect updates
+
+     - Fix interpolation scheme bug in taumol.f
+		- See email notes from July 2009, Subject: CCMVal Case B
+
+     - Add new continuum coefficients created by Andy Maher (obtained from 
+     /storm/rc4/amaher/rrtm_cntm_mt_ckd_2.5/new-k_gB-files) in early May 2010.
+
+     - rrtm.f, cldprop.f: Overhaul the code to read in cloud optical properties, so a number
+     of revisions were made to the August 2009 revisions.  New code is
+     stored in src_newcloudopts, and has been copied into src.
+
+	- Attempted to accomodate all options properly for
+          iscat=0,1,2/inflag=0,1,2,10; Modified OUT_CLD_RRTM file to
+          reflect these options/.
+
+	- Modified many common blocks to bring read-in properties into
+          main part of code
+
+	!!- Fixed significant bug in cldprop.f that utilized the
+          iceflag=2 extinction properties in the iceflag=3 routine.
+
+	- There was an apparent bug for inflag = 0,1 in that taucloud
+          was only set for the first band.  So, in cldprop.f, added:
+	                  DO 1000 IB = 1, NCBANDS                  
+	                     TAUCLOUD(LAY,IB) = ABSCLD1 * CWP
+			  1000             CONTINUE
+
+	- Lower limit on radliq now set to 2.5 (see emails from Mike Iacono, 
+	February 2010, subject: cldprop issues).  This is now consistent with RRTMG_LW.
+
+     - Updated rrtatm.f to be consistent with lblatm v9.14 using program lbl2r_v9.14.f; this mean that the CO2MX 
+     input parameter NO LONGER works and all run decks using this scaling factor will need modification.
+
+     - extra.f: Changed MXZMD to 6000 to be consistent with new rrtatm.f; Replaced MXMOL in most all points 
+     with MX_XS to be consistent with LBLRTM and original RRTM.
+
+     - Changed MXMOL in all subroutines to 39
+
+     - rrtm.f,rrtatm.f, and others: Added gravity, specific heat of air, molecular weight of air,
+     sec/day to NIST data block in rrtm.f; Modified common blocks
+     accordingly; removed AIRMWT data statement from rrtatm.f
+
+     - rrtm.f: Updated NIST constants
+
+     - rrtatm.f: Revised gravity formulation to use "grav" constant rather
+     than hard-wired value of 9.80 in the formula for g0.
+
+     - Increase number of calculational output levels to 600 
+	- Modify MXLAY to 603 in all codes.
+	- Modify MXFSC to 600 in rrtatm.f, extra.f
+
+     - rtrdis.f: 
+	- DIMENSION BBD1(MXLAY),BBD2(MXLAY),BBD3(MXLAY)
+	- DIMENSION WTNUM(MXANG)
+	- LOGICAL DELTAM
+
 July 1, 2005
 
-	Release_3_2
+Release_3_2
 
 	Not publicly released at this time.  
 
