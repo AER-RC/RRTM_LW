@@ -1,4 +1,4 @@
-# $id$
+# $Revision$
 # USER INPUT: To be used with the make_rrtm file, also in this directory.
 # RUN MAKEFILE from parent directory using make -f makefiles/make_rrtm
 
