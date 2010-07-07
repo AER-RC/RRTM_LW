@@ -50,31 +50,41 @@ C     created:   $Date$
    49X, I1, 19X, I1, 12X, I1,     I2, 2X, I3, 4X, I1
  
  
-	  IATM   (0,1)   flag for RRTATM    1 = yes
+	  IATM   (0,1)   flag for RRTATM 
+	  	    1 = yes
 
 	  IXSECT (0,1) flag for cross-sections
                   = 0  no cross-sections included in calculation
                   = 1  cross-sections included in calculation
 
 	  ISCAT (0,1,2) flag for radiative transfer solver 
-		  = 0  Use RRTM radiative transfer solver, based on that
-                       utilized by LBLRTM.  No scattering is included in
-                       these calculations.
-	          = 1  Use DISORT radiative transfer solver, but NO SCATTERING
-                       included.  Example, if including a cloud in the calculation,
-                       only its absorption properties are included. Reference:
+		  = 0  Use RRTM radiative transfer solver (see Mlawer et al., 1997), 
+		       only absorption considered (i.e. no scattering).
+
+	          = 1  Use DISORT radiative transfer solver, only absorption considered 
+		       (i.e. no scattering).  (Note: This option is significantly slower than
+		       ISCAT = 0 and provides no accuracy benefit.  The option is available to facilitate
+		       forcing calculations in conjunction with ISCAT = 2.)
+
+	          = 2  Use DISORT radiative transfer solver, absorption and scattering 
+		       is considered. (Note: Please see instructions for IN_CLD_RRTM for restrictions
+		       when using this option.)
+
+		       RRTM Reference:
+		       Mlawer, E.J., S.J. Taubman, P.D. Brown,  M.J. Iacono and 
+		       S.A. Clough: RRTM, a validated correlated-k model for the 
+		       longwave. J. Geophys. Res., 102, 16,663-16,682, 1997		       
+		    
+		       DISORT Reference:
 	               Stamnes, K., S.C. Tsay, W. Wiscombe and K. Jayaweera:
 		       A Numerically Stable Algorithm for Discrete-Ordinate-Method 
                        Radiative Transfer in Multiple Scattering and Emitting Layered 
                        Media, Appl. Opt. (June, 1988).
 
-	          = 2  Use DISORT radiative transfer solver, but SCATTERING
-                       is included.  Example, if including a cloud in the calculation,
-                       all scattering properties are included.
-
+		   
 	  NUMANGS (0,1,2,3,4) flag for number of quadrature angles to use in RT 
                        calculations.
-	  If ISCAT = 0 then the NUMANGS choices are:
+	  	       If ISCAT = 0 then the NUMANGS choices are:
           
 		       NUMANGS = 0 if the radiance is to be computed at 1 angle, the cosine of
                                    which equals 1/1.66 (standard angle in diffusivity approximation)
@@ -83,8 +93,8 @@ C     created:   $Date$
 	        	           values in first-moment Gaussian quadrature.  This requires 
 	               	           the computation of one exponential for each angle.
 
-	  If ISCAT = 1 then the NUMANGS correspond to the number of streams to be used in
-                       DISORT.  These quadrature angles are not identical to those used in
+	  	       If ISCAT = 1 then the NUMANGS choices correspond to the number of streams 
+		       to be used in DISORT.  These quadrature angles are not identical to those used in
                        ISCAT = 0.
 
         	       NUMANGS = 0  - 4 streams
@@ -702,22 +712,25 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
 
            5       10       15
 
-      4X, I1,  4X, I1,  4X, I1
+      3X, I2,  4X, I1,  4X, I1
 
       Note:  ICEFLAG and LIQFLAG are required only if INFLAG = 2.
 
-            INFLAG = 0 direct specification of optical depths of clouds;
-                       cloud fraction and cloud optical depth (gray) are
-                       input for each cloudy layer
+            INFLAG = 0 direct specification of optical properties of clouds, no spectral dependence
+                       cloud fraction, cloud optical depth, and (if ISCAT=2) single-scattering albedo,
+                       and phase-function moments are input for each cloudy layer
                    = 1 calculation of combined ice and liquid cloud optical depths (gray) 
                        as in CCM2; cloud fraction and cloud water path are input for
-                       each cloudy layer.  
+                       each cloudy layer (Note: ISCAT must equal 0 or 1).
                    = 2 calculation of separate ice and liquid cloud optical depths, with
                        parameterizations determined by values of ICEFLAG and LIQFLAG. 
                        Cloud fraction, cloud water path, cloud ice fraction, and
                        effective ice radius are input for each cloudy layer for all 
                        parameterizations.  If LIQFLAG = 1, effective liquid droplet radius
-                       is also needed.  
+                       is also needed. 
+                  = 10 direct specification of optical depths of clouds, spectral dependence
+                       cloud fraction, cloud optical depth, and (if ISCAT=2) single-scattering albedo,
+                       and phase-function moments are input for each band and cloudy layer
 
             ICEFLAG = 0 the optical depths (gray) due to ice clouds are computed as in CCM3.
                     = 1 the optical depths (non-gray) due to ice clouds are computed as closely as
@@ -734,18 +747,22 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
                     = 1 the optical depths (non-gray) due to water clouds are computed by a method
                         based on the parameterization of water clouds due to Y.X. Hu and K. Stamnes,
                         J. Clim., 6, 728-742 (1993).
-                       
-	     These methods are further detailed in the comments in the routine 'cldprop.f'.
+                   
+		   NOTE: Scattering properties for the liquid water parameterizations are not yet 
+		   available in RRTM.  Must use ISCAT = 0 or ISCAT = 1 option when LIQFLAG = 0 or 1.
+
+		   These methods are further detailed in the comments in the routine 'cldprop.f'.
 
 
 
- RECORD C1.2  (one record for each cloudy layer)
+ RECORD C1.2  (for INFLAG = 2 or 3)
+(one record for each cloudy layer)
 
-      TESTCHAR,    LAY, CLDFRAC,   TAUCLD or CWP, FRACICE, EFFSIZEICE, EFFSIZELIQ
+      TESTCHAR,    LAY, CLDFRAC,   CWP, FRACICE, EFFSIZEICE, EFFSIZELIQ
 
-             1,    3-5,    6-15,           16-25,   26-35,     36-45,     46-55
+             1,    3-5,    6-15, 16-25,   26-35,     36-45,     46-55
 
-            A1, 1X, I3,   E10.5,           E10.5,   E10.5,     E10.5,     E10.5
+            A1, 1X, I3,   E10.5, E10.5,   E10.5,     E10.5,     E10.5
 
 
             TESTCHAR   control character -- if equal to '%', cloud input processing
@@ -765,8 +782,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
                        
             CLDFRAC    cloud fraction for the layer
 
-            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the layer
-     or     CWP        (INFLAG > 0) cloud water path for the layer (g/m2)
+            CWP        (INFLAG = 1 or 2) cloud water path for the layer (g/m2)
 
             FRACICE    (INFLAG = 2) fraction of the layer's cloud water path in the form
                        of ice particles  
@@ -784,6 +800,63 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
 
             EFFSIZELIQ  (INFLAG = 2 and LIQFLAG = 1) liquid droplet effective radius (microns) 
 
-
+ RECORD C1.3 (for INFLAG = 0 or 10)
+  (one record for each cloudy layer; if INFLAG = 10, each C1.3 record must be followed by 15 C1.3a records)
+
+      TESTCHAR,    LAY, CLDFRAC, TAUCLD, SINGLE-SCATTERING ALBEDO, PMOM(0:NSTR)
+
+             1,    3-5,    6-15,  16-25,                    26-35,       36-196
+
+            A1, 1X, I3,   E10.5, E10.5,                     E10.5,      17E10.5
+
+
+            TESTCHAR   control character -- if equal to '%', cloud input processing is terminated
+
+            LAY        layer number of cloudy layer.  The layer numbering refers to the
+                       ordering for the upward radiative transfer, i.e. botton to top.
+                       For IATM = 0 (Record 1.2), each layer's number is equal to the  
+                       position of its Record 2.1.1 in the grouping of these records.
+                       For example, the second Record 2.1.1 occurring after Record 2.1
+                       corresponds to the second layer.  For IATM = 1 (Record 1.2) and 
+                       IBMAX > 0 (Record 3.1), layer n corresponds to the region between 
+                       altitudes n and n+1 in the list of layer boundaries in Record 3.3B.  
+                       For IATM = 1 (Record 1.2) and IBMAX = 0 (Record 3.1), the layer 
+                       numbers can be determined by running RRTM for the cloudless case
+                       and examining the TAPE6 output from this run.
+                       
+            CLDFRAC    cloud fraction for the layer
+
+            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the layer
+                       for Band 1; if INFLAG = 0, this optical depth is used for all bands
+
+	    SINGLE-SCATTERING Single-scattering albedo for cloudy layer (unitless);
+	    ALBEDO	      if INFLAG = 0, this value is used for all bands
+            (only used for ISCAT = 2)	
+
+	    PMOM       Moments of the phase function, from 0 to NSTR. (unitless)
+	    	      if INFLAG = 0, this value is used for all bands
+            (only used for ISCAT = 2)	
+       
+ RECORD C1.3a (for INFLAG = 10)
+  (15 records for each cloudy layer must follow each Recod C1.3 and apply to the layer listed 
+  there; each Record C1.3a corresponds to a separate RRTM band -- the first record to Band2, etc.)  
+
+            TAUCLD, SINGLE-SCATTERING ALBEDO, PMOM(0:NSTR)
+
+            16-25,                    26-35,       36-196
+
+       15X, E10.5,                     E10.5,      16E10.5
+
+
+            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the band and layer
+                       
+	    SINGLE-SCATTERING Single-scattering albedo for band and layer (unitless)
+	    ALBEDO	      
+            (only used for ISCAT = 2)	
+
+	    PMOM       Moments of the phase function for the band and layer, from 0 to NSTR. (unitles)
+            (only used for ISCAT = 2)	
+       
+
 
  
