@@ -30,7 +30,7 @@ FC_TYPE		Compiler	Platform	Compiler executable
 ---------------------------------------------------
 absoft		Absoft, Inc	Darwin		f90
 g95		g95		Linux		g95
-gfortran	gnu		Darwin		gfortran
+gnu		gnu		Darwin		gfortran
 ibm_xl		IBM XL		Darwin		xlf90
 intel		Intel, Inc	Darwin		ifort
 intel		Intel, Inc	Linux		ifc
