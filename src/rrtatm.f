@@ -7870,7 +7870,7 @@ C IDEAL GAS LAW
       XMASS_RATIO = XMASS_H2O/XMASS_DRY                                         
       DO 10 J=1,ILVL                                                            
          DT = TM(J) - 273.15                                                    
-         TOTAL_AIR = PM(J)*1.0E-4/(BOLTZ*TM(J))                                 
+         TOTAL_AIR = PM(J)*1.0E+3/(BOLTZ*TM(J))                                 
          DRY_AIR = TOTAL_AIR - DENW(J)                                          
          H2O_MIXRAT(J) = DENW(J)/DRY_AIR                                        
          CHIM = XMASS_RATIO*H2O_MIXRAT(J)                                       
@@ -7884,9 +7884,11 @@ C CONVERT REFERENCE ALTITUDE TO METERS
                                                                                 
       ZTEMP(1) = REF_Z*1000.0                                                   
       ZMDL(1) = REF_Z                                                           
+      print *,'in CMPALT'
                                                                                 
       DO 20 I=1, ILVL - 1                                                       
          GAVE = G0*(RE/(RE+ZTEMP(I)/1000.0))**2                                 
+         GAVE = GAVE/100.
          Y =  LOG(PM(I+1)/PM(I))                                                
                                                                                 
          IF (Y. NE. 0.0) THEN                                                   
@@ -7911,7 +7913,7 @@ C CONVERT REFERENCE ALTITUDE TO METERS
                                                                                 
             XINT_TOT = C1*Y + 0.5*(C2-C1*ALPHA)*Y**2 +                          
      &           0.3333*(C3-C2*ALPHA+C1*ALPHA**2)*Y**3                          
-            XINT_TOT =  -XINT_TOT*GASCON/(XMASS_DRY*GAVE*B)                     
+            XINT_TOT =  -XINT_TOT*(GASCON*1.0e-7)/(XMASS_DRY*GAVE*B)                     
                                                                                 
             ZTEMP(I+1) = ZTEMP(I) + XINT_TOT*COMP_FACTOR(I)                     
             ZMDL(I+1) = ZTEMP(I+1)/1000.                                        
