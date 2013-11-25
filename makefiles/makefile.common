@@ -12,7 +12,7 @@ FC_TYPE = pgi
 #FC_TYPE =  mips
 
 #Set version Name
-VERSION = v3.3
+VERSION = v3.3.1
 
 # Set name of RRTM executable
 OUTPUT = rrtm_$(VERSION)_$(PLTFRM)_$(FC)
