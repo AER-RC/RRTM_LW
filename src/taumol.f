@@ -509,7 +509,7 @@ C Planck fraction mapping level: P = 95.8 mbar, T = 215.7 K
 C Minor gas mapping levels:
 C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
 C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
-C     UPPER - SO2, P = 95.58 mbar, T = 215.7 K
+C     UPPER - SO2, P = 0.951 mbar, T = 275.7 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
