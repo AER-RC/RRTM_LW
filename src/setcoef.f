@@ -20,7 +20,7 @@ C     fractions related to the pressure and temperature interpolations.
 C     Also calculate the values of the integrated Planck functions 
 C     for each band at the level and layer temperatures.
 
-      PARAMETER (MXLAY=603, MXMOL=39)
+      PARAMETER (MXLAY=603, MXMOL=39,nrefmol=9)
       PARAMETER (NBANDS = 16)
       PARAMETER (NBANDSLG = 16)
       PARAMETER (MG =16)
@@ -38,7 +38,7 @@ C  Output
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
      &                  FAC10(MXLAY),FAC11(MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -66,7 +66,7 @@ C  --------
       CHARACTER*18       HNAMSET,HVRSET
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
-      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(nrefmol,59)
 
       REAL MINORFRAC
 
@@ -299,11 +299,13 @@ C        Calculate needed column amounts.
          COLCO(LAY) = 1.E-20 * WKL(5,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
          COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         COLSO2(LAY) = 1.E-20 * WKL(9,LAY)
          IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLO3(LAY) .EQ. 0.) COLO3(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCO(LAY)  .EQ. 0.) COLCO(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLSO2(LAY) .EQ. 0.) COLSO2(LAY) = 1.E-32 * COLDRY(LAY)
          COLBRD(LAY) = 1.E-20 * WBROAD(LAY)
  5400    CONTINUE
 
@@ -330,7 +332,9 @@ C        Rescale selffac and forfac for use in taumol
 
 
       BLOCK DATA BLOCK_ATMREF
-      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      parameter (nrefmol=9)
+      DIMENSION PREF(59),PREFLOG(59),TREF(59)
+      dimension CHI_MLS(nrefmol,59)
       COMMON /MLS_REF/  PREF,PREFLOG,TREF,CHI_MLS
 C     These pressures are chosen such that the ln of the first pressure
 C     has only a few non-zero digits (i.e. ln(PREF(1)) = 6.96000) and
@@ -481,6 +485,37 @@ C     pressures for the MLS standard atmosphere.
      &  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,
      &  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,
      &  0.2090    ,  0.2090    /
+       DATA (CHI_MLS(8,IP),IP=1,12)/
+     &  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,
+     &  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,  2.9902E-10,
+     &  2.9312E-10,  2.7879E-10/
+       DATA (CHI_MLS(8,IP),IP=13,59)/
+     &  2.5954E-10,  2.4448E-10,  2.4633E-10,  2.6374E-10,  2.9746E-10,
+     &  3.6442E-10,  5.2243E-10,  8.2054E-10,  1.1399E-09,  1.6843E-09,
+     &  2.2826E-09,  3.2340E-09,  4.3246E-09,  5.6736E-09,  7.0639E-09,
+     &  8.4849E-09,  9.6481E-09,  1.0674E-08,  1.1333E-08,  1.1673E-08,
+     &  1.1787E-08,  1.1500E-08,  1.1137E-08,  1.0690E-08,  1.0506E-08,
+     &  1.0337E-08,  1.0168E-08,  1.0135E-08,  1.0120E-08,  1.0105E-08,
+     &  1.0130E-08,  1.0173E-08,  1.0216E-08,  1.0331E-08,  1.0589E-08,
+     &  1.0847E-08,  1.1106E-08,  1.1857E-08,  1.2837E-08,  1.3816E-08,
+     &  1.4795E-08,  1.6649E-08,  1.8938E-08,  2.1228E-08,  2.3518E-08,
+     &  2.6383E-08,  3.5385E-08/
+       DATA (CHI_MLS(9,IP),IP=1,12)/
+     &  1.2000E-09,  1.0429E-09,  7.6962E-10,  5.3285E-10,  3.9457E-10,
+     &  3.1517E-10,  2.6822E-10,  2.4309E-10,  2.2882E-10,  2.2406E-10,
+     &  2.2615E-10,  2.2933E-10/
+       DATA (CHI_MLS(9,IP),IP=13,59)/
+     &  2.2118E-10,  1.8674E-07,  9.1341E-07,  1.0290E-06,  1.0290E-06,
+     &  1.0290E-06,  1.0290E-06,  6.6345E-07,  2.1057E-07,  8.9777E-08,
+     &  5.5082E-11,  5.2063E-11,  4.9515E-11,  4.7841E-11,  4.7391E-11,
+     &  4.7846E-11,  5.0237E-11,  5.3541E-11,  5.9161E-11,  6.7032E-11,
+     &  7.6549E-11,  9.0918E-11,  1.0726E-10,  1.2580E-10,  1.4127E-10,
+     &  1.5657E-10,  1.7187E-10,  1.8101E-10,  1.8933E-10,  1.9765E-10,
+     &  2.0110E-10,  2.0236E-10,  2.0362E-10,  2.0223E-10,  1.9556E-10,
+     &  1.8889E-10,  1.8221E-10,  1.7068E-10,  1.5690E-10,  1.4312E-10,
+     &  1.2934E-10,  1.1526E-10,  1.0103E-10,  8.6796E-11,  7.2566E-11,
+     &  5.8908E-11,  5.1354E-11/
+
 
 
        END
