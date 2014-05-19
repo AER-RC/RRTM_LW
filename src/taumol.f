@@ -397,9 +397,9 @@ C----------------------------------------------------------------------------
       SUBROUTINE TAUGB3
 
 C     BAND 3:  500-630 cm-1 (low key - H2O,CO2; low minor - n2o)
-C                           (high key - H2O,CO2; high minor - n2o,so2)
+C                           (high key - H2O,CO2; high minor - n2o)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16,nrefmol=9)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
 
 C  Output
 
@@ -415,13 +415,12 @@ C  Input
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY),colso2(mxlay)
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)  
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                   CHI_MLS(nrefmol,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -435,14 +434,14 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K3/       KA(9,5,13,MG), KB(5,5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MN2O(9,19,MG), 
-     &                  KB_MN2O(5,19,MG),KB_MSO2(5,19,MG)
+     &                  KB_MN2O(5,19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       REAL KA,KB
-      REAL KA_MN2O, KB_MN2O, KB_MSO2, MINORFRAC
+      REAL KA_MN2O, KB_MN2O, MINORFRAC
       REAL N2OM1,N2OM2
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
@@ -509,7 +508,6 @@ C Planck fraction mapping level: P = 95.8 mbar, T = 215.7 K
 C Minor gas mapping levels:
 C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
 C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
-C     UPPER - SO2, P = 0.951 mbar, T = 275.7 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
@@ -741,11 +739,6 @@ c     to obtain the proper contribution.
          JMN2O = 1 + INT(SPECMULT_MN2O)
          FMN2O = AMOD(SPECMULT_MN2O,1.0)
          FMN2OMF = MINORFRAC(LAY)*FMN2O
-
-C All the parameters in the seven lines above, though tagged as N2O, depend
-C only on the relative mixing ratios of the major species in this band (H2O and CO2).
-C Thus they will also be used for SO2 calculations.
-
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
 c     to obtain the proper contribution.
@@ -757,8 +750,6 @@ c     to obtain the proper contribution.
          ELSE
             ADJCOLN2O = COLN2O(LAY)
          ENDIF
-
-         ADJCOLso2 = COLso2(LAY)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -776,21 +767,11 @@ c     to obtain the proper contribution.
             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
      &           FORREF(INDF,IG))) 
-
-C N2O OD
             N2OM1 = KB_MN2O(JMN2O,INDM,IG) + FMN2O*
      &           (KB_MN2O(JMN2O+1,INDM,IG)-KB_MN2O(JMN2O,INDM,IG))
             N2OM2 = KB_MN2O(JMN2O,INDM+1,IG) + FMN2O*
      &           (KB_MN2O(JMN2O+1,INDM+1,IG)-KB_MN2O(JMN2O,INDM+1,IG))
             ABSN2O = N2OM1 + MINORFRAC(LAY) * (N2OM2 - N2OM1)
-
-C SO2 OD
-            SO2M1 = KB_MSO2(JMN2O,INDM,IG) + FMN2O*
-     &           (KB_MSO2(JMN2O+1,INDM,IG)-KB_MSO2(JMN2O,INDM,IG))
-            SO2M2 = KB_MSO2(JMN2O,INDM+1,IG) + FMN2O*
-     &           (KB_MSO2(JMN2O+1,INDM+1,IG)-KB_MSO2(JMN2O,INDM+1,IG))
-            ABSSO2 = SO2M1 + MINORFRAC(LAY) * (SO2M2 - SO2M1)
-
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSB(IND0,IG) +
      &          FAC100 * ABSB(IND0+1,IG) +
@@ -803,7 +784,6 @@ C SO2 OD
      &          FAC111 * ABSB(IND1+6,IG)) 
      &          + TAUFOR
      &          + ADJCOLN2O*ABSN2O            
-     &          + adjCOLSO2*ABSSO2            
             FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
      &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
  3000    CONTINUE
@@ -818,7 +798,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 4:  630-700 cm-1 (low key - H2O,CO2; high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16,nrefmol=9)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
 
 C  Output
 
@@ -835,8 +815,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                   CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1155,7 +1134,7 @@ C----------------------------------------------------------------------------
 C     BAND 5:  700-820 cm-1 (low key - H2O,CO2; low minor - O3, CCL4)
 C                           (high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=16,nrefmol=9)
+      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=16)
 
 C  Output
 
@@ -1172,8 +1151,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
@@ -1522,7 +1500,6 @@ C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2)
 C                           (high key - nothing; high minor - CFC11, CFC12)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
-      parameter (nrefmol=9)
 
 C  Output
 
@@ -1543,8 +1520,7 @@ C  Input
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
@@ -1664,7 +1640,7 @@ C     BAND 7:  980-1080 cm-1 (low key - H2O,O3; low minor - CO2)
 C                            (high key - O3; high minor - CO2)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
-      PARAMETER (nrefmol=9)
+
 C  Output
 
       COMMON /TAUGCOM/  TAUG(MXLAY,MG)
@@ -1684,8 +1660,7 @@ C  Input
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY) 
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -2011,7 +1986,6 @@ C     BAND 8:  1080-1180 cm-1 (low key - H2O; low minor - CO2,O3,N2O)
 C                             (high key - O3; high minor - CO2, N2O)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -2032,8 +2006,7 @@ C  Input
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
@@ -2196,7 +2169,6 @@ C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
 C                             (high key - CH4; high minor - N2O)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -2215,8 +2187,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -2529,7 +2500,6 @@ c     to obtain the proper contribution.
 C     BAND 10:  1390-1480 cm-1 (low key - H2O; high key - H2O)
 
       PARAMETER (MG=16, MXLAY=603, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -2753,7 +2723,6 @@ C----------------------------------------------------------------------------
 C     BAND 12:  1800-2080 cm-1 (low - H2O,CO2; high - nothing)
 
       PARAMETER (MG=16, MXLAY=603, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -2772,8 +2741,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)  
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -3013,7 +2981,6 @@ C----------------------------------------------------------------------------
 C     BAND 13:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39,NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -3032,8 +2999,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -3443,7 +3409,6 @@ C     BAND 15:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
 C                              (high - nothing)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -3460,8 +3425,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -3733,7 +3697,6 @@ C----------------------------------------------------------------------------
 C     BAND 16:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
 
       PARAMETER (MG=16, MXLAY=603, NBANDS=16)
-      PARAMETER (nrefmol=9)
 
 C  Output
 
@@ -3750,8 +3713,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),
-     &                  CHI_MLS(nrefmol,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
