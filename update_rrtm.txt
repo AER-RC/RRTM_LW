@@ -1,0 +1,84 @@
+Update Notes for AER RRTM
+
+RRTM_LW v3.3
+
+Date: June 2010
+
+
+     * Updated water vapor continuum absorption coefficients are consistent with those in MT_CKD 2.5.
+
+     * Scattering capability is available through the radiative transfer solver DISORT [Stamnes et al., 1988].
+
+     * Ice cloud scattering optical properties for the Fu et al. [1998] parameterization (hexagonal particles) 
+     and for the STREAMER v3.0 code (spherical particles) have been included.
+
+     * Options for users to directly input cloud and aerosol absorption and scattering optical 
+     properties have been expanded (INFLAG equals 0 or 10 in IN_CLD_RRTM file).
+
+     * Output file (OUT_CLD_RRTM) containing cloud optical properties used in model calculation is 
+     now generated.
+
+     * Code fix to taumol.f to revise use of the binary species parameter in some spectral bands. 
+     Results are changed in profiles with low water vapor and low temperature: downward surface 
+     fluxes are typically increased by this change by about 0.1 W m-2, with downward flux in some 
+     layers increased by as much as 0.5 W m2 in some profiles, upward flux changes are smaller.
+
+     * Updated physical constants to be consistent with NIST [2010].
+
+     * Updated the atmospheric ray trace program (rrtatm) to be consistent with LBLRTM v11.7.
+
+     * Updated formatting in the OUTPUT_RRTM file.
+
+     * Single makefile applies for a wide range of computing platforms. 
+ 
+RRTM_LW v3.01
+
+Date: Sept 2002 
+ 
+	* Identical to v3.0 except for minor changes to the makefiles provided with the 
+	distribution of RRTM. The RRTM source code is identical between release v3.0 and release v3.01.
+
+RRTM_LW v3.0
+
+Date: August 2002 
+ 
+	* The line parameters for species other than water vapor were obtained from HITRAN 1996 
+	database (http://www.hitran.com). The water vapor lines from 500.0 to 2880. cm-1 were 
+	replaced with those measured by Dr. Bob Toth (JPL).These parameters for water vapor are 
+	consistent with the HITRAN 2000 database.Line coupling coefficients have been utilized for 
+	the important Q-branches ofcarbon dioxide.These line coupling coefficients have been 
+	updated for consistency with the HITRAN 1996 carbon dioxide line strengths.
+
+	* The water vapor continuum absorption coefficients were obtained from CKD 2.4. Note that 
+	contributions to the optical depth from both the self and foreign water vapor continuum are 
+	now explicitly calculated.Continuum contributions from nitrogen are now included.
+
+	* RRTM calculates fluxes and cooling rates in the longwave spectral region (from 10 to 3250 cm-1).
+	Note that in the previous version, RRTM v2.3, the spectral region extended only to 3000 cm-1.
+
+	* The errors in computed stratospheric cooling rates have been substantially reduced.
+	In RRTM v3.0 the average maximum stratospheric cooling rate error (for a representative 
+	set of 43 atmospheric profiles) is 0.27 K/day, compared with an average error of 0.53 K/day for RRTM v2.3.
+
+	* The fluxes and cooling rates computed in RRTM v3.0 are greatly improved for atmospheres 
+	having abundances of trace gases (e.g. CO2, CH4) substantially different from current abundances.
+
+	* Cloudy-sky radiative transfer calculations include new options:
+
+		- Radiative transfer algorithms for cloudy layers with random or maximum/random overlap.
+		- Ice particle parameterization from Fu, Yang, and Sun (J. Climate, Vol 11, 1998, pp. 2223 - 2237).
+
+	* Capability to input atmospheric profile on either altitude or pressure grid, and to 
+	output quantities on either altitude or pressure grid.
+	
+	* The source function in each layer is now computed using the exact linear in tau approach, 
+	in contrast to the use of a Pade approximant in RRTM v2.3.Both the exponential function 
+	and the exact 'linear in tau' function are tabulated at 5000 values and a table lookup is 
+	used in the radiative transfer calculation.It should be noted that this adds a small 
+	element of discreteness into the calculation. (This methodology is consistent with LBLRTM v6.0.)
+
+	* Makefiles for creating single precision executables for a number of platforms have been included.
+
+	* A set of sample RRTM input files has been included in the tar file in a directory called /sample_runs/.
+
+	* The instruction manual has been updated.It includes important changes to many options, such as the number of angles used in the flux calculations, the declaration of either random or maximum/random cloud overlap assumption etc.
