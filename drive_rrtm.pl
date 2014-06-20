@@ -42,7 +42,8 @@ foreach $il (@kminor_files) {
 
    $minor_map = substr(`basename $il`,8);
    $minor_map = substr($minor_map,0,-5);
-   print $minor_map,"\n";
+   $map_lev = substr($minor_map,11);
+   print $minor_map,"  ",$map_lev,"\n";
    system ("cp $kg_file $kg_file.$minor_map");
 
    chdir ("../");
@@ -53,7 +54,9 @@ foreach $il (@kminor_files) {
    for ($ic=0;$ic<$ncases;$ic++)  {
       system ("/bin/rm INPUT_RRTM OUTPUT_RRTM");
       system ("cp $case_names[$ic] INPUT_RRTM");
+      system ("echo $map_lev > minor_map_level");
       system ($code);
+
       print ($case_tags[$ic],"\n");
       print ($band_name,"\n");
       print ($minor_map,"\n");
