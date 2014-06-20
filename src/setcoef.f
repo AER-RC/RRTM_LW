@@ -38,7 +38,7 @@ C  Output
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),
      &                  FAC10(MXLAY),FAC11(MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -47,7 +47,8 @@ C  Output
      &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
      &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
      &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
-     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY),
+     &                  RAT_CH4SO2(MXLAY),RAT_CH4SO2_1(MXLAY)
 
       COMMON /SELF/     SELFFAC, SELFFRAC, INDSELF
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
@@ -66,7 +67,7 @@ C  --------
       CHARACTER*18       HNAMSET,HVRSET
 
       DIMENSION SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
-      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
 
       REAL MINORFRAC
 
@@ -249,6 +250,9 @@ C        species parameter in lower atmosphere.
          RAT_N2OCO2(LAY)=CHI_MLS(4,JP(LAY))/CHI_MLS(2,JP(LAY))
          RAT_N2OCO2_1(LAY)=CHI_MLS(4,JP(LAY)+1)/CHI_MLS(2,JP(LAY)+1)
 
+         RAT_CH4SO2(LAY)=CHI_MLS(6,JP(LAY))/CHI_MLS(9,JP(LAY))
+         RAT_CH4SO2_1(LAY)=CHI_MLS(6,JP(LAY)+1)/CHI_MLS(9,JP(LAY)+1)
+
 C        Calculate needed column amounts.
          COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
          COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
@@ -257,11 +261,13 @@ C        Calculate needed column amounts.
          COLCO(LAY) = 1.E-20 * WKL(5,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
          COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         COLSO2(LAY) = 1.E-20 * WKL(9,LAY)
          IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLO3(LAY) .EQ. 0.) COLO3(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCO(LAY) .EQ. 0.) COLCO(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLSO2(LAY) .EQ. 0.) COLSO2(LAY) = 1.E-32 * COLDRY(LAY)
          COLBRD(LAY) = 1.E-20 * WBROAD(LAY)
          GO TO 5400
 
@@ -291,6 +297,9 @@ C        species parameter in upper atmosphere.
          RAT_O3CO2(LAY)=CHI_MLS(3,JP(LAY))/CHI_MLS(2,JP(LAY))
          RAT_O3CO2_1(LAY)=CHI_MLS(3,JP(LAY)+1)/CHI_MLS(2,JP(LAY)+1)         
 
+         RAT_CH4SO2(LAY)=CHI_MLS(6,JP(LAY))/CHI_MLS(9,JP(LAY))
+         RAT_CH4SO2_1(LAY)=CHI_MLS(6,JP(LAY)+1)/CHI_MLS(9,JP(LAY)+1)
+
 C        Calculate needed column amounts.
          COLH2O(LAY) = 1.E-20 * WKL(1,LAY)
          COLCO2(LAY) = 1.E-20 * WKL(2,LAY)
@@ -299,12 +308,19 @@ C        Calculate needed column amounts.
          COLCO(LAY) = 1.E-20 * WKL(5,LAY)
          COLCH4(LAY) = 1.E-20 * WKL(6,LAY)
          COLO2(LAY) = 1.E-20 * WKL(7,LAY)
+         COLSO2(LAY) = 1.E-20 * WKL(9,LAY)
          IF (COLCO2(LAY) .EQ. 0.) COLCO2(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLO3(LAY) .EQ. 0.) COLO3(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLN2O(LAY) .EQ. 0.) COLN2O(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCO(LAY)  .EQ. 0.) COLCO(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
+         IF (COLSO2(LAY) .EQ. 0.) COLSO2(LAY) = 1.E-32 * COLDRY(LAY)
          COLBRD(LAY) = 1.E-20 * WBROAD(LAY)
+         write (6, 'i5,f8.2,e12.4,e12.4'),lay,pref(jp(lay)),
+     &     chi_mls(9,jp(lay)),wkl(9,lay)/coldry(lay)
+         !print *,colch4(lay),colso2(lay)
+         !print *,RAT_CH4SO2(LAY)
+         !print *,"  "
  5400    CONTINUE
 
 C        We have now isolated the layer ln pressure and temperature,
@@ -330,7 +346,7 @@ C        Rescale selffac and forfac for use in taumol
 
 
       BLOCK DATA BLOCK_ATMREF
-      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      DIMENSION PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /MLS_REF/  PREF,PREFLOG,TREF,CHI_MLS
 C     These pressures are chosen such that the ln of the first pressure
 C     has only a few non-zero digits (i.e. ln(PREF(1)) = 6.96000) and
@@ -481,6 +497,39 @@ C     pressures for the MLS standard atmosphere.
      &  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,
      &  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,  0.2090    ,
      &  0.2090    ,  0.2090    /
+       DATA (CHI_MLS(8,IP),IP=1,12)/
+     &  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,
+     &  3.0000E-10,  3.0000E-10,  3.0000E-10,  3.0000E-10,  2.9902E-10,
+     &  2.9312E-10,  2.7879E-10/
+       DATA (CHI_MLS(8,IP),IP=13,59)/
+     &  2.5954E-10,  2.4448E-10,  2.4633E-10,  2.6374E-10,  2.9746E-10,
+     &  3.6442E-10,  5.2243E-10,  8.2054E-10,  1.1399E-09,  1.6843E-09,
+     &  2.2826E-09,  3.2340E-09,  4.3246E-09,  5.6736E-09,  7.0639E-09,
+     &  8.4849E-09,  9.6481E-09,  1.0674E-08,  1.1333E-08,  1.1673E-08,
+     &  1.1787E-08,  1.1500E-08,  1.1137E-08,  1.0690E-08,  1.0506E-08,
+     &  1.0337E-08,  1.0168E-08,  1.0135E-08,  1.0120E-08,  1.0105E-08,
+     &  1.0130E-08,  1.0173E-08,  1.0216E-08,  1.0331E-08,  1.0589E-08,
+     &  1.0847E-08,  1.1106E-08,  1.1857E-08,  1.2837E-08,  1.3816E-08,
+     &  1.4795E-08,  1.6649E-08,  1.8938E-08,  2.1228E-08,  2.3518E-08,
+     &  2.6383E-08,  3.5385E-08/
+       DATA (CHI_MLS(9,IP),IP=1,12)/
+     &  1.1998E-09,  1.0443E-09,  7.7068E-10,  5.3051E-10,  3.9263E-10,
+     &  3.1387E-10,  2.6740E-10,  2.4259E-10,  2.2840E-10,  2.1866E-10,
+     &  2.5645E-08,  1.2862E-07/
+       DATA (CHI_MLS(9,IP),IP=13,59)/
+     &  2.4639E-07,  2.9317E-07,  2.8936E-07,  2.8936E-07,  2.8936E-07,
+     &  2.8936E-07,  2.8936E-07,  2.8936E-07,  2.8936E-07,  2.8936E-07,
+     &  2.8936E-07,  2.8936E-07,  2.8936E-07,  2.8936E-07,  2.8936E-07,
+     &  2.8936E-07,  2.8936E-07,  2.8939E-07,  2.8952E-07,  2.8983E-07,
+     &  2.8988E-07,  2.7607E-07,  2.5116E-07,  2.1387E-07,  1.7593E-07,
+     &  1.3795E-07,  9.9972E-08,  6.9612E-08,  4.0271E-08,  1.0930E-08,
+     &  1.5803E-09,  1.2028E-09,  8.2528E-10,  5.3973E-10,  4.3789E-10,
+     &  3.3606E-10,  2.3423E-10,  2.0212E-10,  2.0212E-10,  2.0212E-10,
+     &  2.0212E-10,  2.0212E-10,  2.0212E-10,  2.0212E-10,  2.0212E-10,
+     &  2.0212E-10,  2.0212E-10/
+
+
+
 
 
        END
