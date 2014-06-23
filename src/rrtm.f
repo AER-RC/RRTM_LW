@@ -1,7 +1,7 @@
 C     path:      $Source$
-C     author:    $Author: jdelamer $
-C     revision:  $Revision: 11497 $
-C     created:   $Date: 2010-07-07 17:10:53 -0400 (Wed, 07 Jul 2010) $
+C     author:    $Author: kcadyper $
+C     revision:  $Revision: 25077 $
+C     created:   $Date: 2014-06-20 16:13:20 -0400 (Fri, 20 Jun 2014) $
 C
 C  --------------------------------------------------------------------------
 C |                                                                          |
@@ -194,7 +194,7 @@ C     is multiplied by W m-2 mb-1.
       IWR = 10
       PAGE = CHAR(12)
 
-      HVRRTM = '$Revision: 11497 $'
+      HVRRTM = '$Revision: 25077 $'
 
 C     Open the INPUT set of atmospheres
       IRD = 9
@@ -924,7 +924,7 @@ C        Left-justify all inputed names.
 
       DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
       DATA NSPA /1,1,9,9,9,1,9,1,9,1,1,9,9,1,9,9/
-      DATA NSPB /1,1,5,5,5,0,1,1,1,1,1,0,0,1,0,0/
+      DATA NSPB /1,1,5,5,5,0,1,1,5,1,1,0,0,1,0,0/
 
       DATA WX /MAXPROD*0.0/
 
