@@ -1,4 +1,4 @@
-C     path:      $Source$
+C     path:      $Source: /storm/rc1/cvsroot/rc/rrtm_lw/src/rrtm.f,v $
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
@@ -924,7 +924,7 @@ C        Left-justify all inputed names.
 
       DATA NG /16,16,16,16,16,16,16,16,16,16,16,16,16,16,16,16/
       DATA NSPA /1,1,9,9,9,1,9,1,9,1,1,9,9,1,9,9/
-      DATA NSPB /1,1,5,5,5,0,1,1,5,1,1,0,0,1,0,0/
+      DATA NSPB /1,1,5,5,5,0,1,1,1,1,1,0,0,1,0,0/
 
       DATA WX /MAXPROD*0.0/
 

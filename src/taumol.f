@@ -1,4 +1,4 @@
-C     path:      $Source$
+C     path:      $Source: /storm/rc1/cvsroot/rc/rrtm_lw/src/taumol.f,v $
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
@@ -397,7 +397,7 @@ C----------------------------------------------------------------------------
       SUBROUTINE TAUGB3
 
 C     BAND 3:  500-630 cm-1 (low key - H2O,CO2; low minor - n2o)
-C                           (high key - H2O,CO2; high minor - n2o,so2)
+C                           (high key - H2O,CO2; high minor - n2o)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
 
@@ -415,12 +415,12 @@ C  Input
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)  
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -434,14 +434,14 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K3/       KA(9,5,13,MG), KB(5,5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MN2O(9,19,MG), 
-     &                  KB_MN2O(5,19,MG),KB_MSO2(5,19,MG)
+     &                  KB_MN2O(5,19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       REAL KA,KB
-      REAL KA_MN2O, KB_MN2O, KB_MSO2, MINORFRAC
+      REAL KA_MN2O, KB_MN2O, MINORFRAC
       REAL N2OM1,N2OM2
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
@@ -522,13 +522,6 @@ C     P = 706.270mb
 
 C     P = 95.58 mb 
       REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
-
-      open(33,file='minor_map_level')
-      read(33,*) minor_map_lev
-      minor_map_lev = minor_map_lev+12
-      REFRAT_M_B_SO2 = CHI_MLS(1,minor_map_lev)/CHI_MLS(2,minor_map_lev)
-      close(33)
-      print *,minor_map_lev
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
@@ -746,15 +739,6 @@ c     to obtain the proper contribution.
          JMN2O = 1 + INT(SPECMULT_MN2O)
          FMN2O = AMOD(SPECMULT_MN2O,1.0)
          FMN2OMF = MINORFRAC(LAY)*FMN2O
-
-         SPECCOMB_MSO2 = COLH2O(LAY) + REFRAT_M_B_SO2*COLCO2(LAY)
-         SPECPARM_MSO2 = COLH2O(LAY)/SPECCOMB_MSO2
-         IF (SPECPARM_MSO2 .GE. ONEMINUS) SPECPARM_MSO2 = ONEMINUS
-         SPECMULT_MSO2 = 4.*SPECPARM_MSO2
-         JMSO2 = 1 + INT(SPECMULT_MSO2)
-         FMSO2 = AMOD(SPECMULT_MSO2,1.0)
-         FMSO2MF = MINORFRAC(LAY)*FMSO2
-
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
 c     to obtain the proper contribution.
@@ -766,17 +750,6 @@ c     to obtain the proper contribution.
          ELSE
             ADJCOLN2O = COLN2O(LAY)
          ENDIF
-
-         CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
-         RATSO2 = 1.E20*CHI_SO2/CHI_MLS(9,JP(LAY)+1)
-         !IF (RATSO2 .GT. 1.5) THEN
-            !ADJFAC = 0.5+(RATSO2-0.5)**0.65
-            !ADJCOLSO2 = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
-            !ADJCOLSO2 = 0.5
-         !ELSE
-         !   ADJCOLSO2 = COLSO2(LAY)
-         !ENDIF
-         adjcolso2 = colso2(lay)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -799,13 +772,6 @@ c     to obtain the proper contribution.
             N2OM2 = KB_MN2O(JMN2O,INDM+1,IG) + FMN2O*
      &           (KB_MN2O(JMN2O+1,INDM+1,IG)-KB_MN2O(JMN2O,INDM+1,IG))
             ABSN2O = N2OM1 + MINORFRAC(LAY) * (N2OM2 - N2OM1)
-
-            SO2M1 = KB_MSO2(JMSO2,INDM,IG) + FMSO2*
-     &           (KB_MSO2(JMSO2+1,INDM,IG)-KB_MSO2(JMSO2,INDM,IG))
-            SO2M2 = KB_MSO2(JMSO2,INDM+1,IG) + FMSO2*
-     &           (KB_MSO2(JMSO2+1,INDM+1,IG)-KB_MSO2(JMSO2,INDM+1,IG))
-            ABSSO2 = SO2M1 + MINORFRAC(LAY) * (SO2M2 - SO2M1)
-            
             TAUG(LAY,IG) = SPECCOMB * 
      &          (FAC000 * ABSB(IND0,IG) +
      &          FAC100 * ABSB(IND0+1,IG) +
@@ -818,12 +784,8 @@ c     to obtain the proper contribution.
      &          FAC111 * ABSB(IND1+6,IG)) 
      &          + TAUFOR
      &          + ADJCOLN2O*ABSN2O            
-     &          + ADJCOLSO2*ABSSO2            
             FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
      &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
-            !if (lay.eq.27) then 
-            !print *, ig,taug(lay,ig),fracs(lay,ig)
-            !endif
  3000    CONTINUE
  3500 CONTINUE
 
@@ -2204,7 +2166,7 @@ C----------------------------------------------------------------------------
       SUBROUTINE TAUGB9
 
 C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
-C                             (high key - CH4,SO2; high minor - N2O)
+C                             (high key - CH4; high minor - N2O)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
 
@@ -2222,10 +2184,10 @@ C  Input
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -2234,14 +2196,13 @@ C  Input
      &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
      &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
      &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
-     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY),
-     &                  RAT_CH4SO2(MXLAY),RAT_CH4SO2_1(MXLAY)
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K9/       KA(9,5,13,MG),KB(5,5,13:59,MG),FORREF(4,MG),
-     &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(5,19,MG)
+      COMMON /K9/       KA(9,5,13,MG),KB(5,13:59,MG),FORREF(4,MG),
+     &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -2249,8 +2210,8 @@ C  Input
 
       REAL KA,KB
       REAL KA_MN2O,KB_MN2O,MINORFRAC,N2OM1,N2OM2
-      DIMENSION ABSA(585,MG),ABSB(1175,MG)
-      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+      DIMENSION ABSA(585,MG),ABSB(235,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
 C Planck fractions mapping level : P=212.7250 mb, T = 223.06 K
 
@@ -2291,34 +2252,16 @@ C Planck fractions mapping level : P=212.7250 mb, T = 223.06 K
      &7.6745E-02,5.6987E-02,3.8135E-02,4.1626E-03,3.4243E-03,2.7116E-03,
      &1.7095E-03,9.7271E-04,3.5299E-04,4.7410E-05/
 
-C Planck fraction mapping level : P=64.072 mb, T = 218.58 K
-C  !!!!! Need to check this !!!!
+C Planck fraction mapping level : P=3.20e-2 mb, T = 197.92 K
 
-       DATA (FRACREFB(IG, 1),IG=1,16) /
-     &1.8314E-01,1.6795E-01,1.5483E-01,1.4283E-01,1.1684E-01,8.4590E-02,
-     &6.1799E-02,4.5330E-02,3.0758E-02,3.3742E-03,2.7950E-03,2.2383E-03,
-     &1.7658E-03,1.2338E-03,4.8090E-04,4.8504E-05/
-      DATA (FRACREFB(IG, 2),IG=1,16) /
-     &1.8426E-01,1.7107E-01,1.5766E-01,1.3883E-01,1.1216E-01,8.2710E-02,
-     &6.2784E-02,4.6378E-02,3.1603E-02,3.4843E-03,2.9360E-03,2.4822E-03,
-     &1.8969E-03,1.2511E-03,4.4823E-04,5.4155E-05/
-      DATA (FRACREFB(IG, 3),IG=1,16) /
-     &1.8586E-01,1.7134E-01,1.5790E-01,1.3713E-01,1.0973E-01,8.1964E-02,
-     &6.3379E-02,4.7077E-02,3.2202E-02,3.7615E-03,3.2834E-03,2.6853E-03,
-     &1.9532E-03,1.2246E-03,4.4915E-04,6.1929E-05/
-      DATA (FRACREFB(IG, 4),IG=1,16) /
-     &1.8832E-01,1.7227E-01,1.5656E-01,1.3423E-01,1.0664E-01,8.1654E-02,
-     &6.4546E-02,4.8084E-02,3.3805E-02,4.0949E-03,3.4172E-03,2.6773E-03,
-     &1.9714E-03,1.2302E-03,4.5283E-04,6.1927E-05/
-      DATA (FRACREFB(IG, 5),IG=1,16) /
-     &1.8293E-01,1.5072E-01,1.3883E-01,1.2820E-01,1.1394E-01,9.6960E-02,
-     &7.7845E-02,5.7851E-02,3.8591E-02,4.2258E-03,3.4810E-03,2.7227E-03,
-     &1.9694E-03,1.2254E-03,4.5140E-04,6.1955E-05/
+      DATA FRACREFB /
+     &2.0914E-01,1.5077E-01,1.2878E-01,1.1856E-01,1.0695E-01,9.3048E-02,
+     &7.7645E-02,6.0785E-02,4.0642E-02,4.0499E-03,3.3931E-03,2.6363E-03,
+     &1.9151E-03,1.1963E-03,4.3471E-04,5.1421E-05/
 
 C Minor gas mapping level :
 C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
 C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
-c     need to redo upper minor species
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
@@ -2327,8 +2270,6 @@ C     fraction in lower/upper atmosphere.
 
 C     P = 212 mb
       REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(6,9)
-
-      REFRAT_PLANCK_B = CHI_MLS(6,15)/CHI_MLS(9,15)
 
 C     P = 706.272 mb 
       REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
@@ -2518,49 +2459,11 @@ c     to obtain the proper contribution.
  2000    CONTINUE
  2500 CONTINUE
 
-       DO 3500 LAY = LAYTROP+1, NLAYERS
-         !print *,"   "
-         !print *,"   "
-         !print *,'lay ', lay,' pavel ',pavel(lay),' tavel ',tavel(lay)
-         !print *,'colch4 ',colch4(lay),' colso2 ',colso2(lay)
-         SPECCOMB = COLCH4(LAY) + RAT_CH4SO2(LAY)*COLSO2(LAY)
-         !print *,'RAT_CH4SO2 ',RAT_CH4SO2(LAY)
-         !print *,' speccomb ',speccomb,' specparm ',specparm
-         SPECPARM = COLCH4(LAY)/SPECCOMB
-         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
-         SPECMULT = 4.*(SPECPARM)
-         JS = 1 + INT(SPECMULT)
-         FS = AMOD(SPECMULT,1.0)
-
-         SPECCOMB1 = COLCH4(LAY) + RAT_CH4SO2_1(LAY)*COLSO2(LAY)
-         !print *,'RAT_CH4SO2_1 ',RAT_CH4SO2_1(LAY)
-         !print *,' speccomb1 ',speccomb1,' specparm1 ',specparm1
-         SPECPARM1 = COLCH4(LAY)/SPECCOMB1
-         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
-         SPECMULT1 = 4.*(SPECPARM1)
-         JS1 = 1 + INT(SPECMULT1)
-         FS1 = AMOD(SPECMULT1,1.0)
-
-         FAC000 = (1. - FS) * FAC00(LAY)
-         FAC010 = (1. - FS) * FAC10(LAY)
-         FAC100 = FS * FAC00(LAY)
-         FAC110 = FS * FAC10(LAY)
-         FAC001 = (1. - FS1) * FAC01(LAY)
-         FAC011 = (1. - FS1) * FAC11(LAY)
-         FAC101 = FS1 * FAC01(LAY)
-         FAC111 = FS1 * FAC11(LAY)
-
-         SPECCOMB_MN2O = COLCH4(LAY) + REFRAT_M_B*COLSO2(LAY)
-         SPECPARM_MN2O = COLCH4(LAY)/SPECCOMB_MN2O
-         IF (SPECPARM_MN2O .GE. ONEMINUS) SPECPARM_MN2O = ONEMINUS
-         SPECMULT_MN2O = 4.*SPECPARM_MN2O
-         JMN2O = 1 + INT(SPECMULT_MN2O)
-         FMN2O = AMOD(SPECMULT_MN2O,1.0)
-         FMN2OMF = MINORFRAC(LAY)*FMN2O
+      DO 3500 LAY = LAYTROP+1, NLAYERS
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
+         CHI_N2O = COLN2O(LAY)/(COLDRY(LAY))
          RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
          IF (RATN2O .GT. 1.5) THEN
             ADJFAC = 0.5+(RATN2O-0.5)**0.65
@@ -2569,49 +2472,23 @@ c     to obtain the proper contribution.
             ADJCOLN2O = COLN2O(LAY)
          ENDIF
 
-         SPECCOMB_PLANCK = COLCH4(LAY)+REFRAT_PLANCK_B*COLSO2(LAY)
-         SPECPARM_PLANCK = COLCH4(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(9) + JS
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(9) + JS1
-         INDF = INDFOR(LAY)
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(9) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(9) + 1
          INDM = INDMINOR(LAY)
 
          DO 3000 IG = 1, NG(9)
-            N2OM1 = KB_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &           (KB_MN2O(JMN2O+1,INDM,IG)-KB_MN2O(JMN2O,INDM,IG))
-            N2OM2 = KB_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &           (KB_MN2O(JMN2O+1,INDM+1,IG)-KB_MN2O(JMN2O,INDM+1,IG))
-            ABSN2O = N2OM1 + MINORFRAC(LAY) * (N2OM2 - N2OM1)
-            TAUG(LAY,IG) = SPECCOMB *
-     &          (FAC000 * ABSB(IND0,IG) +
-     &          FAC100 * ABSB(IND0+1,IG) +
-     &          FAC010 * ABSB(IND0+5,IG) +
-     &          FAC110 * ABSB(IND0+6,IG))
-     &          + SPECCOMB1 *
-     &          (FAC001 * ABSB(IND1,IG) +
-     &          FAC101 * ABSB(IND1+1,IG) +
-     &          FAC011 * ABSB(IND1+5,IG) +
-     &          FAC111 * ABSB(IND1+6,IG))
-c    &          + ADJCOLN2O*ABSN2O
-            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
-     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
-         !    if (lay.eq.37) then
-	!	  print *,"   "
-        !         print *,ig,jp(lay),jt(lay),js
-        !         print *,'ind0 ',ind0
-        !         print *,'000 ',fac000,absb(ind0,ig)
-        !         print *,'100 ',fac100,absb(ind0+1,ig)
-        !         print *,'010 ',fac010,absb(ind0+5,ig)
-        !         print *,'110 ',fac110,absb(ind0+6,ig)
-        !         print *,ig,taug(lay,ig),fracs(lay,ig)
-        !     endif
+            ABSN2O = KB_MN2O(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MN2O(INDM+1,IG) - KB_MN2O(INDM,IG))
+            TAUG(LAY,IG) = COLCH4(LAY) * 
+     &          (FAC00(LAY) * ABSB(IND0,IG) +
+     &           FAC10(LAY) * ABSB(IND0+1,IG) +
+     &           FAC01(LAY) * ABSB(IND1,IG) + 
+     &           FAC11(LAY) * ABSB(IND1+1,IG))
+     &           + ADJCOLN2O*ABSN2O
+            FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
-
       RETURN
       END
 
