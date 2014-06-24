@@ -7860,7 +7860,7 @@ c      REAL BTZ
                                                                                 
       DATA XMASS_H2O/0.018015/,XMASS_DRY/0.0289654/                             
                                                                                 
-C CALCULATE GRAVITY AT REFERENCE LATITUDE AT SURFACE                            
+C CALCULATE GRAVITY AT REFERENCE LATITUDE AT SURFACE (cm/s2)                            
                                                                                 
       G0 = GRAV - 0.02586*COS(2.0*PI*REF_LAT/180.0)                             
                                                                                 
@@ -7888,6 +7888,8 @@ C CONVERT REFERENCE ALTITUDE TO METERS
                                                                                 
       DO 20 I=1, ILVL - 1                                                       
          GAVE = G0*(RE/(RE+ZTEMP(I)/1000.0))**2                                 
+
+c Now comvert to to m/s2 for use with xmass_dry (kg) below
          GAVE = GAVE/100.
          Y =  LOG(PM(I+1)/PM(I))                                                
                                                                                 
@@ -7913,6 +7915,8 @@ C CONVERT REFERENCE ALTITUDE TO METERS
                                                                                 
             XINT_TOT = C1*Y + 0.5*(C2-C1*ALPHA)*Y**2 +                          
      &           0.3333*(C3-C2*ALPHA+C1*ALPHA**2)*Y**3                          
+
+c 1.0e-7 converts GASCON to MKS, for consistency with xmass_dry and gave
             XINT_TOT =  -XINT_TOT*(GASCON*1.0e-7)/(XMASS_DRY*GAVE*B)                     
                                                                                 
             ZTEMP(I+1) = ZTEMP(I) + XINT_TOT*COMP_FACTOR(I)                     
