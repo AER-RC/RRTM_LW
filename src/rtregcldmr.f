@@ -27,7 +27,7 @@ C     Clouds are treated with maximum/random overlap scheme.
       PARAMETER (MG=16)
       PARAMETER (MXLAY=603)
       PARAMETER (MXANG = 4)
-      PARAMETER (NBANDS = 16)
+      PARAMETER (NBANDS = 17)
       PARAMETER (NTBL = 10000,TBLINT = 10000.0)
 
       IMPLICIT DOUBLE PRECISION (V)                                     
@@ -338,8 +338,10 @@ C *** Loop over frequency bands.
             CALL TAUGB14
          ELSEIF (IBAND .EQ. 15) THEN
             CALL TAUGB15
-         ELSE
+         ELSEIF (IBAND .EQ. 16) THEN
             CALL TAUGB16
+         ELSEIF (IBAND .EQ. 17) THEN
+            CALL TAUGB17
          ENDIF
 
          

@@ -153,7 +153,7 @@ C                          (high key - H2O; high minor - N2)
 C     NOTE: Previous versions of RRTM BAND 1: 
 C           10-250 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -290,7 +290,7 @@ C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O)
 C     NOTE: Previous version of RRTM BAND 2: 
 C           250 - 500 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -399,7 +399,7 @@ C----------------------------------------------------------------------------
 C     BAND 3:  500-630 cm-1 (low key - H2O,CO2; low minor - n2o)
 C                           (high key - H2O,CO2; high minor - n2o,so2)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -522,8 +522,13 @@ C     P = 706.270mb
 
 C     P = 95.58 mb 
       REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+      REFRAT_M_B_SO2 = CHI_MLS(1,13)/CHI_MLS(2,13)
 
-      REFVMR_SO2 = 7.0e-10
+      !open(33,file='minor_map_level')
+      !read(33,*) minor_map_lev
+      !minor_map_lev = minor_map_lev+12
+      !close(33)
+      !print *,minor_map_lev
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
@@ -763,13 +768,15 @@ c     to obtain the proper contribution.
          ENDIF
 
          CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
-         RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
-         IF (RATSO2 .GT. 50.0) THEN
-            ADJFAC = 54.0+(RATSO2-54.0)**0.952
-            ADJCOLSO2 = ADJFAC*REFVMR_SO2*COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLSO2 = COLSO2(LAY)
-         ENDIF
+         RATSO2 = 1.E20*CHI_SO2/CHI_MLS(9,JP(LAY)+1)
+         !IF (RATSO2 .GT. 1.5) THEN
+            !ADJFAC = 0.5+(RATSO2-0.5)**0.65
+            !ADJCOLSO2 = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
+            !ADJCOLSO2 = 0.5
+         !ELSE
+         !   ADJCOLSO2 = COLSO2(LAY)
+         !ENDIF
+         adjcolso2 = colso2(lay)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -829,7 +836,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 4:  630-700 cm-1 (low key - H2O,CO2; high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -1165,7 +1172,7 @@ C----------------------------------------------------------------------------
 C     BAND 5:  700-820 cm-1 (low key - H2O,CO2; low minor - O3, CCL4)
 C                           (high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -1530,7 +1537,7 @@ C----------------------------------------------------------------------------
 C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2)
 C                           (high key - nothing; high minor - CFC11, CFC12)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -1670,7 +1677,7 @@ C----------------------------------------------------------------------------
 C     BAND 7:  980-1080 cm-1 (low key - H2O,O3; low minor - CO2)
 C                            (high key - O3; high minor - CO2)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -2016,7 +2023,7 @@ C FOR O3
 C     BAND 8:  1080-1180 cm-1 (low key - H2O; low minor - CO2,O3,N2O)
 C                             (high key - O3; high minor - CO2, N2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -2192,14 +2199,15 @@ c     to obtain the proper contribution.
       RETURN
       END
 
-C----------------------------------------------------------------------------
+*******************************************************************************
+
 
       SUBROUTINE TAUGB9
 
-C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
+C     BAND 9:  1180-1330 cm-1 (low key - H2O,CH4; low minor - N2O)
 C                             (high key - CH4; high minor - N2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -2246,53 +2254,13 @@ C  Input
 
 C Planck fractions mapping level : P=212.7250 mb, T = 223.06 K
 
-      DATA (FRACREFA(IG, 1),IG=1,16) /
-     &1.8129E-01,1.6119E-01,1.3308E-01,1.2342E-01,1.1259E-01,9.7580E-02,
-     &7.9176E-02,5.8541E-02,3.9084E-02,4.2419E-03,3.4314E-03,2.6935E-03,
-     &1.9404E-03,1.2218E-03,4.5263E-04,6.0909E-05/
-      DATA (FRACREFA(IG, 2),IG=1,16) /
-     &1.9665E-01,1.5640E-01,1.3101E-01,1.2153E-01,1.1037E-01,9.6043E-02,
-     &7.7856E-02,5.7547E-02,3.8670E-02,4.1955E-03,3.4104E-03,2.6781E-03,
-     &1.9245E-03,1.2093E-03,4.4113E-04,6.0913E-05/
-      DATA (FRACREFA(IG, 3),IG=1,16) /
-     &2.0273E-01,1.5506E-01,1.3044E-01,1.2043E-01,1.0952E-01,9.5384E-02,
-     &7.7157E-02,5.7176E-02,3.8379E-02,4.1584E-03,3.3836E-03,2.6412E-03,
-     &1.8865E-03,1.1791E-03,4.2094E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 4),IG=1,16) /
-     &2.0272E-01,1.5963E-01,1.2913E-01,1.2060E-01,1.0820E-01,9.4685E-02,
-     &7.6544E-02,5.6851E-02,3.8155E-02,4.0913E-03,3.3442E-03,2.6054E-03,
-     &1.8875E-03,1.1263E-03,3.7743E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 5),IG=1,16) /
-     &2.0280E-01,1.6353E-01,1.2910E-01,1.1968E-01,1.0725E-01,9.4112E-02,
-     &7.5828E-02,5.6526E-02,3.7972E-02,4.0205E-03,3.3063E-03,2.5681E-03,
-     &1.8386E-03,1.0757E-03,3.5301E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 6),IG=1,16) /
-     &2.0294E-01,1.6840E-01,1.2852E-01,1.1813E-01,1.0724E-01,9.2946E-02,
-     &7.5029E-02,5.6158E-02,3.7744E-02,3.9632E-03,3.2434E-03,2.5275E-03,
-     &1.7558E-03,1.0080E-03,3.5301E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 7),IG=1,16) /
-     &2.0313E-01,1.7390E-01,1.2864E-01,1.1689E-01,1.0601E-01,9.1791E-02,
-     &7.4224E-02,5.5500E-02,3.7374E-02,3.9214E-03,3.1984E-03,2.4162E-03,
-     &1.6394E-03,9.7275E-04,3.5299E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 8),IG=1,16) /
-     &2.0332E-01,1.7800E-01,1.3286E-01,1.1555E-01,1.0407E-01,9.0475E-02,
-     &7.2452E-02,5.4566E-02,3.6677E-02,3.7889E-03,3.0351E-03,2.2587E-03,
-     &1.5764E-03,9.7270E-04,3.5300E-04,4.7410E-05/
-      DATA (FRACREFA(IG, 9),IG=1,16) /
-     &1.9624E-01,1.6519E-01,1.3663E-01,1.1535E-01,1.0719E-01,9.4156E-02,
-     &7.6745E-02,5.6987E-02,3.8135E-02,4.1626E-03,3.4243E-03,2.7116E-03,
-     &1.7095E-03,9.7271E-04,3.5299E-04,4.7410E-05/
-
 C Planck fraction mapping level : P=3.20e-2 mb, T = 197.92 K
+      include 'pl_kb9.f'
 
-      DATA FRACREFB /
-     &2.0914E-01,1.5077E-01,1.2878E-01,1.1856E-01,1.0695E-01,9.3048E-02,
-     &7.7645E-02,6.0785E-02,4.0642E-02,4.0499E-03,3.3931E-03,2.6363E-03,
-     &1.9151E-03,1.1963E-03,4.3471E-04,5.1421E-05/
 
 C Minor gas mapping level :
-C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
-C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
+C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K (level 3)
+C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K    (level 13 overall, 1 in strat)
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
@@ -2300,7 +2268,15 @@ C     Calculate reference ratio to be used in calculation of Planck
 C     fraction in lower/upper atmosphere.
 
 C     P = 212 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(6,9)
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev
+      !close(33)
+      !print *,iplanck_map_lev
+      iplanck_map_lev = 9
+
+      REFRAT_PLANCK_A = CHI_MLS(1,iplanck_map_lev)/
+     &    CHI_MLS(6,iplanck_map_lev)
 
 C     P = 706.272 mb 
       REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
@@ -2523,13 +2499,338 @@ c     to obtain the proper contribution.
       RETURN
       END
 
+*******************************************************************************
 
-C----------------------------------------------------------------------------
       SUBROUTINE TAUGB10
 
-C     BAND 10:  1390-1480 cm-1 (low key - H2O; high key - H2O)
+C     BAND 10:  1330-1390 cm-1 (low key - H2O,CH4; )
+C                             (high key - SO2, CH4; )
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
+
+C  Output
+
+      COMMON /TAUGCOM/  TAUG(MXLAY,MG)
+      COMMON /PLANKG/   FRACS(MXLAY,MG)                                       
+
+C  Input
+
+      COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
+      COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
+     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
+      COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
+     &                  FAC10(MXLAY),FAC11(MXLAY)                             
+      COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY),
+     &                  RAT_SO2CH4(MXLAY),RAT_SO2CH4_1(MXLAY)
+      COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K10/      KA(9,5,13,MG),KB(5,5,13:59,MG),FORREF(4,MG),
+     &                  SELFREF(10,MG)
+
+      COMMON /CVRTAU/    HNAMTAU,HVRTAU
+
+      CHARACTER*18       HNAMTAU,HVRTAU
+
+      REAL KA,KB
+      DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+
+
+      include 'pl_kb10.f'
+
+      EQUIVALENCE (KA,ABSA),(KB,ABSB)
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev
+      !close(33)
+      !print *,iplanck_map_lev
+       iplanck_map_lev_lo = 9
+
+C     P = 212 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,iplanck_map_lev_lo)/
+     &                  CHI_MLS(6,iplanck_map_lev_lo)
+
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev+12
+      !close(33)
+      !print *,iplanck_map_lev
+
+      REFRAT_PLANCK_B = CHI_MLS(9,iplanck_map_lev)/
+     & CHI_MLS(6,iplanck_map_lev)
+
+C     P = 706.272 mb 
+      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
+
+C     Compute the optical depth by interpolating in ln(pressure), 
+C     temperature, and appropriate species.  Below LAYTROP, the water
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision: 25077 $'
+
+      DO 2500 LAY = 1, LAYTROP
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCH4(LAY)*COLCH4(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
+         SPECMULT = 8.*(SPECPARM)
+         JS = 1 + INT(SPECMULT)
+         FS = AMOD(SPECMULT,1.0)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCH4_1(LAY)*COLCH4(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCH4(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(10) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(10) + JS1
+         INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
+
+         DO 2000 IG = 1, NG(9)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+c            if (lay.eq.20) then
+c 	  print *,"   "
+c                 print *,ig,jp(lay),jt(lay),js
+c                 print *,'ind0 ',ind0
+c                 print *,'000 ',fac000,absa(ind0,ig)
+c                 print *,'100 ',fac100,absa(ind0+1,ig)
+c                 print *,'010 ',fac010,absa(ind0+5,ig)
+c                 print *,'110 ',fac110,absa(ind0+6,ig)
+c                 print *,ig,taug(lay,ig),fracs(lay,ig)
+c             endif
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
+ 2500 CONTINUE
+
+       DO 3500 LAY = LAYTROP+1, NLAYERS
+         !print *,"   "
+         !print *,"   "
+         !print *,'lay ', lay,' pavel ',pavel(lay),' tavel ',tavel(lay)
+         !print *,'colch4 ',colch4(lay),' colso2 ',colso2(lay)
+         SPECCOMB = COLSO2(LAY) + RAT_SO2CH4(LAY)*COLCH4(LAY)
+         !print *,'RAT_CH4SO2 ',RAT_CH4SO2(LAY)
+         !print *,' speccomb ',speccomb,' specparm ',specparm
+         SPECPARM = COLSO2(LAY)/SPECCOMB
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
+         SPECMULT = 4.*(SPECPARM)
+         JS = 1 + INT(SPECMULT)
+         FS = AMOD(SPECMULT,1.0)
+
+         SPECCOMB1 = COLSO2(LAY) + RAT_SO2CH4_1(LAY)*COLCH4(LAY)
+         !print *,'RAT_CH4SO2_1 ',RAT_CH4SO2_1(LAY)
+         !print *,' speccomb1 ',speccomb1,' specparm1 ',specparm1
+         SPECPARM1 = COLSO2(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 4.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         FAC000 = (1. - FS) * FAC00(LAY)
+         FAC010 = (1. - FS) * FAC10(LAY)
+         FAC100 = FS * FAC00(LAY)
+         FAC110 = FS * FAC10(LAY)
+         FAC001 = (1. - FS1) * FAC01(LAY)
+         FAC011 = (1. - FS1) * FAC11(LAY)
+         FAC101 = FS1 * FAC01(LAY)
+         FAC111 = FS1 * FAC11(LAY)
+
+
+         SPECCOMB_PLANCK = COLSO2(LAY)+REFRAT_PLANCK_B*COLSO2(LAY)
+         SPECPARM_PLANCK = COLSO2(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(9) + JS
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(9) + JS1
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         DO 3000 IG = 1, NG(9)
+            TAUG(LAY,IG) = SPECCOMB *
+     &          (FAC000 * ABSB(IND0,IG) +
+     &          FAC100 * ABSB(IND0+1,IG) +
+     &          FAC010 * ABSB(IND0+5,IG) +
+     &          FAC110 * ABSB(IND0+6,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSB(IND1,IG) +
+     &          FAC101 * ABSB(IND1+1,IG) +
+     &          FAC011 * ABSB(IND1+5,IG) +
+     &          FAC111 * ABSB(IND1+6,IG))
+            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
+     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+         !    if (lay.eq.37) then
+	!	  print *,"   "
+        !         print *,ig,jp(lay),jt(lay),js
+        !         print *,'ind0 ',ind0
+        !         print *,'000 ',fac000,absb(ind0,ig)
+        !         print *,'100 ',fac100,absb(ind0+1,ig)
+        !         print *,'010 ',fac010,absb(ind0+5,ig)
+        !         print *,'110 ',fac110,absb(ind0+6,ig)
+        !         print *,ig,taug(lay,ig),fracs(lay,ig)
+        !     endif
+ 3000    CONTINUE
+ 3500 CONTINUE
+
+      RETURN
+      END
+
+*******************************************************************************
+
+
+      SUBROUTINE TAUGB11
+
+C     BAND 11:  1390-1480 cm-1 (low key - H2O; high key - H2O)
+
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2550,7 +2851,7 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K10/      KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
+      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -2627,12 +2928,12 @@ C     foreign continuum is interpolated (in temperature) separately.
 
 *******************************************************************************
 
-      SUBROUTINE TAUGB11
+      SUBROUTINE TAUGB12
 
-C     BAND 11:  1480-1800 cm-1 (low - H2O; low minor - O2)
+C     BAND 12:  1480-1800 cm-1 (low - H2O; low minor - O2)
 C                              (high key - H2O; high minor - O2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2655,7 +2956,7 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+      COMMON /K12/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MO2(19,MG), KB_MO2(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -2748,11 +3049,11 @@ C     foreign continuum is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB12
+      SUBROUTINE TAUGB13
 
-C     BAND 12:  1800-2080 cm-1 (low - H2O,CO2; high - nothing)
+C     BAND 13:  1800-2080 cm-1 (low - H2O,CO2; high - nothing)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2781,7 +3082,7 @@ C  Input
      &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K12/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG)
+      COMMON /K13/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -3006,11 +3307,11 @@ C     (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB13
+      SUBROUTINE TAUGB14
 
-C     BAND 13:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
+C     BAND 14:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39,NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39,NBANDS=17)
 
 C  Output
 
@@ -3043,7 +3344,7 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K13/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG),
+      COMMON /K14/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG),
      &                  KA_MCO2(9,19,MG), KA_MCO(9,19,MG),KB_MO3(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3336,11 +3637,11 @@ c     to obtain the proper contribution.
 
 *******************************************************************************
 
-      SUBROUTINE TAUGB14
+      SUBROUTINE TAUGB15
 
-C     BAND 14:  2250-2380 cm-1 (low - CO2; high - CO2)
+C     BAND 15:  2250-2380 cm-1 (low - CO2; high - CO2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -3361,7 +3662,7 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K14/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+      COMMON /K15/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
      &                  SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3433,12 +3734,12 @@ C     and foreign continuum is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB15
+      SUBROUTINE TAUGB16
 
-C     BAND 15:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
+C     BAND 16:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
 C                              (high - nothing)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -3471,7 +3772,7 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K15/      KA(9,5,13,MG), 
+      COMMON /K16/      KA(9,5,13,MG), 
      &                  FORREF(4,MG), SELFREF(10,MG), KA_MN2(9,19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3722,11 +4023,11 @@ C     (in temperature) separately.
 C----------------------------------------------------------------------------
 
 
-      SUBROUTINE TAUGB16
+      SUBROUTINE TAUGB17
 
-C     BAND 16:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
+C     BAND 17:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -3755,7 +4056,7 @@ C  Input
      &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K16/      KA(9,5,13,MG),KB(5,13:59,MG),
+      COMMON /K17/      KA(9,5,13,MG),KB(5,13:59,MG),
      &                  FORREF(4,MG),SELFREF(10,MG)
 
 

@@ -15,7 +15,7 @@ C     per g-value per band.
       IMPLICIT DOUBLE PRECISION (V)
       PARAMETER (MXLAY=603)
       PARAMETER (MG = 16)
-      PARAMETER (NBANDS = 16)
+      PARAMETER (NBANDS = 17)
       PARAMETER (MXANG = 4)
       PARAMETER ( MCMU = 32, MUMU = 32,
      &           MPHI = 3)
@@ -153,8 +153,10 @@ C *** Loop over frequency bands.
             CALL TAUGB14
          ELSEIF (IBAND .EQ. 15) THEN
             CALL TAUGB15
-         ELSE
+         ELSEIF (IBAND .EQ. 16) THEN
             CALL TAUGB16
+         ELSEIF (IBAND .EQ. 17) THEN
+            CALL TAUGB17
          ENDIF
 
 c  set albedo for this band
