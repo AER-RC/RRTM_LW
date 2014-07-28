@@ -153,7 +153,7 @@ C                          (high key - H2O; high minor - N2)
 C     NOTE: Previous versions of RRTM BAND 1: 
 C           10-250 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -290,7 +290,7 @@ C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O)
 C     NOTE: Previous version of RRTM BAND 2: 
 C           250 - 500 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -399,7 +399,7 @@ C----------------------------------------------------------------------------
 C     BAND 3:  500-630 cm-1 (low key - H2O,CO2; low minor - n2o)
 C                           (high key - H2O,CO2; high minor - n2o,so2)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -522,8 +522,15 @@ C     P = 706.270mb
 
 C     P = 95.58 mb 
       REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+      REFRAT_M_B_SO2 = CHI_MLS(1,13)/CHI_MLS(2,13)
 
       REFVMR_SO2 = 7.0e-10
+
+      !open(33,file='minor_map_level')
+      !read(33,*) minor_map_lev
+      !minor_map_lev = minor_map_lev+12
+      !close(33)
+      !print *,minor_map_lev
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
@@ -829,7 +836,7 @@ C----------------------------------------------------------------------------
 
 C     BAND 4:  630-700 cm-1 (low key - H2O,CO2; high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -1165,7 +1172,7 @@ C----------------------------------------------------------------------------
 C     BAND 5:  700-820 cm-1 (low key - H2O,CO2; low minor - O3, CCL4)
 C                           (high key - O3,CO2)
 
-      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -1530,7 +1537,7 @@ C----------------------------------------------------------------------------
 C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2)
 C                           (high key - nothing; high minor - CFC11, CFC12)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -1670,7 +1677,7 @@ C----------------------------------------------------------------------------
 C     BAND 7:  980-1080 cm-1 (low key - H2O,O3; low minor - CO2)
 C                            (high key - O3; high minor - CO2)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -2016,7 +2023,7 @@ C FOR O3
 C     BAND 8:  1080-1180 cm-1 (low key - H2O; low minor - CO2,O3,N2O)
 C                             (high key - O3; high minor - CO2, N2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=17)
 
 C  Output
 
@@ -2192,14 +2199,15 @@ c     to obtain the proper contribution.
       RETURN
       END
 
-C----------------------------------------------------------------------------
+*******************************************************************************
+
 
       SUBROUTINE TAUGB9
 
-C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
+C     BAND 9:  1180-1330 cm-1 (low key - H2O,CH4; low minor - N2O)
 C                             (high key - CH4; high minor - N2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -2247,52 +2255,50 @@ C  Input
 C Planck fractions mapping level : P=212.7250 mb, T = 223.06 K
 
       DATA (FRACREFA(IG, 1),IG=1,16) /
-     &1.8129E-01,1.6119E-01,1.3308E-01,1.2342E-01,1.1259E-01,9.7580E-02,
-     &7.9176E-02,5.8541E-02,3.9084E-02,4.2419E-03,3.4314E-03,2.6935E-03,
-     &1.9404E-03,1.2218E-03,4.5263E-04,6.0909E-05/
+     &1.8072E-01,1.7534E-01,1.4062E-01,1.2331E-01,1.0834E-01,9.2807E-02,
+     &7.4022E-02,5.5096E-02,3.6712E-02,3.9061E-03,3.2110E-03,2.5107E-03,
+     &1.7907E-03,1.1310E-03,4.2125E-04,5.4949E-05/
       DATA (FRACREFA(IG, 2),IG=1,16) /
-     &1.9665E-01,1.5640E-01,1.3101E-01,1.2153E-01,1.1037E-01,9.6043E-02,
-     &7.7856E-02,5.7547E-02,3.8670E-02,4.1955E-03,3.4104E-03,2.6781E-03,
-     &1.9245E-03,1.2093E-03,4.4113E-04,6.0913E-05/
+     &1.8079E-01,1.7572E-01,1.4123E-01,1.2291E-01,1.0811E-01,9.2608E-02,
+     &7.3868E-02,5.5026E-02,3.6712E-02,3.9064E-03,3.2106E-03,2.5099E-03,
+     &1.7920E-03,1.1311E-03,4.2123E-04,5.4949E-05/
       DATA (FRACREFA(IG, 3),IG=1,16) /
-     &2.0273E-01,1.5506E-01,1.3044E-01,1.2043E-01,1.0952E-01,9.5384E-02,
-     &7.7157E-02,5.7176E-02,3.8379E-02,4.1584E-03,3.3836E-03,2.6412E-03,
-     &1.8865E-03,1.1791E-03,4.2094E-04,4.7410E-05/
+     &1.8078E-01,1.7605E-01,1.4184E-01,1.2226E-01,1.0802E-01,9.2608E-02,
+     &7.3813E-02,5.4941E-02,3.6679E-02,3.9068E-03,3.2106E-03,2.5087E-03,
+     &1.7934E-03,1.1310E-03,4.2127E-04,5.4949E-05/
       DATA (FRACREFA(IG, 4),IG=1,16) /
-     &2.0272E-01,1.5963E-01,1.2913E-01,1.2060E-01,1.0820E-01,9.4685E-02,
-     &7.6544E-02,5.6851E-02,3.8155E-02,4.0913E-03,3.3442E-03,2.6054E-03,
-     &1.8875E-03,1.1263E-03,3.7743E-04,4.7410E-05/
+     &1.8087E-01,1.7616E-01,1.4247E-01,1.2167E-01,1.0794E-01,9.2494E-02,
+     &7.3900E-02,5.4820E-02,3.6648E-02,3.9019E-03,3.2103E-03,2.5077E-03,
+     &1.7951E-03,1.1310E-03,4.2129E-04,5.4949E-05/
       DATA (FRACREFA(IG, 5),IG=1,16) /
-     &2.0280E-01,1.6353E-01,1.2910E-01,1.1968E-01,1.0725E-01,9.4112E-02,
-     &7.5828E-02,5.6526E-02,3.7972E-02,4.0205E-03,3.3063E-03,2.5681E-03,
-     &1.8386E-03,1.0757E-03,3.5301E-04,4.7410E-05/
+     &1.8101E-01,1.7625E-01,1.4300E-01,1.2137E-01,1.0766E-01,9.2356E-02,
+     &7.3931E-02,5.4772E-02,3.6636E-02,3.8993E-03,3.2032E-03,2.4987E-03,
+     &1.7974E-03,1.1311E-03,4.2129E-04,5.4949E-05/
       DATA (FRACREFA(IG, 6),IG=1,16) /
-     &2.0294E-01,1.6840E-01,1.2852E-01,1.1813E-01,1.0724E-01,9.2946E-02,
-     &7.5029E-02,5.6158E-02,3.7744E-02,3.9632E-03,3.2434E-03,2.5275E-03,
-     &1.7558E-03,1.0080E-03,3.5301E-04,4.7410E-05/
+     &1.8127E-01,1.7631E-01,1.4318E-01,1.2153E-01,1.0732E-01,9.2085E-02,
+     &7.3886E-02,5.4838E-02,3.6588E-02,3.8927E-03,3.2076E-03,2.4947E-03,
+     &1.7981E-03,1.1227E-03,4.2128E-04,5.4949E-05/
       DATA (FRACREFA(IG, 7),IG=1,16) /
-     &2.0313E-01,1.7390E-01,1.2864E-01,1.1689E-01,1.0601E-01,9.1791E-02,
-     &7.4224E-02,5.5500E-02,3.7374E-02,3.9214E-03,3.1984E-03,2.4162E-03,
-     &1.6394E-03,9.7275E-04,3.5299E-04,4.7410E-05/
+     &1.8159E-01,1.7622E-01,1.4380E-01,1.2170E-01,1.0661E-01,9.1874E-02,
+     &7.3727E-02,5.4956E-02,3.6559E-02,3.8762E-03,3.2113E-03,2.4756E-03,
+     &1.8150E-03,1.1194E-03,4.1234E-04,5.5313E-05/
       DATA (FRACREFA(IG, 8),IG=1,16) /
-     &2.0332E-01,1.7800E-01,1.3286E-01,1.1555E-01,1.0407E-01,9.0475E-02,
-     &7.2452E-02,5.4566E-02,3.6677E-02,3.7889E-03,3.0351E-03,2.2587E-03,
-     &1.5764E-03,9.7270E-04,3.5300E-04,4.7410E-05/
+     &1.8213E-01,1.7537E-01,1.4558E-01,1.2185E-01,1.0612E-01,9.1015E-02,
+     &7.3419E-02,5.4968E-02,3.6634E-02,3.8673E-03,3.1626E-03,2.4528E-03,
+     &1.8023E-03,1.1474E-03,4.1914E-04,5.6853E-05/
       DATA (FRACREFA(IG, 9),IG=1,16) /
-     &1.9624E-01,1.6519E-01,1.3663E-01,1.1535E-01,1.0719E-01,9.4156E-02,
-     &7.6745E-02,5.6987E-02,3.8135E-02,4.1626E-03,3.4243E-03,2.7116E-03,
-     &1.7095E-03,9.7271E-04,3.5299E-04,4.7410E-05/
+     &1.7666E-01,1.6788E-01,1.5344E-01,1.2609E-01,1.0600E-01,9.0134E-02,
+     &7.4142E-02,5.5082E-02,3.6942E-02,4.0268E-03,3.3144E-03,2.6394E-03,
+     &1.9306E-03,1.2276E-03,4.3348E-04,5.6853E-05/
+      DATA (FRACREFB(IG),IG=1,16) /
+     &1.8142E-01,1.4797E-01,1.3800E-01,1.2717E-01,1.1269E-01,9.6770E-02,
+     &8.0100E-02,6.0544E-02,4.1518E-02,4.1763E-03,3.3796E-03,2.7042E-03,
+     &1.9094E-03,1.1652E-03,4.1738E-04,5.5434E-05/
 
-C Planck fraction mapping level : P=3.20e-2 mb, T = 197.92 K
-
-      DATA FRACREFB /
-     &2.0914E-01,1.5077E-01,1.2878E-01,1.1856E-01,1.0695E-01,9.3048E-02,
-     &7.7645E-02,6.0785E-02,4.0642E-02,4.0499E-03,3.3931E-03,2.6363E-03,
-     &1.9151E-03,1.1963E-03,4.3471E-04,5.1421E-05/
 
 C Minor gas mapping level :
-C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
-C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
+C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K (level 3)
+C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K    (level 13 overall, 1 in strat)
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
@@ -2300,7 +2306,15 @@ C     Calculate reference ratio to be used in calculation of Planck
 C     fraction in lower/upper atmosphere.
 
 C     P = 212 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(6,9)
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev
+      !close(33)
+      !print *,iplanck_map_lev
+      !iplanck_map_lev = 9
+
+      REFRAT_PLANCK_A = CHI_MLS(1,iplanck_map_lev)/
+     &    CHI_MLS(6,iplanck_map_lev)
 
 C     P = 706.272 mb 
       REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
@@ -2523,13 +2537,397 @@ c     to obtain the proper contribution.
       RETURN
       END
 
+*******************************************************************************
 
-C----------------------------------------------------------------------------
       SUBROUTINE TAUGB10
 
-C     BAND 10:  1390-1480 cm-1 (low key - H2O; high key - H2O)
+C     BAND 10:  1330-1390 cm-1 (low key - H2O,CH4; )
+C                             (high key - SO2, CH4; )
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
+
+C  Output
+
+      COMMON /TAUGCOM/  TAUG(MXLAY,MG)
+      COMMON /PLANKG/   FRACS(MXLAY,MG)                                       
+
+C  Input
+
+      COMMON /FEATURES/ NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
+      COMMON /PRECISE/  ONEMINUS
+      COMMON /PROFILE/  NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
+     &                  PZ(0:MXLAY),TZ(0:MXLAY)
+      COMMON /PROFDATA/ LAYTROP,                                   
+     &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
+     &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
+      COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
+     &                  COLMOL(MXLAY),NMOL
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
+      COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
+     &                  FAC10(MXLAY),FAC11(MXLAY)                             
+      COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
+      COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
+     &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
+     &                  RAT_H2ON2O(MXLAY),RAT_H2ON2O_1(MXLAY),
+     &                  RAT_H2OCH4(MXLAY),RAT_H2OCH4_1(MXLAY),
+     &                  RAT_N2OCO2(MXLAY),RAT_N2OCO2_1(MXLAY),
+     &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY),
+     &                  RAT_SO2CH4(MXLAY),RAT_SO2CH4_1(MXLAY)
+      COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
+      COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
+      COMMON /K10/      KA(9,5,13,MG),KB(5,5,13:59,MG),FORREF(4,MG),
+     &                  SELFREF(10,MG)
+
+      COMMON /CVRTAU/    HNAMTAU,HVRTAU
+
+      CHARACTER*18       HNAMTAU,HVRTAU
+
+      REAL KA,KB
+      DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+
+
+      EQUIVALENCE (KA,ABSA),(KB,ABSB)
+
+      DATA (FRACREFA(IG, 1),IG=1,16) /
+     &1.3964E-01,1.4474E-01,1.4479E-01,1.3399E-01,1.1999E-01,1.0398E-01,
+     &8.6055E-02,6.5099E-02,4.4722E-02,4.9347E-03,4.1213E-03,3.2835E-03,
+     &2.4309E-03,1.5524E-03,5.8738E-04,8.3951E-05/
+      DATA (FRACREFA(IG, 2),IG=1,16) /
+     &1.4256E-01,1.4970E-01,1.4195E-01,1.3310E-01,1.1870E-01,1.0338E-01,
+     &8.5294E-02,6.4376E-02,4.4264E-02,4.8509E-03,4.0426E-03,3.2570E-03,
+     &2.3885E-03,1.5140E-03,5.5098E-04,8.3951E-05/
+      DATA (FRACREFA(IG, 3),IG=1,16) /
+     &1.4653E-01,1.4789E-01,1.4225E-01,1.3197E-01,1.1856E-01,1.0308E-01,
+     &8.4910E-02,6.4307E-02,4.4089E-02,4.8476E-03,4.0380E-03,3.1883E-03,
+     &2.3350E-03,1.4385E-03,4.9211E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 4),IG=1,16) /
+     &1.4959E-01,1.4722E-01,1.4114E-01,1.3208E-01,1.1830E-01,1.0276E-01,
+     &8.4596E-02,6.4143E-02,4.3994E-02,4.8379E-03,4.0193E-03,3.1822E-03,
+     &2.2228E-03,1.3722E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 5),IG=1,16) /
+     &1.5149E-01,1.4745E-01,1.3994E-01,1.3248E-01,1.1824E-01,1.0233E-01,
+     &8.4319E-02,6.3982E-02,4.3826E-02,4.8336E-03,3.9978E-03,3.0975E-03,
+     &2.1506E-03,1.3311E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 6),IG=1,16) /
+     &1.5317E-01,1.4767E-01,1.3939E-01,1.3186E-01,1.1888E-01,1.0189E-01,
+     &8.3924E-02,6.3836E-02,4.3716E-02,4.7670E-03,3.9028E-03,3.0266E-03,
+     &2.0926E-03,1.3311E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 7),IG=1,16) /
+     &1.5579E-01,1.4739E-01,1.3886E-01,1.3130E-01,1.1931E-01,1.0133E-01,
+     &8.3516E-02,6.3598E-02,4.3547E-02,4.6319E-03,3.7866E-03,2.9806E-03,
+     &2.0929E-03,1.3308E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 8),IG=1,16) /
+     &1.5866E-01,1.4661E-01,1.3950E-01,1.3033E-01,1.1901E-01,1.0138E-01,
+     &8.3091E-02,6.3289E-02,4.2898E-02,4.5606E-03,3.7465E-03,2.9808E-03,
+     &2.0925E-03,1.3310E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFA(IG, 9),IG=1,16) /
+     &1.6498E-01,1.5252E-01,1.3958E-01,1.2838E-01,1.1538E-01,1.0031E-01,
+     &8.0837E-02,6.1058E-02,4.1710E-02,4.5615E-03,3.7458E-03,2.9804E-03,
+     &2.0927E-03,1.3308E-03,4.7276E-04,6.6525E-05/
+      DATA (FRACREFB(IG, 1),IG=1,16) /
+     &1.4153E-01,1.4899E-01,1.4306E-01,1.3300E-01,1.1934E-01,1.0309E-01,
+     &8.5364E-02,6.4783E-02,4.4210E-02,4.8212E-03,3.9838E-03,3.2221E-03,
+     &2.3944E-03,1.5390E-03,5.8913E-04,8.4431E-05/
+      DATA (FRACREFB(IG, 2),IG=1,16) /
+     &1.4857E-01,1.4995E-01,1.4337E-01,1.3225E-01,1.1794E-01,1.0170E-01,
+     &8.3249E-02,6.2921E-02,4.3416E-02,4.8139E-03,3.9796E-03,3.2237E-03,
+     &2.3943E-03,1.5396E-03,5.8897E-04,8.4431E-05/
+      DATA (FRACREFB(IG, 3),IG=1,16) /
+     &1.4913E-01,1.5010E-01,1.4375E-01,1.3244E-01,1.1825E-01,1.0160E-01,
+     &8.3088E-02,6.2683E-02,4.2409E-02,4.7485E-03,3.9741E-03,3.2190E-03,
+     &2.3938E-03,1.5393E-03,5.8835E-04,8.4431E-05/
+      DATA (FRACREFB(IG, 4),IG=1,16) /
+     &1.4967E-01,1.5005E-01,1.4391E-01,1.3281E-01,1.1839E-01,1.0161E-01,
+     &8.2729E-02,6.2485E-02,4.2190E-02,4.6199E-03,3.8676E-03,3.1067E-03,
+     &2.3400E-03,1.5429E-03,5.8282E-04,8.4431E-05/
+      DATA (FRACREFB(IG, 5),IG=1,16) /
+     &1.5122E-01,1.5033E-01,1.4369E-01,1.3327E-01,1.1816E-01,1.0110E-01,
+     &8.2550E-02,6.2245E-02,4.2049E-02,4.5413E-03,3.7578E-03,2.9762E-03,
+     &2.1919E-03,1.3680E-03,4.8747E-04,6.6105E-05/
+
+
+
+
+C     Calculate reference ratio to be used in calculation of Planck
+C     fraction in lower/upper atmosphere.
+
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev
+      !close(33)
+      !print *,iplanck_map_lev
+       iplanck_map_lev_lo = 9
+
+C     P = 212 mb
+      REFRAT_PLANCK_A = CHI_MLS(1,iplanck_map_lev_lo)/
+     &                  CHI_MLS(6,iplanck_map_lev_lo)
+
+      !open(33,file='planck_map_level')
+      !read(33,*) iplanck_map_lev
+      !iplanck_map_lev = iplanck_map_lev+12
+      !close(33)
+      !print *,iplanck_map_lev
+      
+      iplanck_map_lev_hi = 1
+      REFRAT_PLANCK_B = CHI_MLS(9,iplanck_map_lev_hi)/
+     & CHI_MLS(6,iplanck_map_lev_hi)
+
+C     P = 706.272 mb 
+      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
+
+C     Compute the optical depth by interpolating in ln(pressure), 
+C     temperature, and appropriate species.  Below LAYTROP, the water
+C     vapor self-continuum and foreign continuum is interpolated 
+C     (in temperature) separately.  
+
+      HVRTAU = '$Revision: 25077 $'
+
+      DO 2500 LAY = 1, LAYTROP
+
+         SPECCOMB = COLH2O(LAY) + RAT_H2OCH4(LAY)*COLCH4(LAY)
+         SPECPARM = COLH2O(LAY)/SPECCOMB
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
+         SPECMULT = 8.*(SPECPARM)
+         JS = 1 + INT(SPECMULT)
+         FS = AMOD(SPECMULT,1.0)
+
+         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCH4_1(LAY)*COLCH4(LAY)
+         SPECPARM1 = COLH2O(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 8.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+
+         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCH4(LAY)
+         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(10) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(10) + JS1
+         INDS = INDSELF(LAY)
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
+
+         DO 2000 IG = 1, NG(9)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+c            if (lay.eq.20) then
+c 	  print *,"   "
+c                 print *,ig,jp(lay),jt(lay),js
+c                 print *,'ind0 ',ind0
+c                 print *,'000 ',fac000,absa(ind0,ig)
+c                 print *,'100 ',fac100,absa(ind0+1,ig)
+c                 print *,'010 ',fac010,absa(ind0+5,ig)
+c                 print *,'110 ',fac110,absa(ind0+6,ig)
+c                 print *,ig,taug(lay,ig),fracs(lay,ig)
+c             endif
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
+ 2500 CONTINUE
+
+       DO 3500 LAY = LAYTROP+1, NLAYERS
+         !print *,"   "
+         !print *,"   "
+         !print *,'lay ', lay,' pavel ',pavel(lay),' tavel ',tavel(lay)
+         !print *,'colch4 ',colch4(lay),' colso2 ',colso2(lay)
+         SPECCOMB = COLSO2(LAY) + RAT_SO2CH4(LAY)*COLCH4(LAY)
+         !print *,'RAT_CH4SO2 ',RAT_CH4SO2(LAY)
+         !print *,' speccomb ',speccomb,' specparm ',specparm
+         SPECPARM = COLSO2(LAY)/SPECCOMB
+         IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
+         SPECMULT = 4.*(SPECPARM)
+         JS = 1 + INT(SPECMULT)
+         FS = AMOD(SPECMULT,1.0)
+
+         SPECCOMB1 = COLSO2(LAY) + RAT_SO2CH4_1(LAY)*COLCH4(LAY)
+         !print *,'RAT_CH4SO2_1 ',RAT_CH4SO2_1(LAY)
+         !print *,' speccomb1 ',speccomb1,' specparm1 ',specparm1
+         SPECPARM1 = COLSO2(LAY)/SPECCOMB1
+         IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
+         SPECMULT1 = 4.*(SPECPARM1)
+         JS1 = 1 + INT(SPECMULT1)
+         FS1 = AMOD(SPECMULT1,1.0)
+
+         FAC000 = (1. - FS) * FAC00(LAY)
+         FAC010 = (1. - FS) * FAC10(LAY)
+         FAC100 = FS * FAC00(LAY)
+         FAC110 = FS * FAC10(LAY)
+         FAC001 = (1. - FS1) * FAC01(LAY)
+         FAC011 = (1. - FS1) * FAC11(LAY)
+         FAC101 = FS1 * FAC01(LAY)
+         FAC111 = FS1 * FAC11(LAY)
+
+
+         SPECCOMB_PLANCK = COLSO2(LAY)+REFRAT_PLANCK_B*COLSO2(LAY)
+         SPECPARM_PLANCK = COLSO2(LAY)/SPECCOMB_PLANCK
+         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+         JPL= 1 + INT(SPECMULT_PLANCK)
+         FPL = AMOD(SPECMULT_PLANCK,1.0)
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(10) + JS
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(10) + JS1
+         INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
+
+         DO 3000 IG = 1, NG(9)
+            TAUG(LAY,IG) = SPECCOMB *
+     &          (FAC000 * ABSB(IND0,IG) +
+     &          FAC100 * ABSB(IND0+1,IG) +
+     &          FAC010 * ABSB(IND0+5,IG) +
+     &          FAC110 * ABSB(IND0+6,IG))
+     &          + SPECCOMB1 *
+     &          (FAC001 * ABSB(IND1,IG) +
+     &          FAC101 * ABSB(IND1+1,IG) +
+     &          FAC011 * ABSB(IND1+5,IG) +
+     &          FAC111 * ABSB(IND1+6,IG))
+            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
+     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+         !    if (lay.eq.37) then
+	!	  print *,"   "
+        !         print *,ig,jp(lay),jt(lay),js
+        !         print *,'ind0 ',ind0
+        !         print *,'000 ',fac000,absb(ind0,ig)
+        !         print *,'100 ',fac100,absb(ind0+1,ig)
+        !         print *,'010 ',fac010,absb(ind0+5,ig)
+        !         print *,'110 ',fac110,absb(ind0+6,ig)
+        !         print *,ig,taug(lay,ig),fracs(lay,ig)
+        !     endif
+ 3000    CONTINUE
+ 3500 CONTINUE
+
+      RETURN
+      END
+
+*******************************************************************************
+
+
+      SUBROUTINE TAUGB11
+
+C     BAND 11:  1390-1480 cm-1 (low key - H2O; high key - H2O)
+
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2550,7 +2948,7 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K10/      KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
+      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -2583,8 +2981,8 @@ C     foreign continuum is interpolated (in temperature) separately.
       HVRTAU = '$Revision: 25077 $'
 
       DO 2500 LAY = 1, LAYTROP
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(10) + 1
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(10) + 1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(11) + 1
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(11) + 1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          DO 2000 IG = 1, NG(10)
@@ -2605,8 +3003,8 @@ C     foreign continuum is interpolated (in temperature) separately.
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(10) + 1
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(10) + 1
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(11) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(11) + 1
          INDF = INDFOR(LAY)
          DO 3000 IG = 1, NG(10)
             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
@@ -2627,12 +3025,12 @@ C     foreign continuum is interpolated (in temperature) separately.
 
 *******************************************************************************
 
-      SUBROUTINE TAUGB11
+      SUBROUTINE TAUGB12
 
-C     BAND 11:  1480-1800 cm-1 (low - H2O; low minor - O2)
+C     BAND 12:  1480-1800 cm-1 (low - H2O; low minor - O2)
 C                              (high key - H2O; high minor - O2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2655,7 +3053,7 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K11/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+      COMMON /K12/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MO2(19,MG), KB_MO2(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -2691,8 +3089,8 @@ C     foreign continuum is interpolated (in temperature) separately.
       HVRTAU = '$Revision: 25077 $'
 
       DO 2500 LAY = 1, LAYTROP
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(11) + 1
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(11) + 1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(12) + 1
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(12) + 1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
@@ -2719,8 +3117,8 @@ C     foreign continuum is interpolated (in temperature) separately.
  2000    CONTINUE
  2500 CONTINUE
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(11) + 1
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(11) + 1
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(12) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(12) + 1
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
          SCALEO2 = COLO2(LAY)*SCALEMINOR(LAY)
@@ -2748,11 +3146,11 @@ C     foreign continuum is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB12
+      SUBROUTINE TAUGB13
 
-C     BAND 12:  1800-2080 cm-1 (low - H2O,CO2; high - nothing)
+C     BAND 13:  1800-2080 cm-1 (low - H2O,CO2; high - nothing)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -2781,7 +3179,7 @@ C  Input
      &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K12/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG)
+      COMMON /K13/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -2868,8 +3266,8 @@ C     (in temperature) separately.
          JPL= 1 + INT(SPECMULT_PLANCK)
          FPL = AMOD(SPECMULT_PLANCK,1.0)
 
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(12) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(12) + JS1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(13) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(13) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
 
@@ -3006,11 +3404,11 @@ C     (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB13
+      SUBROUTINE TAUGB14
 
-C     BAND 13:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
+C     BAND 14:  2080-2250 cm-1 (low key - H2O,N2O; high minor - O3 minor)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39,NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39,NBANDS=17)
 
 C  Output
 
@@ -3043,7 +3441,7 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K13/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG),
+      COMMON /K14/      KA(9,5,13,MG),FORREF(4,MG),SELFREF(10,MG),
      &                  KA_MCO2(9,19,MG), KA_MCO(9,19,MG),KB_MO3(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3336,11 +3734,11 @@ c     to obtain the proper contribution.
 
 *******************************************************************************
 
-      SUBROUTINE TAUGB14
+      SUBROUTINE TAUGB15
 
-C     BAND 14:  2250-2380 cm-1 (low - CO2; high - CO2)
+C     BAND 15:  2250-2380 cm-1 (low - CO2; high - CO2)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -3361,7 +3759,7 @@ C  Input
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
-      COMMON /K14/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
+      COMMON /K15/      KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
      &                  SELFREF(10,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3394,8 +3792,8 @@ C     and foreign continuum is interpolated (in temperature) separately.
       HVRTAU = '$Revision: 25077 $'
 
       DO 2500 LAY = 1, LAYTROP
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(14) + 1
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(14) + 1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(15) + 1
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(15) + 1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          DO 2000 IG = 1, NG(14)
@@ -3416,8 +3814,8 @@ C     and foreign continuum is interpolated (in temperature) separately.
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(14) + 1
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(14) + 1
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(15) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(15) + 1
          DO 3000 IG = 1, NG(14)
             TAUG(LAY,IG) = COLCO2(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
@@ -3433,12 +3831,12 @@ C     and foreign continuum is interpolated (in temperature) separately.
 
 C----------------------------------------------------------------------------
 
-      SUBROUTINE TAUGB15
+      SUBROUTINE TAUGB16
 
-C     BAND 15:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
+C     BAND 16:  2380-2600 cm-1 (low - N2O,CO2; low minor - N2)
 C                              (high - nothing)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=17)
 
 C  Output
 
@@ -3471,7 +3869,7 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K15/      KA(9,5,13,MG), 
+      COMMON /K16/      KA(9,5,13,MG), 
      &                  FORREF(4,MG), SELFREF(10,MG), KA_MN2(9,19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
@@ -3571,8 +3969,8 @@ C     (in temperature) separately.
          JPL= 1 + INT(SPECMULT_PLANCK)
          FPL = AMOD(SPECMULT_PLANCK,1.0)
 
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(15) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(15) + JS1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(16) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(16) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
@@ -3722,11 +4120,11 @@ C     (in temperature) separately.
 C----------------------------------------------------------------------------
 
 
-      SUBROUTINE TAUGB16
+      SUBROUTINE TAUGB17
 
-C     BAND 16:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
+C     BAND 17:  2600-3250 cm-1 (low key- H2O,CH4; high key - CH4)
 
-      PARAMETER (MG=16, MXLAY=603, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, NBANDS=17)
 
 C  Output
 
@@ -3755,7 +4153,7 @@ C  Input
      &                  RAT_O3CO2(MXLAY),RAT_O3CO2_1(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
-      COMMON /K16/      KA(9,5,13,MG),KB(5,13:59,MG),
+      COMMON /K17/      KA(9,5,13,MG),KB(5,13:59,MG),
      &                  FORREF(4,MG),SELFREF(10,MG)
 
 
@@ -3850,8 +4248,8 @@ C     (in temperature) separately.
          JPL= 1 + INT(SPECMULT_PLANCK)
          FPL = AMOD(SPECMULT_PLANCK,1.0)
 
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(16) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(16) + JS1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(17) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(17) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
 
@@ -3977,8 +4375,8 @@ C     (in temperature) separately.
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
-         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(16) + 1
-         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(16) + 1
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(17) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(17) + 1
          DO 3000 IG = 1, NG(16)
             TAUG(LAY,IG) = COLCH4(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
