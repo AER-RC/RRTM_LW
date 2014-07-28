@@ -14,6 +14,8 @@ SRCS = rrtm.f rtreg.f rtr.f rrtatm.f setcoef.f taumol.f rtregcld.f rtrcld.f extr
 rtregcldmr.f k_g.f cldprop.f  \
 rtrdis.f RDI1MACH.f  ErrPack.f LINPAK.f disort.f $(UTIL_FILE)
 
+k_g_files = $(wildcard k_gB*.f)
+
 # Object file names
 OBPATH = ${SRCS:.f=.o}
 
@@ -32,7 +34,9 @@ all : intro makedir $(OUTPUT) conclude
 $(OUTPUT) : $(OBPATH)
 	  $(FC) $(FCFLAG) -o $(OUTPUT) $^; \mv *.o $(CDOTO)/.
 
-k_g.o : k_gB03.f
+k_g.o : $(k_g_files)
+
+taumol.o: pl_kb10.f
 
 #; \mv $(OUTPUT) 
 
