@@ -285,7 +285,7 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB2
 
-C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O)
+C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O,minor SO2)
 
 C     NOTE: Previous version of RRTM BAND 2: 
 C           250 - 500 cm-1 (low - H2O; high - H2O)
@@ -307,14 +307,16 @@ C  Input
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
+      COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
+     &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K2/       KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG), 
-     &                  SELFREF(10,MG)
+     &                  SELFREF(10,MG), KB_MSO2 (19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -322,6 +324,7 @@ C  Input
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
+      REAL KB_MSO2, MINORFRAC
 
 C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
 
@@ -341,6 +344,8 @@ C Planck fraction mapping level: P = 3.206e-2 mb, T = 197.92 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
+
+      REFVMR_SO2 = 7.0e-10
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum and
@@ -372,19 +377,38 @@ C     foreign continuum is interpolated (in temperature) separately.
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
+c     In atmospheres where the amount of SO2 is too great to be considered
+c     a minor species, adjust the column amount of SO2 by an empirical factor 
+c     to obtain the proper contribution.
+         CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
+         RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
+         IF (RATSO2 .GT. 80.) THEN
+            ADJFAC = 79.0+(RATSO2-79.0)**0.9665
+            ADJCOLSO2 = ADJFAC*REFVMR_SO2
+     &           * COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLSO2 = COLSO2(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(2) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(2) + 1
          INDF = INDFOR(LAY)
+         INDM = INDMINOR(LAY)
          DO 3000 IG = 1, NG(2)
             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) *
      &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
+            ABSSO2 = (KB_MSO2(INDM,IG)+
+     &           MINORFRAC(LAY) *
+     &           (KB_MSO2(INDM+1,IG) - KB_MSO2(INDM,IG)))
+
             TAUG(LAY,IG) = COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
-     &           + TAUFOR
+     &           + TAUFOR 
+     &           + ABSSO2*ADJCOLSO2
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -769,14 +793,24 @@ c     to obtain the proper contribution.
             ADJCOLN2O = COLN2O(LAY)
          ENDIF
 
-         CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
-         RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
-         IF (RATSO2 .GT. 50.0) THEN
-            ADJFAC = 54.0+(RATSO2-54.0)**0.952
-            ADJCOLSO2 = ADJFAC*REFVMR_SO2*COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLSO2 = COLSO2(LAY)
-         ENDIF
+          !CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
+          !RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
+          !IF (RATSO2 .GT. 50.0) THEN
+          !   ADJFAC = 49.0+(RATSO2-49.0)**0.957
+          !   ADJCOLSO2 = ADJFAC*REFVMR_SO2*COLDRY(LAY)*1.E-20
+          !ELSE
+          !   ADJCOLSO2 = COLSO2(LAY)
+          !ENDIF
+
+          CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
+          RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
+          IF (RATSO2 .GT. 55.0) THEN
+             ADJFAC = 54.0+(RATSO2-54.0)**0.944
+             ADJCOLSO2 = ADJFAC*REFVMR_SO2*COLDRY(LAY)*1.E-20
+          ELSE
+             ADJCOLSO2 = COLSO2(LAY)
+          ENDIF
+	 !ADJCOLSO2 = COLSO2(LAY)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -2021,7 +2055,7 @@ C FOR O3
       SUBROUTINE TAUGB8
 
 C     BAND 8:  1080-1180 cm-1 (low key - H2O; low minor - CO2,O3,N2O)
-C                             (high key - O3; high minor - CO2, N2O)
+C                             (high key - O3; high minor - CO2, N2O,SO2)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=4, NBANDS=17)
 
@@ -2038,7 +2072,7 @@ C  Input
       COMMON /PROFDATA/ LAYTROP,                                   
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
-     &                  COLO2(MXLAY),COLBRD(MXLAY)
+     &                  COLO2(MXLAY),COLBRD(MXLAY),COLSO2(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
@@ -2052,14 +2086,16 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K8/       KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MCO2(19,MG), KA_MO3(19,MG),
-     &                  KA_MN2O(19,MG), KB_MCO2(19,MG), KB_MN2O(19,MG)
+     &                  KA_MN2O(19,MG), KB_MCO2(19,MG), KB_MN2O(19,MG),
+     &                  KB_MSO2(19,MG)
 
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
-      REAL KA,KB,KA_MCO2,KA_MO3,KA_MN2O,KB_MCO2,KB_MN2O, MINORFRAC              
+      REAL KA,KB,KA_MCO2,KA_MO3,KA_MN2O,KB_MCO2,KB_MN2O, KB_MSO2, 
+     &      MINORFRAC              
 
       DIMENSION ABSA(65,MG),ABSB(235,MG),CFC12(MG),CFC22ADJ(MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -2098,6 +2134,8 @@ C     and 1290-1335 cm-1 bands.
      &     2.82885, 9.12751, 6.28271, 0./
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
+
+      REFVMR_SO2 = 7.0e-10
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
@@ -2172,6 +2210,16 @@ c     to obtain the proper contribution.
             ADJCOLCO2 = COLCO2(LAY)
          ENDIF
 
+         CHI_SO2 = COLSO2(LAY)/COLDRY(LAY)
+         RATSO2 = 1.E20*CHI_SO2/REFVMR_SO2
+         IF (RATSO2 .GT. 40.) THEN
+            ADJFAC = 39.0+(RATSO2-39.0)**0.949
+            ADJCOLSO2 = ADJFAC*REFVMR_SO2
+     &           * COLDRY(LAY)*1.E-20
+         ELSE
+            ADJCOLSO2 = COLSO2(LAY)
+         ENDIF
+
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(8) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(8) + 1
          INDM = INDMINOR(LAY)
@@ -2183,6 +2231,9 @@ c     to obtain the proper contribution.
             ABSN2O =  (KB_MN2O(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_MN2O(INDM+1,IG) - KB_MN2O(INDM,IG)))
+            ABSSO2 =  (KB_MSO2(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_MSO2(INDM+1,IG) - KB_MSO2(INDM,IG)))
             TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
@@ -2190,6 +2241,7 @@ c     to obtain the proper contribution.
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
      &           + ADJCOLCO2*ABSCO2
      &           + COLN2O(LAY)*ABSN2O 
+     &           + ADJCOLSO2*ABSSO2 
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
             FRACS(LAY,IG) = FRACREFB(IG)
