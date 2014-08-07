@@ -1,5 +1,19 @@
 Update Notes for AER RRTM
 
+RRTM_LW_v3.3 for KAUST
+
+Date: August 2014
+
+     * Added capability to handle SO2 as radiatively active gas
+
+     * Broke band 9 into bands 9 and 10; all bands above 9 have been renamed
+     one unit higher.
+
+     * Bands 2, 3, 8 have SO2 as a minor species in the stratopshere.
+
+     * Band 10 has SO2 as a major species in the stratosphere.
+   
+
 RRTM_LW v3.3
 
 Date: June 2010

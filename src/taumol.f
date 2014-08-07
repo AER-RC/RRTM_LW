@@ -2905,16 +2905,16 @@ c             endif
          !print *,'lay ', lay,' pavel ',pavel(lay),' tavel ',tavel(lay)
          !print *,'colch4 ',colch4(lay),' colso2 ',colso2(lay)
          SPECCOMB = COLSO2(LAY) + RAT_SO2CH4(LAY)*COLCH4(LAY)
-         !print *,'RAT_CH4SO2 ',RAT_CH4SO2(LAY)
-         !print *,' speccomb ',speccomb,' specparm ',specparm
          SPECPARM = COLSO2(LAY)/SPECCOMB
+         !print *,'RAT_SO2CH4 ',RAT_SO2CH4(LAY)
+         !print *,' speccomb ',speccomb,' specparm ',specparm
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 4.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
 
          SPECCOMB1 = COLSO2(LAY) + RAT_SO2CH4_1(LAY)*COLCH4(LAY)
-         !print *,'RAT_CH4SO2_1 ',RAT_CH4SO2_1(LAY)
+         !print *,'RAT_SO2CH4_1 ',RAT_SO2CH4_1(LAY)
          !print *,' speccomb1 ',speccomb1,' specparm1 ',specparm1
          SPECPARM1 = COLSO2(LAY)/SPECCOMB1
          IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
