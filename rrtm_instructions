@@ -731,7 +731,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
                        is also needed. 
                   = 10 direct specification of optical depths of clouds, spectral dependence
                        cloud fraction, cloud optical depth, and (if ISCAT=2) single-scattering albedo,
-                       and phase-function moments are input for each band and cloudy layer
+                       and phase-function, moments are input for each band and cloudy layer
 
             ICEFLAG = 0 the optical depths (gray) due to ice clouds are computed as in CCM3.
                     = 1 the optical depths (non-gray) due to ice clouds are computed as closely as
@@ -827,7 +827,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
                        
             CLDFRAC    cloud fraction for the layer
 
-            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the layer
+            TAUCLD     (INFLAG = 0 or INFLAG=10) total (ice and water) optical depth for the layer
                        for Band 1; if INFLAG = 0, this optical depth is used for all bands
 
 	    SINGLE-SCATTERING Single-scattering albedo for cloudy layer (unitless);
@@ -839,7 +839,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
             (only used for ISCAT = 2)	
        
  RECORD C1.3a (for INFLAG = 10)
-  (15 records for each cloudy layer must follow each Recod C1.3 and apply to the layer listed 
+  (16 records for each cloudy layer must follow each Recod C1.3 and apply to the layer listed 
   there; each Record C1.3a corresponds to a separate RRTM band -- the first record to Band2, etc.)  
 
             TAUCLD, SINGLE-SCATTERING ALBEDO, PMOM(0:NSTR)
