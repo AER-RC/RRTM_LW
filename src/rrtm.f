@@ -656,7 +656,7 @@ C     Read in cloud input option.
       IF (CLDFRAC(LAY) .GE. EPS ) THEN
          ICLDATM = 1
          IF (INFLAG .EQ. 0) THEN
-	    NCBANDS = 16		
+	    NCBANDS = 17		
             DO 1040 IB = 1,NCBANDS
                TAUCLOUD(LAY,IB) = DAT(1)
                SSACLOUD(LAY,IB) = DAT(2)
@@ -674,8 +674,9 @@ C     Read in cloud input option.
      &                 XMOM(1,LAY,IB)
                ENDIF
  1040       CONTINUE
+            !print *,'cloudprop ',lay,ib,taucloud(lay,ib) 
          ELSE IF (INFLAG .EQ. 10) THEN
-	    NCBANDS = 16
+	    NCBANDS = 17
             TAUCLOUD(LAY,1) = DAT(1)
             SSACLOUD(LAY,1) = DAT(2)
             XMOM(0:16,LAY,1) = DAT(3:19)

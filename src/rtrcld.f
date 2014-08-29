@@ -38,7 +38,7 @@ C     Clouds are treated with random overlap scheme.
       COMMON /FEATURES/  NG(NBANDS),NSPA(NBANDS),NSPB(NBANDS)
       COMMON /BANDS/     WAVENUM1(NBANDS),WAVENUM2(NBANDS),
      &                   DELWAVE(NBANDS)
-      COMMON /CONTROL/   NUMANGS, IOUT, ISTART, IEND
+      COMMON /CONTROL/   NUMANGS, ISCAT, NSTR,IOUT, ISTART, IEND, ICLD
       COMMON /PROFILE/   NLAYERS,PAVEL(MXLAY),TAVEL(MXLAY),
      &                   PZ(0:MXLAY),TZ(0:MXLAY)
       COMMON /SURFACE/   TBOUND,IREFLECT,SEMISS(NBANDS)
@@ -65,7 +65,7 @@ C     Clouds are treated with random overlap scheme.
       DIMENSION ATOT(MXLAY)
       DIMENSION ABSCLD(MXLAY,NBANDS)
       DIMENSION EFCLFRAC(MXLAY,NBANDS)
-      DIMENSION IPAT(16,0:2)
+      DIMENSION IPAT(17,0:2)
 
 C Dimensions for cloud 
       DIMENSION ICLDLYR(MXLAY)
@@ -73,9 +73,9 @@ C Dimensions for cloud
 C     These arrays indicate the spectral 'region' (used in the 
 C     calculation of ice cloud optical depths) corresponding
 C     to each spectral band.  See cldprop.f for more details.
-      DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1,
-     &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5,
-     &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16/
+      DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1, 1,
+     &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5, 5,
+     &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17/
 
 C *** These weights correspond to angles of 24.30,53.81,77.75
 C     degrees, resp.  They are used when "numerical" Gaussian
@@ -118,7 +118,7 @@ C *** Loop over frequency bands.
             IB = IPAT(IBAND,0)
          ELSEIF (NCBANDS .EQ.  5) THEN
             IB = IPAT(IBAND,1)
-         ELSEIF (NCBANDS .EQ. 16) THEN
+         ELSEIF (NCBANDS .EQ. 17) THEN
             IB = IPAT(IBAND,2)
          ENDIF
 
