@@ -1,4 +1,4 @@
-C     path:      $Source$
+C     path:      $Source: /storm/rc1/cvsroot/rc/rrtm_lw/src/taumol.f,v $
 C     author:    $Author$
 C     revision:  $Revision$
 C     created:   $Date$
@@ -290,7 +290,7 @@ C     BAND 2:  350-500 cm-1 (low key - H2O; high key - H2O)
 C     NOTE: Previous version of RRTM BAND 2: 
 C           250 - 500 cm-1 (low - H2O; high - H2O)
 
-      PARAMETER (MG=16, MXLAY=203, MXMOL = 38, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=203, MXMOL=38, NBANDS=16)
 
 C  Output
 
@@ -578,169 +578,137 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(3)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY) *
-     &              (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLN2O*ABSN2O            
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000       CONTINUE
-         ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(3)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY) *
-     &              (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLN2O*ABSN2O 
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010          CONTINUE
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
          ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(3)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG) - 
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG) - 
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY) *
-     &              (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLN2O*ABSN2O   
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-        ENDIF
+         DO 2000 IG = 1, NG(3)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &           (KA_MN2O(JMN2O+1,INDM,IG) - 
+     &           KA_MN2O(JMN2O,INDM,IG))
+             N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &           (KA_MN2O(JMN2O+1,INDM+1,IG) - 
+     &           KA_MN2O(JMN2O,INDM+1,IG))
+             ABSN2O = N2OM1 + MINORFRAC(LAY) *
+     &           (N2OM2 - N2OM1)
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLN2O*ABSN2O            
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
-      DO 3500 LAY = LAYTROP+1, NLAYERS
+       DO 3500 LAY = LAYTROP+1, NLAYERS
          SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
          SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
@@ -974,138 +942,125 @@ C     separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(4)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-         ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-            DO 2010 IG = 1, NG(4)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
          ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(4)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-        ENDIF
+         DO 2000 IG = 1, NG(4)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -1353,161 +1308,134 @@ C     interpolated (in temperature) separately.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
 
-            DO 2000 IG = 1, NG(5)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+         DO 2000 IG = 1, NG(5)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
      &           FORREF(INDF,IG))) 
-               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
-
-               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
-               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ABSO3*COLO3(LAY)
-     &              + WX(1,LAY) * CCL4(IG)
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(5)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
-               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
-               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF+ TAUFOR
-     &              + ABSO3*COLO3(LAY)
-     &              + WX(1,LAY) * CCL4(IG)
-                FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &               (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(5)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &           FORREF(INDF,IG))) 
-               O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
-               O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
-     &              (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
-               ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ABSO3*COLO3(LAY)
-     &              + WX(1,LAY) * CCL4(IG)
-            FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &          (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-      ENDIF
+             O3M1 = KA_MO3(JMO3,INDM,IG) + FMO3*
+     &           (KA_MO3(JMO3+1,INDM,IG)-KA_MO3(JMO3,INDM,IG))
+             
+             O3M2 = KA_MO3(JMO3,INDM+1,IG) + FMO3*
+     &           (KA_MO3(JMO3+1,INDM+1,IG)-KA_MO3(JMO3,INDM+1,IG))
+             ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + ABSO3*COLO3(LAY)
+     &           + WX(1,LAY) * CCL4(IG)
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -1872,164 +1800,134 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
 
-            DO 2000 IG = 1, NG(7)
-
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               TAUG(LAY,IG) = SPECCOMB *
-     &          (FAC000 * ABSA(IND0,IG) +
-     &          FAC100 * ABSA(IND0+1,IG) +
-     &          FAC200 * ABSA(IND0+2,IG) +
-     &          FAC010 * ABSA(IND0+9,IG) +
-     &          FAC110 * ABSA(IND0+10,IG) +
-     &          FAC210 * ABSA(IND0+11,IG))
-     &          + SPECCOMB1 *
-     &          (FAC001 * ABSA(IND1,IG) + 
-     &          FAC101 * ABSA(IND1+1,IG) +
-     &          FAC201 * ABSA(IND1+2,IG) +
-     &          FAC011 * ABSA(IND1+9,IG) +
-     &          FAC111 * ABSA(IND1+10,IG) +
-     &          FAC211 * ABSA(IND1+11,IG)) 
-     &          + TAUSELF + TAUFOR
-     &          + ADJCOLCO2*ABSCO2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(7)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLCO2*ABSCO2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(7)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &         (FAC000 * ABSA(IND0,IG) +
-     &          FAC100 * ABSA(IND0+1,IG) +
-     &          FAC010 * ABSA(IND0+9,IG) +
-     &          FAC110 * ABSA(IND0+10,IG))
-     &          + SPECCOMB1 *
-     &          (FAC001 * ABSA(IND1,IG) + 
-     &          FAC101 * ABSA(IND1+1,IG) +
-     &          FAC011 * ABSA(IND1+9,IG) +
-     &          FAC111 * ABSA(IND1+10,IG)) 
-     &          + TAUSELF + TAUFOR
-     &          + ADJCOLCO2*ABSCO2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020    CONTINUE
-      ENDIF
+         DO 2000 IG = 1, NG(7)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &           (KA_MCO2(JMCO2+1,INDM,IG)-
+     &           KA_MCO2(JMCO2,INDM,IG))
+             CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &           (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &           KA_MCO2(JMCO2,INDM+1,IG))
+             ABSCO2 = CO2M1 + MINORFRAC(LAY) * (CO2M2 - CO2M1)
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLCO2*ABSCO2
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -2431,166 +2329,134 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(9)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG)-
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY)
-     &              * (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB *
-     &          (FAC000 * ABSA(IND0,IG) +
-     &          FAC100 * ABSA(IND0+1,IG) +
-     &          FAC200 * ABSA(IND0+2,IG) +
-     &          FAC010 * ABSA(IND0+9,IG) +
-     &          FAC110 * ABSA(IND0+10,IG) +
-     &          FAC210 * ABSA(IND0+11,IG))
-     &          + SPECCOMB1 *
-     &          (FAC001 * ABSA(IND1,IG) + 
-     &          FAC101 * ABSA(IND1+1,IG) +
-     &          FAC201 * ABSA(IND1+2,IG) +
-     &          FAC011 * ABSA(IND1+9,IG) +
-     &          FAC111 * ABSA(IND1+10,IG) +
-     &          FAC211 * ABSA(IND1+11,IG)) 
-     &          + TAUSELF + TAUFOR
-     &          + ADJCOLN2O*ABSN2O            
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(9)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG)-
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY)
-     &              * (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLN2O*ABSN2O            
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(9)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM,IG)-
-     &              KA_MN2O(JMN2O,INDM,IG))
-               N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
-     &              (KA_MN2O(JMN2O+1,INDM+1,IG)-
-     &              KA_MN2O(JMN2O,INDM+1,IG))
-               ABSN2O = N2OM1 + MINORFRAC(LAY)
-     &              * (N2OM2 - N2OM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLN2O*ABSN2O            
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-      ENDIF
+         DO 2000 IG = 1, NG(9)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             N2OM1 = KA_MN2O(JMN2O,INDM,IG) + FMN2O*
+     &           (KA_MN2O(JMN2O+1,INDM,IG)-
+     &           KA_MN2O(JMN2O,INDM,IG))
+             N2OM2 = KA_MN2O(JMN2O,INDM+1,IG) + FMN2O*
+     &           (KA_MN2O(JMN2O+1,INDM+1,IG)-
+     &           KA_MN2O(JMN2O,INDM+1,IG))
+             ABSN2O = N2OM1 + MINORFRAC(LAY)
+     &           * (N2OM2 - N2OM1)
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLN2O*ABSN2O            
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -2977,138 +2843,125 @@ C     (in temperature) separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(12)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-            DO 2010 IG = 1, NG(12)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
+         DO 2000 IG = 1, NG(12)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
      &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
      &           FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(12)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-      ENDIF
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -3298,194 +3151,143 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(13)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 + 
-     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
-     &              (KA_MCO(JMCO+1,INDM,IG)-
-     &              KA_MCO(JMCO,INDM,IG))
-               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
-     &              (KA_MCO(JMCO+1,INDM+1,IG)-
-     &              KA_MCO(JMCO,INDM+1,IG))
-               ABSCO = COM1 + 
-     &              MINORFRAC(LAY) * (COM2 - COM1)
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))+
-     &              SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLCO2*ABSCO2
-     &              + COLCO(LAY)*ABSCO
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(13)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 +
-     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
+         DO 2000 IG = 1, NG(13)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
+     &           (KA_MCO2(JMCO2+1,INDM,IG)-
+     &           KA_MCO2(JMCO2,INDM,IG))
+             CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
+     &           (KA_MCO2(JMCO2+1,INDM+1,IG)-
+     &           KA_MCO2(JMCO2,INDM+1,IG))
+             ABSCO2 = CO2M1 + 
+     &           MINORFRAC(LAY) * (CO2M2 - CO2M1)
+             COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
      &           (KA_MCO(JMCO+1,INDM,IG)-
-     &              KA_MCO(JMCO,INDM,IG))
-               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
+     &           KA_MCO(JMCO,INDM,IG))
+             COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
      &           (KA_MCO(JMCO+1,INDM+1,IG)-
-     &              KA_MCO(JMCO,INDM+1,IG))
-               ABSCO = COM1 +
-     &              MINORFRAC(LAY) * (COM2 - COM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLCO2*ABSCO2
-     &              + COLCO(LAY)*ABSCO
-                FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &               (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(13)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               CO2M1 = KA_MCO2(JMCO2,INDM,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM,IG)-
-     &              KA_MCO2(JMCO2,INDM,IG))
-               CO2M2 = KA_MCO2(JMCO2,INDM+1,IG) + FMCO2*
-     &              (KA_MCO2(JMCO2+1,INDM+1,IG)-
-     &              KA_MCO2(JMCO2,INDM+1,IG))
-               ABSCO2 = CO2M1 + 
-     &              MINORFRAC(LAY) * (CO2M2 - CO2M1)
-               COM1 = KA_MCO(JMCO,INDM,IG) + FMCO*
-     &              (KA_MCO(JMCO+1,INDM,IG)-
-     &              KA_MCO(JMCO,INDM,IG))
-               COM2 = KA_MCO(JMCO,INDM+1,IG) + FMCO*
-     &              (KA_MCO(JMCO+1,INDM+1,IG)-
-     &              KA_MCO(JMCO,INDM+1,IG))
-               ABSCO = COM1 +
-     &              MINORFRAC(LAY) * (COM2 - COM1)
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + ADJCOLCO2*ABSCO2
-     &              + COLCO(LAY)*ABSCO
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
-
- 2020          CONTINUE
-      ENDIF
+     &           KA_MCO(JMCO,INDM+1,IG))
+             ABSCO = COM1 + 
+     &           MINORFRAC(LAY) * (COM2 - COM1)
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + ADJCOLCO2*ABSCO2
+     &           + COLCO(LAY)*ABSCO
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -3746,166 +3548,135 @@ C     (in temperature) separately.
          INDM = INDMINOR(LAY)
          
          SCALEN2 = COLBRD(LAY)*SCALEMINOR(LAY)
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            DO 2000 IG = 1, NG(15)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM,IG)-
-     &              KA_MN2(JMN2,INDM,IG))
-               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM+1,IG)-
-     &              KA_MN2(JMN2,INDM+1,IG))
-               TAUN2 = SCALEN2*
-     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + TAUN2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2010 IG = 1, NG(15)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM,IG)-
-     &              KA_MN2(JMN2,INDM,IG))
-               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM+1,IG)-
-     &              KA_MN2(JMN2,INDM+1,IG))
-               TAUN2 = SCALEN2*
-     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-     &              + TAUN2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-
-            DO 2020 IG = 1, NG(15)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM,IG)-
-     &              KA_MN2(JMN2,INDM,IG))
-               N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
-     &              (KA_MN2(JMN2+1,INDM+1,IG)-
-     &              KA_MN2(JMN2,INDM+1,IG))
-               TAUN2 = SCALEN2 *
-     &              (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-     &              + TAUN2
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-      ENDIF
+         DO 2000 IG = 1, NG(15)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             N2M1 = KA_MN2(JMN2,INDM,IG) + FMN2*
+     &           (KA_MN2(JMN2+1,INDM,IG)-
+     &           KA_MN2(JMN2,INDM,IG))
+             N2M2 = KA_MN2(JMN2,INDM+1,IG) + FMN2*
+     &           (KA_MN2(JMN2+1,INDM+1,IG)-
+     &           KA_MN2(JMN2,INDM+1,IG))
+             TAUN2 = SCALEN2*
+     &           (N2M1 + MINORFRAC(LAY) * (N2M2 - N2M1))
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+     &           + TAUN2
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -4054,138 +3825,125 @@ C     (in temperature) separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
 
-         IF (SPECPARM .LT. 0.125 .AND. SPECPARM1 .LT. 0.125) THEN
-            P = FS - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+         IF (SPECPARM .LT. 0.125) THEN
+             P = FS - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)
+         ELSEIF (SPECPARM .GT. 0.875) THEN
+             P = -FS 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC000 = FK0*FAC00(LAY)
+             FAC100 = FK1*FAC00(LAY)
+             FAC200 = FK2*FAC00(LAY)
+             FAC010 = FK0*FAC10(LAY)
+             FAC110 = FK1*FAC10(LAY)
+             FAC210 = FK2*FAC10(LAY)            
+         ELSE
+             FAC000 = (1. - FS) * FAC00(LAY)
+             FAC010 = (1. - FS) * FAC10(LAY)
+             FAC100 = FS * FAC00(LAY)
+             FAC110 = FS * FAC10(LAY)
+         ENDIF
+         IF (SPECPARM1 .LT. 0.125) THEN
+             P = FS1 - 1
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSEIF (SPECPARM1 .GT. 0.875) THEN
+             P = -FS1 
+             P4 = P**4
+             FK0 = P4
+             FK1 = 1 - P - 2.0*P4
+             FK2 = P + P4
+             FAC001 = FK0*FAC01(LAY)
+             FAC101 = FK1*FAC01(LAY)
+             FAC201 = FK2*FAC01(LAY)
+             FAC011 = FK0*FAC11(LAY)
+             FAC111 = FK1*FAC11(LAY)
+             FAC211 = FK2*FAC11(LAY)
+         ELSE
+             FAC001 = (1. - FS1) * FAC01(LAY)
+             FAC011 = (1. - FS1) * FAC11(LAY)
+             FAC101 = FS1 * FAC01(LAY)
+             FAC111 = FS1 * FAC11(LAY)
+         ENDIF
 
-            P = FS1 - 1
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-
-            DO 2000 IG = 1, NG(16)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB *
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC200 * ABSA(IND0+2,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG) +
-     &              FAC210 * ABSA(IND0+11,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC201 * ABSA(IND1+2,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG) +
-     &              FAC211 * ABSA(IND1+11,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2000          CONTINUE
-      ELSE IF (SPECPARM .GT. 0.875 .AND. SPECPARM1 .GT. 0.875) THEN
-            P = -FS 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
-
-            P = -FS1 
-            P4 = P**4
-            FK0 = P4
-            FK1 = 1 - P - 2.0*P4
-            FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
-            DO 2010 IG = 1, NG(16)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC200 * ABSA(IND0-1,IG) +
-     &              FAC100 * ABSA(IND0,IG) +
-     &              FAC000 * ABSA(IND0+1,IG) +
-     &              FAC210 * ABSA(IND0+8,IG) +
-     &              FAC110 * ABSA(IND0+9,IG) +
-     &              FAC010 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC201 * ABSA(IND1-1,IG) +
-     &              FAC101 * ABSA(IND1,IG) +
-     &              FAC001 * ABSA(IND1+1,IG) +
-     &              FAC211 * ABSA(IND1+8,IG) +
-     &              FAC111 * ABSA(IND1+9,IG) +
-     &              FAC011 * ABSA(IND1+10,IG))
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2010           CONTINUE
-       ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
-
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
-            DO 2020 IG = 1, NG(16)
-               TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
-     &              SELFFRAC(LAY)  *
-     &              (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
-               TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
-     &              FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
-     &              FORREF(INDF,IG))) 
-               TAUG(LAY,IG) = SPECCOMB * 
-     &              (FAC000 * ABSA(IND0,IG) +
-     &              FAC100 * ABSA(IND0+1,IG) +
-     &              FAC010 * ABSA(IND0+9,IG) +
-     &              FAC110 * ABSA(IND0+10,IG))
-     &              + SPECCOMB1 *
-     &              (FAC001 * ABSA(IND1,IG) + 
-     &              FAC101 * ABSA(IND1+1,IG) +
-     &              FAC011 * ABSA(IND1+9,IG) +
-     &              FAC111 * ABSA(IND1+10,IG)) 
-     &              + TAUSELF + TAUFOR
-               FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &              (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
- 2020          CONTINUE
-      ENDIF
-
+         DO 2000 IG = 1, NG(16)
+             TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
+     &           SELFFRAC(LAY)  *
+     &           (SELFREF(INDS+1,IG) - SELFREF(INDS,IG)))
+             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
+     &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
+     &           FORREF(INDF,IG))) 
+             IF (SPECPARM .LT. 0.125) THEN
+                 TAU_MAJOR =  SPECCOMB *
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC200 * ABSA(IND0+2,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG) +
+     &               FAC210 * ABSA(IND0+11,IG))
+             ELSEIF (SPECPARM .GT. 0.875) THEN
+                 TAU_MAJOR =  SPECCOMB * 
+     &               (FAC200 * ABSA(IND0-1,IG) +
+     &               FAC100 * ABSA(IND0,IG) +
+     &               FAC000 * ABSA(IND0+1,IG) +
+     &               FAC210 * ABSA(IND0+8,IG) +
+     &               FAC110 * ABSA(IND0+9,IG) +
+     &               FAC010 * ABSA(IND0+10,IG))
+             ELSE
+                 TAU_MAJOR = SPECCOMB * 
+     &               (FAC000 * ABSA(IND0,IG) +
+     &               FAC100 * ABSA(IND0+1,IG) +
+     &               FAC010 * ABSA(IND0+9,IG) +
+     &               FAC110 * ABSA(IND0+10,IG))
+             ENDIF
+             IF (SPECPARM1 .LT. 0.125) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 *
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC201 * ABSA(IND1+2,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG) +
+     &               FAC211 * ABSA(IND1+11,IG))
+             ELSEIF (SPECPARM1 .GT. 0.875) THEN
+                 TAU_MAJOR1 =  SPECCOMB1 * 
+     &               (FAC201 * ABSA(IND1-1,IG) +
+     &               FAC101 * ABSA(IND1,IG) +
+     &               FAC001 * ABSA(IND1+1,IG) +
+     &               FAC211 * ABSA(IND1+8,IG) +
+     &               FAC111 * ABSA(IND1+9,IG) +
+     &               FAC011 * ABSA(IND1+10,IG))
+             ELSE
+                 TAU_MAJOR1 = SPECCOMB1 * 
+     &               (FAC001 * ABSA(IND1,IG) +
+     &               FAC101 * ABSA(IND1+1,IG) +
+     &               FAC011 * ABSA(IND1+9,IG) +
+     &               FAC111 * ABSA(IND1+10,IG))
+             ENDIF
+             TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
+     &           + TAUSELF + TAUFOR
+             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
+     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+ 2000    CONTINUE
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
