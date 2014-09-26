@@ -8,7 +8,7 @@ SHELL = /bin/sh
 ###############################
 
 PLATFORM = linux_pgi
-VERSION = v3.2
+VERSION = hybrid_v3.2
 
 FC = pgf90
 FCFLAG =  -fast -r8 -i8 

@@ -8,7 +8,7 @@ SHELL = /bin/sh
 ###############################
 
 PLATFORM = OS_X
-VERSION = v3.2
+VERSION = hybrid_v3.2
 
 FC = f90
 FCFLAG =  -s -O -N11 -i8 -N113
