@@ -222,11 +222,12 @@ C     foreign continuum is interpolated (in temperature) separately.
          INDM = INDMINOR(LAY)
          PP = PAVEL(LAY)
          CORRADJ =  1.
-         IF (PP .LT. 250.) THEN
-            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
-         ENDIF
+c         IF (PP .LT. 250.) THEN
+c            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
+c         ENDIF
 
-         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
+c        SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
+         SCALEN2 = 0.0
          DO 2000 IG = 1, NG(1)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -253,10 +254,11 @@ C     foreign continuum is interpolated (in temperature) separately.
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(1) + 1
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
-         PP = PAVEL(LAY)
-         CORRADJ =  1. - 0.15 * (PP / 95.6)
-
-         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
+c         PP = PAVEL(LAY)
+c         CORRADJ =  1. - 0.15 * (PP / 95.6)
+         CORRADJ = 1.
+c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
+         SCALEN2 = 0.0
          DO 3000 IG = 1, NG(1)
             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) *
@@ -352,8 +354,9 @@ C     foreign continuum is interpolated (in temperature) separately.
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(2) + 1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
-         PP = PAVEL(LAY)
-         CORRADJ = 1. - .05 * (PP - 100.) / 900.
+c        PP = PAVEL(LAY)
+c         CORRADJ = 1. - .05 * (PP - 100.) / 900.
+         CORRADJ = 1.0
          DO 2000 IG = 1, NG(2)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -556,14 +559,15 @@ C     separately.
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
-         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
-         IF (RATN2O .GT. 1.5) THEN
-            ADJFAC = 0.5+(RATN2O-0.5)**0.65
-            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLN2O = COLN2O(LAY)
-         ENDIF
+c         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
+c         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+c         IF (RATN2O .GT. 1.5) THEN
+c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
+c         ELSE
+c            ADJCOLN2O = COLN2O(LAY)
+c         ENDIF
+         ADJCOLN2O = COLN2O(LAY)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -742,15 +746,16 @@ c     to obtain the proper contribution.
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
-         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
-         IF (RATN2O .GT. 1.5) THEN
-            ADJFAC = 0.5+(RATN2O-0.5)**0.65
-            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLN2O = COLN2O(LAY)
-         ENDIF
-
+c         CHI_N2O = COLN2O(LAY)/COLDRY(LAY)
+c         RATN2O = 1.E20*CHI_N2O/CHI_MLS(4,JP(LAY)+1)
+c         IF (RATN2O .GT. 1.5) THEN
+c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
+c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
+c         ELSE
+c            ADJCOLN2O = COLN2O(LAY)
+c         ENDIF
+         ADJCOLN2O = 0.0
+         
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
          IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
@@ -1580,15 +1585,16 @@ C     is interpolated (in temperature) separately.
 c     In atmospheres where the amount of CO2 is too great to be considered
 c     a minor species, adjust the column amount of CO2 by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
-         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
-         IF (RATCO2 .GT. 3.0) THEN
-            ADJFAC = 2.0+(RATCO2-2.0)**0.77
-            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
-     &           *COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLCO2 = COLCO2(LAY)
-         ENDIF
+c         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+c         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+c         IF (RATCO2 .GT. 3.0) THEN
+c            ADJFAC = 2.0+(RATCO2-2.0)**0.77
+c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+c     &           *COLDRY(LAY)*1.E-20
+c         ELSE
+c            ADJCOLCO2 = COLCO2(LAY)
+c         ENDIF
+         ADJCOLCO2 = 1.0
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(6) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(6) + 1
@@ -1777,16 +1783,17 @@ C     (in temperature) separately.
 c     In atmospheres where the amount of CO2 is too great to be considered
 c     a minor species, adjust the column amount of CO2 by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
-         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
-         IF (RATCO2 .GT. 3.0) THEN
-            ADJFAC = 3.0+(RATCO2-3.0)**0.79
-            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
-     &           *COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLCO2 = COLCO2(LAY)
-         ENDIF
-
+c         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+c         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+c         IF (RATCO2 .GT. 3.0) THEN
+c            ADJFAC = 3.0+(RATCO2-3.0)**0.79
+c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+c     &           *COLDRY(LAY)*1.E-20
+c         ELSE
+c            ADJCOLCO2 = COLCO2(LAY)
+c         ENDIF
+         ADJCOLCO2 = 1.0
+         
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
          IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
@@ -1935,16 +1942,17 @@ c     to obtain the proper contribution.
 c     In atmospheres where the amount of CO2 is too great to be considered
 c     a minor species, adjust the column amount of CO2 by an empirical factor 
 c     to obtain the proper contribution.
-         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
-         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
-         IF (RATCO2 .GT. 3.0) THEN
-            ADJFAC = 2.0+(RATCO2-2.0)**0.79
-            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
-     &           *COLDRY(LAY)*1.E-20
-         ELSE
-            ADJCOLCO2 = COLCO2(LAY)
-         ENDIF
-
+c         CHI_CO2 = COLCO2(LAY)/(COLDRY(LAY))
+c         RATCO2 = 1.E20*CHI_CO2/CHI_MLS(2,JP(LAY)+1)
+c         IF (RATCO2 .GT. 3.0) THEN
+c            ADJFAC = 2.0+(RATCO2-2.0)**0.79
+c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
+c     &           *COLDRY(LAY)*1.E-20
+c         ELSE
+c            ADJCOLCO2 = COLCO2(LAY)
+c         ENDIF
+         ADJCOLCO2 = 1.0
+         
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(7) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(7) + 1
          INDM = INDMINOR(LAY)
@@ -1965,13 +1973,13 @@ c     to obtain the proper contribution.
 C EMPIRICAL MODIFICATION TO CODE TO IMPROVE STRATOSPHERIC COOLING RATES
 C FOR O3 
 
-         TAUG(LAY,8)=TAUG(LAY,8)*0.92
-         TAUG(LAY,9)=TAUG(LAY,9)*0.88
-         TAUG(LAY,10)=TAUG(LAY,10)*1.07
-         TAUG(LAY,11)=TAUG(LAY,11)*1.1
-         TAUG(LAY,12)=TAUG(LAY,12)*0.99
-         TAUG(LAY,13)=TAUG(LAY,13)*0.88
-         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+c         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+c         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+c         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+c         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+c         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+c         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+c         TAUG(LAY,14)=TAUG(LAY,14)*0.83
 
  3500 CONTINUE
 
