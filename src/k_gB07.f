@@ -22,7 +22,7 @@ C  --------------------------------------------------------------------------
        COMMON /CVRSN7/ HNAMKG7,HVRKG7
 
        COMMON /K7/ KA, KB, FORREF, SELFREF, KA_MCO2, KB_MCO2,
-			 &  FRACREFA, FRACREFB
+     &  FRACREFA, FRACREFB
 
        CHARACTER*18 HVRKG7
 
@@ -4379,5 +4379,5 @@ C Planck fraction mapping level : P = 706.27 mb, T = 278.94 K
 c Planck fraction mapping level : P=95.58 mbar, T= 215.70 K
       DATA FRACREFB /
      &1.5872E-01,1.5443E-01,1.4413E-01,1.3147E-01,1.1634E-01,9.8914E-02,
-		 &8.0236E-02,6.0197E-02,4.0624E-02,4.4225E-03,3.6688E-03,2.9074E-03,
-		 &2.0862E-03,1.3039E-03,4.8561E-04,6.8854E-05/
+     &8.0236E-02,6.0197E-02,4.0624E-02,4.4225E-03,3.6688E-03,2.9074E-03,
+     &2.0862E-03,1.3039E-03,4.8561E-04,6.8854E-05/

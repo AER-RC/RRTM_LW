@@ -20,7 +20,7 @@ C  --------------------------------------------------------------------------
 			 
        COMMON /CVRSN6/ HNAMKG6,HVRKG6
        COMMON /K6/ KA, FORREF, SELFREF, KA_MCO2,
-			 &  FRACREFA, FRACREFB
+     &    FRACREFA
 
        CHARACTER*18 HVRKG6
 

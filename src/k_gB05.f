@@ -22,7 +22,7 @@ C  --------------------------------------------------------------------------
       COMMON /CVRSN5/ HNAMKG5,HVRKG5
 
       COMMON /K5/ KA, KB, FORREF, SELFREF, KA_MO3,
-					&  FRACREFA, FRACREFB
+     &  FRACREFA, FRACREFB
 
       CHARACTER*18 HVRKG5
 
