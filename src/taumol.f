@@ -324,7 +324,6 @@ C  Input
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
-      DIMENSION FRACREFA(MG),FRACREFB(MG)
 
 C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
 
@@ -1681,8 +1680,8 @@ C  Input
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K7/       KA(9,5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
-     &                  SELFREF(10,MG), KA_MCO2(9,19,MG), KB_MCO2(19,MG),
-     &                  FRACREFA(MG,9),FRACREFB(MG)
+     &                  SELFREF(10,MG), KA_MCO2(9,19,MG), 
+     &                  KB_MCO2(19,MG), FRACREFA(MG,9),FRACREFB(MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
