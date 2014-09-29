@@ -16,9 +16,11 @@ C  --------------------------------------------------------------------------
        PARAMETER (MG=16)
        REAL KA(5,13,MG), KA_MCO2(19,MG)
        DIMENSION SELFREF(10,MG), FORREF(4,MG)
-
+			 DIMENSION FRACREFA(MG)
+			 
        COMMON /CVRSN6/ HNAMKG6,HVRKG6
-       COMMON /K6/ KA, FORREF, SELFREF, KA_MCO2
+       COMMON /K6/ KA, FORREF, SELFREF, KA_MCO2,
+			 &  FRACREFA, FRACREFB
 
        CHARACTER*18 HVRKG6
 
@@ -26,7 +28,7 @@ C  --------------------------------------------------------------------------
 
        DATA HVRKG6 /'$Revision$'/
        DATA HNAMKG6 / '         k_gB06.f:' /
-
+			 
 C     The array KA contains absorption coefs at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first
 C     index in the array, JT, which runs from 1 to 5, corresponds to 
@@ -621,3 +623,9 @@ C     etc.  The second index runs over the g-channel (1 to 16).
       DATA (SELFREF(JT,16),JT=1,10)  /
      & 1.00195e-01, 8.58713e-02, 7.35950e-02, 6.30737e-02, 5.40566e-02,
      & 4.63286e-02, 3.97054e-02, 3.40290e-02, 2.91641e-02, 2.49948e-02/
+
+C Planck fraction mapping level : P = 473.4280 mb, T = 259.83 K
+      DATA FRACREFA /
+     &1.4353E-01,1.4774E-01,1.4467E-01,1.3785E-01,1.2376E-01,1.0214E-01,
+     &8.1984E-02,6.1152E-02,4.0987E-02,4.5067E-03,4.0020E-03,3.1772E-03,
+     &2.3458E-03,1.5025E-03,5.7415E-04,8.2970E-05/

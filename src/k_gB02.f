@@ -16,10 +16,11 @@ C  --------------------------------------------------------------------------
        PARAMETER (MG=16)
        REAL KA(5,13,MG), KB(5,13:59,MG)
        DIMENSION SELFREF(10,MG), FORREF(4,MG)
-
+       DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
+       
        COMMON /CVRSN2/ HNAMKG2,HVRKG2
 
-       COMMON /K2/ KA ,KB, FORREF, SELFREF
+       COMMON /K2/ KA ,KB, FORREF, SELFREF, FRACREFA, FRACREFB
 
        CHARACTER*18 HVRKG2
 
@@ -28,6 +29,7 @@ C  --------------------------------------------------------------------------
        DATA HVRKG2  / '$Revision$' /
        DATA HNAMKG2 / '         k_gB02.f:' /
 
+       
 C     The array KA contains absorption coefs at the 16 chosen g-values 
 C     for a range of pressure levels > ~100mb and temperatures.  The first
 C     index in the array, JT, which runs from 1 to 5, corresponds to 
@@ -2051,3 +2053,18 @@ C     etc.  The second index runs over the g-channel (1 to 16).
       DATA (SELFREF(JT,16),JT=1,10)  /
      & 1.78105e+00, 1.61421e+00, 1.46300e+00, 1.32595e+00, 1.20174e+00,
      & 1.08917e+00, 9.87141e-01, 8.94670e-01, 8.10861e-01, 7.34904e-01/
+
+C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
+
+      DATA FRACREFA /
+     & 1.6388E-01, 1.5241E-01, 1.4290E-01, 1.2864E-01, 
+     & 1.1615E-01, 1.0047E-01, 8.0013E-02, 6.0445E-02, 
+     & 4.0530E-02, 4.3879E-03, 3.5726E-03, 2.7669E-03,
+     & 2.0078E-03, 1.2864E-03, 4.7630E-04, 6.9109E-05/
+
+C Planck fraction mapping level: P = 3.206e-2 mb, T = 197.92 K
+      DATA FRACREFB /
+     & 1.4697E-01, 1.4826E-01, 1.4278E-01, 1.3320E-01, 
+     & 1.1965E-01, 1.0297E-01, 8.4170E-02, 6.3282E-02, 
+     & 4.2868E-02, 4.6644E-03, 3.8619E-03, 3.0533E-03,
+     & 2.2359E-03, 1.4226E-03, 5.3642E-04, 7.6316E-05/
