@@ -13,20 +13,21 @@ C |                       (http://www.rtweb.aer.com/)                        |
 C |                                                                          |
 C  --------------------------------------------------------------------------
 
-       PARAMETER (MG=16)
-       REAL KA(5,13,MG), KA_MCO2(19,MG)
-       DIMENSION SELFREF(10,MG), FORREF(4,MG)
-       DIMENSION FRACREFA(MG)
+      PARAMETER (MG=16)
+      REAL KA(5,13,MG), KA_MCO2(19,MG)
+      DIMENSION SELFREF(10,MG), FORREF(4,MG)
+      DIMENSION FRACREFA(MG)
 
-       COMMON /CVRSN6/ HNAMKG6,HVRKG6
-       COMMON /K6/ KA, FORREF, SELFREF, KA_MCO2, FRACREFA
+      COMMON /CVRSN6/ HNAMKG6,HVRKG6
+      COMMON /K6/ KA, FORREF, SELFREF, KA_MCO2, 
+     &  FRACREFA
 
-       CHARACTER*18 HVRKG6
+      CHARACTER*18 HVRKG6
 
-       CHARACTER*18 HNAMKG6
+      CHARACTER*18 HNAMKG6
 
-       DATA HVRKG6 /'$Revision: 11468 $'/
-       DATA HNAMKG6 / '         k_gB06.f:' /
+      DATA HVRKG6 /'$Revision: 11468 $'/
+      DATA HNAMKG6 / '         k_gB06.f:' /
 
       DATA (KA_MCO2(JT, 1),JT=1,19)  /
      & 1.45661e-05, 1.73337e-05, 2.06273e-05, 2.45466e-05, 2.92105e-05,
