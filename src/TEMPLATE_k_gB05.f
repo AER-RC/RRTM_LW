@@ -19,7 +19,6 @@ C  --------------------------------------------------------------------------
       REAL KA_MO3(9,19,MG)
       DIMENSION SELFREF(10,MG), FORREF(4,MG)
 
-
       COMMON /CVRSN5/ HNAMKG5,HVRKG5
 
       COMMON /K5/ KA, KB, FORREF, SELFREF, KA_MO3, 

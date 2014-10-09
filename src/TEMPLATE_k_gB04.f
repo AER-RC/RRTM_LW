@@ -17,11 +17,11 @@ C  --------------------------------------------------------------------------
 
       REAL KA(9,5,13,MG), KB(5,5,13:59,MG)
       REAL PA(9,5,13,MG), PB(5,5,13:59,MG)
+      DIMENSION SELFREF(10,MG), FORREF(4,MG)
 
       COMMON /CVRSN4/ HNAMKG4,HVRKG4
       COMMON /K4/ KA, KB, FORREF, SELFREF, 
      &  PA, PB
-
       CHARACTER*18 HVRKG4
 
       CHARACTER*18 HNAMKG4
