@@ -14,15 +14,15 @@ C |                                                                          |
 C  --------------------------------------------------------------------------
 
       PARAMETER (MG=16)
-      DIMENSION SELFREF(10,MG), FORREF(4,MG)
-      DIMENSION FRACREFA(MG,9),FRACREFB(MG)
       REAL KA(9,5,13,MG), KB(5,13:59,MG)
+      REAL PA(9,5,13,MG), PB(5,13:59,MG)
       REAL KA_MCO2(9,19,MG), KB_MCO2(19,MG)
+      DIMENSION SELFREF(10,MG), FORREF(4,MG)
 
       COMMON /CVRSN7/ HNAMKG7,HVRKG7
 
       COMMON /K7/ KA, KB, FORREF, SELFREF, KA_MCO2, KB_MCO2,
-     &  FRACREFA,FRACREFB
+     &  PA, PB
       CHARACTER*18 HVRKG7
 
       CHARACTER*18 HNAMKG7
