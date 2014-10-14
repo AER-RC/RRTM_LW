@@ -221,12 +221,11 @@ C     foreign continuum is interpolated (in temperature) separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
-         PP = PAVEL(LAY)
-         CORRADJ =  1.
+c         PP = PAVEL(LAY)
 c         IF (PP .LT. 250.) THEN
 c            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
 c         ENDIF
-
+         CORRADJ =  1.
 c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          SCALEN2 = 0.0
          DO 2000 IG = 1, NG(1)
@@ -565,9 +564,8 @@ c         IF (RATN2O .GT. 1.5) THEN
 c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
 c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLN2O = COLN2O(LAY)
+            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
-         ADJCOLN2O = COLN2O(LAY)
 
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -752,9 +750,8 @@ c         IF (RATN2O .GT. 1.5) THEN
 c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
 c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLN2O = COLN2O(LAY)
+            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
-         ADJCOLN2O = COLN2O(LAY)
          
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -1593,9 +1590,8 @@ c            ADJFAC = 2.0+(RATCO2-2.0)**0.77
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(6) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(6) + 1
@@ -1791,9 +1787,8 @@ c            ADJFAC = 3.0+(RATCO2-3.0)**0.79
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
          
          SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
          SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -1950,9 +1945,8 @@ c            ADJFAC = 2.0+(RATCO2-2.0)**0.79
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
          
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(7) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(7) + 1
