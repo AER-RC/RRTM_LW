@@ -178,13 +178,14 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K1/       KA(5,13,MG), KB(5,13:59,MG),FORREF(4,MG), 
      &                  SELFREF(10,MG),KA_MN2(19,MG),KB_MN2(19,MG),
-     &                  FRACREFA(MG),FRACREFB(MG)
+     &                  PA(5,13,MG), PB(5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
+      DIMENSION PLAA(65,MG),PLAB(235,MG)
 c      DIMENSION FRACREFA(MG),FRACREFB(MG)
 
 
@@ -207,7 +208,9 @@ C     LOWER - N2, P = 142.5490 mbar, T = 215.70 K
 C     UPPER - N2, P = 142.5490 mbar, T = 215.70 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
       REAL KA, KB, KA_MN2, KB_MN2, MINORFRAC
+			REAL PA, PB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum and
@@ -246,7 +249,11 @@ c        SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
      &           FAC11(LAY) * ABSA(IND1+1,IG))  
      &           + TAUSELF + TAUFOR
      &           + TAUN2)
-             FRACS(LAY,IG) = FRACREFA(IG)
+             FRACS(LAY,IG) = 
+			& 			 		FAC00(LAY) * PLAA(IND0,IG) +
+      &           FAC10(LAY) * PLAA(IND0+1,IG) +
+      &           FAC01(LAY) * PLAA(IND1,IG) + 
+      &           FAC11(LAY) * PLAA(IND1+1,IG)
  2000    CONTINUE
  2500 CONTINUE
 
@@ -274,7 +281,11 @@ c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
      &           FAC11(LAY) * ABSB(IND1+1,IG))   
      &           + TAUFOR
      &           + TAUN2)
-            FRACS(LAY,IG) = FRACREFB(IG)
+            FRACS(LAY,IG) = 
+     &           FAC00(LAY) * PLAB(IND0,IG) +
+     &           FAC10(LAY) * PLAB(IND0+1,IG) +
+     &           FAC01(LAY) * PLAB(IND1,IG) + 
+     &           FAC11(LAY) * PLAB(IND1+1,IG) 						
  3000    CONTINUE
  3500 CONTINUE
 
@@ -317,13 +328,15 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /K2/       KA(5,13,MG), KB(5,13:59,MG) , FORREF(4,MG), 
-     &                  SELFREF(10,MG), FRACREFA(MG),FRACREFB(MG)
+     &                  SELFREF(10,MG), 
+		 &                  PA(5,13,MG), PB(5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(65,MG),ABSB(235,MG)
+      DIMENSION PLAA(65,MG),PLAB(235,MG)
 
 C Planck fraction mapping level: P = 1053.630 mbar, T = 294.2 K
 
@@ -343,6 +356,8 @@ c     & 2.2359E-03, 1.4226E-03, 5.3642E-04, 7.6316E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
+      EQUIVALENCE (PA,PLAA),(KB,PLAB)
+      REAL PA,PB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature.  Below LAYTROP, the water vapor self-continuum and
@@ -370,7 +385,11 @@ c         CORRADJ = 1. - .05 * (PP - 100.) / 900.
      &           FAC01(LAY) * ABSA(IND1,IG) + 
      &           FAC11(LAY) * ABSA(IND1+1,IG)) 
      &           + TAUSELF + TAUFOR)
-            FRACS(LAY,IG) = FRACREFA(IG)
+            FRACS(LAY,IG) = 
+     &           FAC00(LAY) * PLAA(IND0,IG) +
+     &           FAC10(LAY) * PLAA(IND0+1,IG) +
+     &           FAC01(LAY) * PLAA(IND1,IG) + 
+     &           FAC11(LAY) * PLAA(IND1+1,IG)
  2000    CONTINUE
  2500 CONTINUE
 
@@ -388,7 +407,11 @@ c         CORRADJ = 1. - .05 * (PP - 100.) / 900.
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG)) 
      &           + TAUFOR
-            FRACS(LAY,IG) = FRACREFB(IG)
+            FRACS(LAY,IG) = 
+		 &          (FAC00(LAY) * PLAB(IND0,IG) +
+		 &           FAC10(LAY) * PLAB(IND0+1,IG) +
+		 &           FAC01(LAY) * PLAB(IND1,IG) + 
+		 &           FAC11(LAY) * PLAB(IND1+1,IG)) 
  3000    CONTINUE
  3500 CONTINUE
 
@@ -437,16 +460,19 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K3/       KA(9,5,13,MG), KB(5,5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MN2O(9,19,MG), 
-     &                  KB_MN2O(5,19,MG),FRACREFA(MG,9), FRACREFB(MG,5)
+     &                  KB_MN2O(5,19,MG),
+		 &                  PA(9,5,13,MG), PB(5,5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       REAL KA,KB
+			REAL PA,PB
       REAL KA_MN2O, KB_MN2O, MINORFRAC
       REAL N2OM1,N2OM2
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION PLAA(585,MG),PLAB(1175,MG)			
 c      DIMENSION FRACREFA(MG,9), FRACREFB(MG,5)
 
 C Planck fraction mapping level: P=212.7250 mbar, T = 223.06 K
@@ -513,18 +539,19 @@ C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
 C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
 
 C     P = 212.725 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(2,9)
+c      REFRAT_PLANCK_A = CHI_MLS(1,9)/CHI_MLS(2,9)
 
 C     P = 95.58 mb
-      REFRAT_PLANCK_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+c      REFRAT_PLANCK_B = CHI_MLS(1,13)/CHI_MLS(2,13)
 
 C     P = 706.270mb
-      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(2,3)
+c      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(2,3)
 
 C     P = 95.58 mb 
-      REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
+c      REFRAT_M_B = CHI_MLS(1,13)/CHI_MLS(2,13)
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water vapor 
@@ -569,12 +596,12 @@ c            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
          ADJCOLN2O = COLN2O(LAY)
 
-         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
-         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(3) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(3) + JS1
@@ -666,6 +693,13 @@ c         ENDIF
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG) +
      &               FAC210 * ABSA(IND0+11,IG))
+           	 		PLANCK_MAJOR =  
+&               		 FAC000 * PLAA(IND0,IG) +
+&               		 FAC100 * PLAA(IND0+1,IG) +
+&               		 FAC200 * PLAA(IND0+2,IG) +
+&               		 FAC010 * PLAA(IND0+9,IG) +
+&               		 FAC110 * PLAA(IND0+10,IG) +
+&               		 FAC210 * PLAA(IND0+11,IG)
              ELSEIF (SPECPARM .GT. 0.875) THEN
                  TAU_MAJOR =  SPECCOMB * 
      &               (FAC200 * ABSA(IND0-1,IG) +
@@ -674,12 +708,24 @@ c         ENDIF
      &               FAC210 * ABSA(IND0+8,IG) +
      &               FAC110 * ABSA(IND0+9,IG) +
      &               FAC010 * ABSA(IND0+10,IG))
+            		PLANCK_MAJOR =   
+		 &               FAC200 * PLAA(IND0-1,IG) +
+		 &               FAC100 * PLAA(IND0,IG) +
+		 &               FAC000 * PLAA(IND0+1,IG) +
+		 &               FAC210 * PLAA(IND0+8,IG) +
+		 &               FAC110 * PLAA(IND0+9,IG) +
+		 &               FAC010 * PLAA(IND0+10,IG)
              ELSE
                  TAU_MAJOR = SPECCOMB * 
      &               (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG))
+            		PLANCK_MAJOR =  
+  	 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+     &               FAC010 * PLAA(IND0+9,IG) +
+     &               FAC110 * PLAA(IND0+10,IG))
              ENDIF
              IF (SPECPARM1 .LT. 0.125) THEN
                  TAU_MAJOR1 =  SPECCOMB1 *
@@ -689,6 +735,13 @@ c         ENDIF
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG) +
      &               FAC211 * ABSA(IND1+11,IG))
+            		PLANCK_MAJOR1 = 
+		 &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC201 * PLAA(IND1+2,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG) +
+		 &               FAC211 * PLAA(IND1+11,IG)
              ELSEIF (SPECPARM1 .GT. 0.875) THEN
                  TAU_MAJOR1 =  SPECCOMB1 * 
      &               (FAC201 * ABSA(IND1-1,IG) +
@@ -697,18 +750,29 @@ c         ENDIF
      &               FAC211 * ABSA(IND1+8,IG) +
      &               FAC111 * ABSA(IND1+9,IG) +
      &               FAC011 * ABSA(IND1+10,IG))
+            		PLANCK_MAJOR1 =  
+		 &               FAC201 * PLAA(IND1-1,IG) +
+		 &               FAC101 * PLAA(IND1,IG) +
+		 &               FAC001 * PLAA(IND1+1,IG) +
+		 &               FAC211 * PLAA(IND1+8,IG) +
+		 &               FAC111 * PLAA(IND1+9,IG) +
+		 &               FAC011 * PLAA(IND1+10,IG)
              ELSE
                  TAU_MAJOR1 = SPECCOMB1 * 
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG))
+            			PLANCK_MAJOR1 = 
+ 		 &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG)
              ENDIF
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
      &           + ADJCOLN2O*ABSN2O            
-             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+             FRACS(LAY,IG) = PLANCK_MAJOR + PLANCK_MAJOR1
  2000    CONTINUE
  2500 CONTINUE
 
@@ -756,12 +820,12 @@ c            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
          ADJCOLN2O = COLN2O(LAY)
          
-         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
-         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+c        JPL= 1 + INT(SPECMULT_PLANCK)
+c        FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(3) + JS
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(3) + JS1
@@ -789,8 +853,16 @@ c         ENDIF
      &          FAC111 * ABSB(IND1+6,IG)) 
      &          + TAUFOR
      &          + ADJCOLN2O*ABSN2O            
-            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
-     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+            FRACS(LAY,IG) = 
+     &          (FAC000 * PLAB(IND0,IG) +
+     &          FAC100 * PLAB(IND0+1,IG) +
+     &          FAC010 * PLAB(IND0+5,IG) +
+     &          FAC110 * PLAB(IND0+6,IG))
+     &          + 
+     &          (FAC001 * PLAB(IND1,IG) + 
+     &          FAC101 * PLAB(IND1+1,IG) +
+     &          FAC011 * PLAB(IND1+5,IG) +
+     &          FAC111 * PLAB(IND1+6,IG)) 					
  3000    CONTINUE
  3500 CONTINUE
 
@@ -833,13 +905,15 @@ C  Input
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /K4/       KA(9,5,13,MG), KB(5,5,13:59,MG) , FORREF(4,MG), 
-     &                  SELFREF(10,MG), FRACREFA(MG,9), FRACREFB(MG,5)
+     &                  SELFREF(10,MG),
+		 &                  PA(9,5,13,MG), PB(5,5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION PLAA(585,MG),PLAB(1175,MG)			
 c      DIMENSION FRACREFA(MG,9), FRACREFB(MG,6)
 
 C Planck fraction mapping level : P = 142.5940 mbar, T = 215.70 K
@@ -905,12 +979,14 @@ c     &2.1134E-03,1.3457E-03,5.1024E-04,7.3998E-05/
 c
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
+      REAL PA,PB		
 
 C     P =   142.5940 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,11)/CHI_MLS(2,11)
+c      REFRAT_PLANCK_A = CHI_MLS(1,11)/CHI_MLS(2,11)
 
 C     P = 95.58350 mb
-      REFRAT_PLANCK_B = CHI_MLS(3,13)/CHI_MLS(2,13)
+c      REFRAT_PLANCK_B = CHI_MLS(3,13)/CHI_MLS(2,13)
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the water 
@@ -935,12 +1011,12 @@ C     separately.
          JS1 = 1 + INT(SPECMULT1)
          FS1 = AMOD(SPECMULT1,1.0)
 
-         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
-         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(4) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(4) + JS1
@@ -1023,6 +1099,13 @@ C     separately.
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG) +
      &               FAC210 * ABSA(IND0+11,IG))
+            		PLANCK_MAJOR =  
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC200 * PLAA(IND0+2,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG) +
+		 &               FAC210 * PLAA(IND0+11,IG)
              ELSEIF (SPECPARM .GT. 0.875) THEN
                  TAU_MAJOR =  SPECCOMB * 
      &               (FAC200 * ABSA(IND0-1,IG) +
@@ -1031,12 +1114,24 @@ C     separately.
      &               FAC210 * ABSA(IND0+8,IG) +
      &               FAC110 * ABSA(IND0+9,IG) +
      &               FAC010 * ABSA(IND0+10,IG))
+            			PLANCK_MAJOR =   
+		 &               FAC200 * PLAA(IND0-1,IG) +
+		 &               FAC100 * PLAA(IND0,IG) +
+		 &               FAC000 * PLAA(IND0+1,IG) +
+		 &               FAC210 * PLAA(IND0+8,IG) +
+		 &               FAC110 * PLAA(IND0+9,IG) +
+		 &	             FAC010 * PLAA(IND0+10,IG)
              ELSE
                  TAU_MAJOR = SPECCOMB * 
      &               (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG))
+            		PLANCK_MAJOR =  
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG)
              ENDIF
              IF (SPECPARM1 .LT. 0.125) THEN
                  TAU_MAJOR1 =  SPECCOMB1 *
@@ -1046,6 +1141,13 @@ C     separately.
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG) +
      &               FAC211 * ABSA(IND1+11,IG))
+            		PLANCK_MAJOR1 =  
+     &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC201 * PLAA(IND1+2,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG) +
+		 &               FAC211 * PLAA(IND1+11,IG)
              ELSEIF (SPECPARM1 .GT. 0.875) THEN
                  TAU_MAJOR1 =  SPECCOMB1 * 
      &               (FAC201 * ABSA(IND1-1,IG) +
@@ -1054,17 +1156,28 @@ C     separately.
      &               FAC211 * ABSA(IND1+8,IG) +
      &               FAC111 * ABSA(IND1+9,IG) +
      &               FAC011 * ABSA(IND1+10,IG))
+            		PLANCK_MAJOR1 =  
+     &               FAC201 * PLAA(IND1-1,IG) +
+     &               FAC101 * PLAA(IND1,IG) +
+     &               FAC001 * PLAA(IND1+1,IG) +
+     &               FAC211 * PLAA(IND1+8,IG) +
+     &               FAC111 * PLAA(IND1+9,IG) +
+     &               FAC011 * PLAA(IND1+10,IG)
              ELSE
                  TAU_MAJOR1 = SPECCOMB1 * 
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG))
+            			PLANCK_MAJOR1 =  
+     &               	FAC001 * PLAA(IND1,IG) +
+     &               	FAC101 * PLAA(IND1+1,IG) +
+     &               	FAC011 * PLAA(IND1+9,IG) +
+     &               	FAC111 * PLAA(IND1+10,IG))
              ENDIF
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
-             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+             FRACS(LAY,IG) = PLANCK_MAJOR + PLANCK_MAJOR1
  2000    CONTINUE
  2500 CONTINUE
 
@@ -1092,12 +1205,12 @@ C     separately.
          FAC101 = FS1 * FAC01(LAY)
          FAC111 = FS1 * FAC11(LAY)
 
-         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
-         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(4) + JS
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(4) + JS1
@@ -1113,8 +1226,16 @@ C     separately.
      &          FAC101 * ABSB(IND1+1,IG) +
      &          FAC011 * ABSB(IND1+5,IG) +
      &          FAC111 * ABSB(IND1+6,IG)) 
-            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
-     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+            FRACS(LAY,IG) =
+		 &          (FAC000 * PLAB(IND0,IG) +
+		 &          FAC100 * PLAB(IND0+1,IG) +
+		 &          FAC010 * PLAB(IND0+5,IG) +
+		 &          FAC110 * PLAB(IND0+6,IG))
+		 &          + 
+		 &          (FAC001 * PLAB(IND1,IG) + 
+		 &          FAC101 * PLAB(IND1+1,IG) +
+		 &          FAC011 * PLAB(IND1+5,IG) +
+		 &          FAC111 * PLAB(IND1+6,IG)) 
  3000    CONTINUE
 
 C EMPIRICAL MODIFICATION TO CODE TO IMPROVING STRATOSPHERIC COOLING RATES
@@ -1173,13 +1294,14 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K5/       KA(9,5,13,MG), KB(5,5,13:59,MG),
      &                  FORREF(4,MG),SELFREF(10,MG), KA_MO3(9,19,MG),
-     &                  FRACREFA(MG,9), FRACREFB(MG,5)
+     &                  PA(9,5,13,MG), PB(5,5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(585,MG),ABSB(1175,MG)
+      DIMENSION PLAA(585,MG),PLAB(1175,MG)			
       DIMENSION CCL4(MG)
 
 
@@ -1257,19 +1379,20 @@ C     LOWER - CCL4
       REAL KA,KB
       REAL KA_MO3, MINORFRAC
       REAL O3M1, O3M2
-
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
+      REAL PA,PB
 
 C     Calculate reference ratio to be used in calculation of Planck
 C     fraction in lower/upper atmosphere.
 
 C     P = 473.420 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,5)/CHI_MLS(2,5)
+c      REFRAT_PLANCK_A = CHI_MLS(1,5)/CHI_MLS(2,5)
 
 C     P = 0.2369 mb
-      REFRAT_PLANCK_B = CHI_MLS(3,43)/CHI_MLS(2,43)
+c      REFRAT_PLANCK_B = CHI_MLS(3,43)/CHI_MLS(2,43)
 
 C     P = 317.3480
-      REFRAT_M_A = CHI_MLS(1,7)/CHI_MLS(2,7)
+c      REFRAT_M_A = CHI_MLS(1,7)/CHI_MLS(2,7)
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
 C     temperature, and appropriate species.  Below LAYTROP, the 
@@ -1301,12 +1424,12 @@ C     interpolated (in temperature) separately.
          JMO3 = 1 + INT(SPECMULT_MO3)
          FMO3 = AMOD(SPECMULT_MO3,1.0)
 
-         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
-         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(5) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS1
@@ -1397,6 +1520,13 @@ C     interpolated (in temperature) separately.
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG) +
      &               FAC210 * ABSA(IND0+11,IG))
+            		 PLANCK_MAJOR =  
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC200 * PLAA(IND0+2,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG) +
+		 &               FAC210 * PLAA(IND0+11,IG)
              ELSEIF (SPECPARM .GT. 0.875) THEN
                  TAU_MAJOR =  SPECCOMB * 
      &               (FAC200 * ABSA(IND0-1,IG) +
@@ -1405,12 +1535,24 @@ C     interpolated (in temperature) separately.
      &               FAC210 * ABSA(IND0+8,IG) +
      &               FAC110 * ABSA(IND0+9,IG) +
      &               FAC010 * ABSA(IND0+10,IG))
+            		PLANCK_MAJOR =  
+		&               FAC200 * PLAA(IND0-1,IG) +
+		&               FAC100 * PLAA(IND0,IG) +
+		&               FAC000 * PLAA(IND0+1,IG) +
+		&               FAC210 * PLAA(IND0+8,IG) +
+		&               FAC110 * PLAA(IND0+9,IG) +
+		&               FAC010 * PLAA(IND0+10,IG)
              ELSE
                  TAU_MAJOR = SPECCOMB * 
      &               (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG))
+            		 PLANCK_MAJOR = 
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG)
              ENDIF
              IF (SPECPARM1 .LT. 0.125) THEN
                  TAU_MAJOR1 =  SPECCOMB1 *
@@ -1420,6 +1562,13 @@ C     interpolated (in temperature) separately.
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG) +
      &               FAC211 * ABSA(IND1+11,IG))
+		             PLANCK_MAJOR1 =  
+		 &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC201 * PLAA(IND1+2,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG) +
+     &               FAC211 * PLAA(IND1+11,IG)
              ELSEIF (SPECPARM1 .GT. 0.875) THEN
                  TAU_MAJOR1 =  SPECCOMB1 * 
      &               (FAC201 * ABSA(IND1-1,IG) +
@@ -1428,19 +1577,30 @@ C     interpolated (in temperature) separately.
      &               FAC211 * ABSA(IND1+8,IG) +
      &               FAC111 * ABSA(IND1+9,IG) +
      &               FAC011 * ABSA(IND1+10,IG))
+		             PLANCK_MAJOR1 = 
+		 &               FAC201 * PLAA(IND1-1,IG) +
+		 &               FAC101 * PLAA(IND1,IG) +
+		 &               FAC001 * PLAA(IND1+1,IG) +
+		 &               FAC211 * PLAA(IND1+8,IG) +
+		 &               FAC111 * PLAA(IND1+9,IG) +
+		 &               FAC011 * PLAA(IND1+10,IG)
              ELSE
                  TAU_MAJOR1 = SPECCOMB1 * 
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG))
+		             PLANCK_MAJOR1 = 
+		 &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG)
              ENDIF
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
      &           + ABSO3*COLO3(LAY)
      &           + WX(1,LAY) * CCL4(IG)
-             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+             FRACS(LAY,IG) = PLANCK_MAJOR + PLANCK_MAJOR1
  2000    CONTINUE
  2500 CONTINUE
 
@@ -1468,12 +1628,12 @@ C     interpolated (in temperature) separately.
          FAC101 = FS1 * FAC01(LAY)
          FAC111 = FS1 * FAC11(LAY)
 
-         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
-         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLO3(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
+c         SPECPARM_PLANCK = COLO3(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 4.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(5) + JS
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(5) + JS1
@@ -1490,8 +1650,16 @@ C     interpolated (in temperature) separately.
      &          FAC011 * ABSB(IND1+5,IG) +
      &          FAC111 * ABSB(IND1+6,IG)) 
      &          + WX(1,LAY) * CCL4(IG)
-            FRACS(LAY,IG) = FRACREFB(IG,JPL) + FPL *
-     &          (FRACREFB(IG,JPL+1)-FRACREFB(IG,JPL))
+            FRACS(LAY,IG) = 
+     &          (FAC000 * PLAB(IND0,IG) +
+     &          FAC100 * PLAB(IND0+1,IG) +
+     &          FAC010 * PLAB(IND0+5,IG) +
+     &          FAC110 * PLAB(IND0+6,IG))
+     &          + 
+     &          (FAC001 * PLAB(IND1,IG) + 
+     &          FAC101 * PLAB(IND1+1,IG) +
+     &          FAC011 * PLAB(IND1+5,IG) +
+     &          FAC111 * PLAB(IND1+6,IG))
  3000    CONTINUE
  3500 CONTINUE
 
@@ -1533,13 +1701,15 @@ C  Input
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K6/       KA(5,13,MG), FORREF(4,MG), SELFREF(10,MG), 
-     &                  KA_MCO2(19,MG), FRACREFA(MG)
+     &                  KA_MCO2(19,MG),
+		 &                  PA(5,13,MG),PB(5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(65,MG)
+      DIMENSION PLAA(65,MG),PLAB(235,MG)		
       DIMENSION CFC11ADJ(MG), CFC12(MG)
       REAL KA_MCO2, MINORFRAC
       
@@ -1572,8 +1742,10 @@ C     CFC11 is multiplied by 1.385 to account for the 1060-1107 cm-1 band.
      &     30.0088, 26.3634, 15.8237, 57.5050/
 
 
-      EQUIVALENCE (KA,ABSA),(KB,ABSB)
-      REAL KA,KB
+      EQUIVALENCE (KA,ABSA)
+      REAL KA
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
+      REAL PA,PB			
 
 C     Compute the optical depth by interpolating in ln(pressure) and
 C     temperature. The water vapor self-continuum and foreign continuum
@@ -1622,17 +1794,38 @@ c         ENDIF
      &           + ADJCOLCO2 * ABSCO2
      &           + WX(2,LAY) * CFC11ADJ(IG)
      &           + WX(3,LAY) * CFC12(IG)
-            FRACS(LAY,IG) = FRACREFA(IG)
+            FRACS(LAY,IG) = 
+     &           FAC00(LAY) * PLAA(IND0,IG) +
+     &           FAC10(LAY) * PLAA(IND0+1,IG) +
+     &           FAC01(LAY) * PLAA(IND1,IG) + 
+     &           FAC11(LAY) * PLAA(IND1+1,IG) 					
  2000    CONTINUE
  2500 CONTINUE
 
 C     Nothing important goes on above LAYTROP in this band.
       DO 3500 LAY = LAYTROP+1, NLAYERS
+c JSD: When doing this for real, will need to add planck fractions in
+c      upper layers.  Until then, use whatever we last used for the lower
+c      layer.			
+c         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(2) + 1
+c         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(2) + 1
          DO 3000 IG = 1, NG(6)
             TAUG(LAY,IG) = 0.0 
      &           + WX(2,LAY) * CFC11ADJ(IG)
      &           + WX(3,LAY) * CFC12(IG)
-            FRACS(LAY,IG) = FRACREFA(IG)
+c JSD: See planck note above
+c            FRACS(LAY,IG) = 
+c		 &           FAC00(LAY) * PLAB(IND0,IG) +
+c		 &           FAC10(LAY) * PLAB(IND0+1,IG) +
+c		 &           FAC01(LAY) * PLAB(IND1,IG) + 
+c		 &           FAC11(LAY) * PLAB(IND1+1,IG) 
+c JSD: These fracs use the IND0/1 from last layer in lower atmosphere.
+            FRACS(LAY,IG) = 
+		 &           FAC00(LAYTROP) * PLAA(IND0,IG) +
+		 &           FAC10(LAYTROP) * PLAA(IND0+1,IG) +
+		 &           FAC01(LAYTROP) * PLAA(IND1,IG) + 
+		 &           FAC11(LAYTROP) * PLAA(IND1+1,IG) 
+
  3000    CONTINUE
  3500 CONTINUE
 
@@ -1681,13 +1874,15 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K7/       KA(9,5,13,MG), KB(5,13:59,MG) , FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MCO2(9,19,MG), 
-     &                  KB_MCO2(19,MG), FRACREFA(MG,9),FRACREFB(MG)
+     &                  KB_MCO2(19,MG), 
+		 &                  PA(9,5,13,MG), PB(5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
       DIMENSION ABSA(585,MG),ABSB(235,MG)
+      DIMENSION PLAA(585,MG),PLAB(235,MG)			
       REAL KA_MCO2, KB_MCO2, MINORFRAC
 
 C Planck fraction mapping level : P = 706.27 mb, T = 278.94 K
@@ -1740,15 +1935,17 @@ C     UPPER - CO2, P = 12.9350 mbar, T = 234.01 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
+      REAL PA,PB			
 
 C     Calculate reference ratio to be used in calculation of Planck
 C     fraction in lower atmosphere.
 
 C     P = 706.2620 mb
-      REFRAT_PLANCK_A = CHI_MLS(1,3)/CHI_MLS(3,3)
+c      REFRAT_PLANCK_A = CHI_MLS(1,3)/CHI_MLS(3,3)
 
 C     P = 706.2720 mb
-      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(3,3)
+c      REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(3,3)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
@@ -1795,12 +1992,12 @@ c            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
          ADJCOLCO2 = 1.0
          
-         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
-         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
-         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
-         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
-         JPL= 1 + INT(SPECMULT_PLANCK)
-         FPL = AMOD(SPECMULT_PLANCK,1.0)
+c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
+c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
+c         IF (SPECPARM_PLANCK .GE. ONEMINUS) SPECPARM_PLANCK=ONEMINUS
+c         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
+c         JPL= 1 + INT(SPECMULT_PLANCK)
+c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(7) + JS
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(7) + JS1
@@ -1892,6 +2089,13 @@ c         ENDIF
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG) +
      &               FAC210 * ABSA(IND0+11,IG))
+		             PLANCK_MAJOR =  
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC200 * PLAA(IND0+2,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG) +
+		 &               FAC210 * PLAA(IND0+11,IG)
              ELSEIF (SPECPARM .GT. 0.875) THEN
                  TAU_MAJOR =  SPECCOMB * 
      &               (FAC200 * ABSA(IND0-1,IG) +
@@ -1900,12 +2104,24 @@ c         ENDIF
      &               FAC210 * ABSA(IND0+8,IG) +
      &               FAC110 * ABSA(IND0+9,IG) +
      &               FAC010 * ABSA(IND0+10,IG))
+                 PLANCK_MAJOR =  
+     &               FAC200 * PLAA(IND0-1,IG) +
+     &               FAC100 * PLAA(IND0,IG) +
+     &               FAC000 * PLAA(IND0+1,IG) +
+     &               FAC210 * PLAA(IND0+8,IG) +
+     &               FAC110 * PLAA(IND0+9,IG) +
+     &               FAC010 * PLAA(IND0+10,IG)
              ELSE
                  TAU_MAJOR = SPECCOMB * 
      &               (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
      &               FAC010 * ABSA(IND0+9,IG) +
      &               FAC110 * ABSA(IND0+10,IG))
+		             PLANCK_MAJOR =  
+		 &               FAC000 * PLAA(IND0,IG) +
+		 &               FAC100 * PLAA(IND0+1,IG) +
+		 &               FAC010 * PLAA(IND0+9,IG) +
+		 &               FAC110 * PLAA(IND0+10,IG)
              ENDIF
              IF (SPECPARM1 .LT. 0.125) THEN
                  TAU_MAJOR1 =  SPECCOMB1 *
@@ -1915,6 +2131,13 @@ c         ENDIF
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG) +
      &               FAC211 * ABSA(IND1+11,IG))
+		             PLANCK_MAJOR1 =  
+		 &               FAC001 * PLAA(IND1,IG) +
+		 &               FAC101 * PLAA(IND1+1,IG) +
+		 &               FAC201 * PLAA(IND1+2,IG) +
+		 &               FAC011 * PLAA(IND1+9,IG) +
+		 &               FAC111 * PLAA(IND1+10,IG) +
+		 &               FAC211 * PLAA(IND1+11,IG)
              ELSEIF (SPECPARM1 .GT. 0.875) THEN
                  TAU_MAJOR1 =  SPECCOMB1 * 
      &               (FAC201 * ABSA(IND1-1,IG) +
@@ -1923,18 +2146,29 @@ c         ENDIF
      &               FAC211 * ABSA(IND1+8,IG) +
      &               FAC111 * ABSA(IND1+9,IG) +
      &               FAC011 * ABSA(IND1+10,IG))
+                 PLANCK_MAJOR1 =  
+     &               FAC201 * PLAA(IND1-1,IG) +
+     &               FAC101 * PLAA(IND1,IG) +
+     &               FAC001 * PLAA(IND1+1,IG) +
+     &               FAC211 * PLAA(IND1+8,IG) +
+     &               FAC111 * PLAA(IND1+9,IG) +
+     &               FAC011 * PLAA(IND1+10,IG)
              ELSE
                  TAU_MAJOR1 = SPECCOMB1 * 
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
      &               FAC011 * ABSA(IND1+9,IG) +
      &               FAC111 * ABSA(IND1+10,IG))
+                 PLANCK_MAJOR1 =
+     &               FAC001 * PLAA(IND1,IG) +
+     &               FAC101 * PLAA(IND1+1,IG) +
+     &               FAC011 * PLAA(IND1+9,IG) +
+     &               FAC111 * PLAA(IND1+10,IG)
              ENDIF
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
      &           + ADJCOLCO2*ABSCO2
-             FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
-     &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
+             FRACS(LAY,IG) = PLANCK_MAJOR + PLANCK_MAJOR1
  2000    CONTINUE
  2500 CONTINUE
 
@@ -1968,19 +2202,23 @@ c         ENDIF
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
      &           + ADJCOLCO2 * ABSCO2
-            FRACS(LAY,IG) = FRACREFB(IG)
+            FRACS(LAY,IG) = 
+     &           FAC00(LAY) * PLAB(IND0,IG) +
+     &           FAC10(LAY) * PLAB(IND0+1,IG) +
+     &           FAC01(LAY) * PLAB(IND1,IG) + 
+     &           FAC11(LAY) * PLAB(IND1+1,IG)
  3000    CONTINUE
 
 C EMPIRICAL MODIFICATION TO CODE TO IMPROVE STRATOSPHERIC COOLING RATES
 C FOR O3 
 
-c         TAUG(LAY,8)=TAUG(LAY,8)*0.92
-c         TAUG(LAY,9)=TAUG(LAY,9)*0.88
-c         TAUG(LAY,10)=TAUG(LAY,10)*1.07
-c         TAUG(LAY,11)=TAUG(LAY,11)*1.1
-c         TAUG(LAY,12)=TAUG(LAY,12)*0.99
-c         TAUG(LAY,13)=TAUG(LAY,13)*0.88
-c         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+         TAUG(LAY,14)=TAUG(LAY,14)*0.83
 
  3500 CONTINUE
 
