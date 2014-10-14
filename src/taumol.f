@@ -224,13 +224,12 @@ C     foreign continuum is interpolated (in temperature) separately.
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
-         PP = PAVEL(LAY)
-         CORRADJ =  1.
+c         PP = PAVEL(LAY)
 c         IF (PP .LT. 250.) THEN
 c            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
 c         ENDIF
-
-c        SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
+         CORRADJ =  1.
+c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          SCALEN2 = 0.0
          DO 2000 IG = 1, NG(1)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
@@ -592,9 +591,8 @@ c         IF (RATN2O .GT. 1.5) THEN
 c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
 c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLN2O = COLN2O(LAY)
+            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
-         ADJCOLN2O = COLN2O(LAY)
 
 c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLCO2(LAY)
 c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -816,9 +814,8 @@ c         IF (RATN2O .GT. 1.5) THEN
 c            ADJFAC = 0.5+(RATN2O-0.5)**0.65
 c            ADJCOLN2O = ADJFAC*CHI_MLS(4,JP(LAY)+1)*COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLN2O = COLN2O(LAY)
+            ADJCOLN2O = COLN2O(LAY)
 c         ENDIF
-         ADJCOLN2O = COLN2O(LAY)
          
 c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_B*COLCO2(LAY)
 c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -1241,13 +1238,13 @@ c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 C EMPIRICAL MODIFICATION TO CODE TO IMPROVING STRATOSPHERIC COOLING RATES
 C FOR CO2.
 
-         TAUG(LAY,8)=TAUG(LAY,8)*0.92
-         TAUG(LAY,9)=TAUG(LAY,9)*0.88
-         TAUG(LAY,10)=TAUG(LAY,10)*1.07
-         TAUG(LAY,11)=TAUG(LAY,11)*1.1
-         TAUG(LAY,12)=TAUG(LAY,12)*0.99
-         TAUG(LAY,13)=TAUG(LAY,13)*0.88
-         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+c         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+c         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+c         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+c         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+c         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+c         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+c         TAUG(LAY,14)=TAUG(LAY,14)*0.83
 
  3500 CONTINUE
       RETURN
@@ -1765,9 +1762,8 @@ c            ADJFAC = 2.0+(RATCO2-2.0)**0.77
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
 
          IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(6) + 1
          IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(6) + 1
@@ -1988,9 +1984,8 @@ c            ADJFAC = 3.0+(RATCO2-3.0)**0.79
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
          
 c         SPECCOMB_PLANCK = COLH2O(LAY)+REFRAT_PLANCK_A*COLO3(LAY)
 c         SPECPARM_PLANCK = COLH2O(LAY)/SPECCOMB_PLANCK
@@ -2184,9 +2179,8 @@ c            ADJFAC = 2.0+(RATCO2-2.0)**0.79
 c            ADJCOLCO2 = ADJFAC*CHI_MLS(2,JP(LAY)+1)
 c     &           *COLDRY(LAY)*1.E-20
 c         ELSE
-c            ADJCOLCO2 = COLCO2(LAY)
+            ADJCOLCO2 = COLCO2(LAY)
 c         ENDIF
-         ADJCOLCO2 = 1.0
          
          IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(7) + 1
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(7) + 1
