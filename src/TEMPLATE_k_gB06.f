@@ -15,8 +15,8 @@ C  --------------------------------------------------------------------------
 
       PARAMETER (MG=16)
       REAL KA(5,13,MG)
-			REAL PA(5,13,MG)
-			REAL KA_MCO2(19,MG)
+      REAL PA(5,13,MG)
+      REAL KA_MCO2(19,MG)
       DIMENSION SELFREF(10,MG), FORREF(4,MG)
 
       COMMON /CVRSN6/ HNAMKG6,HVRKG6
