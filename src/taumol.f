@@ -1699,7 +1699,7 @@ C  Input
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K6/       KA(5,13,MG), FORREF(4,MG), SELFREF(10,MG), 
      &                  KA_MCO2(19,MG),
-     &                  PA(5,13,MG),PB(5,13:59,MG)
+     &                  PA(5,13,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
