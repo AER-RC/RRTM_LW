@@ -355,7 +355,7 @@ c     & 2.2359E-03, 1.4226E-03, 5.3642E-04, 7.6316E-05/
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
-      EQUIVALENCE (PA,PLAA),(KB,PLAB)
+      EQUIVALENCE (PA,PLAA),(PB,PLAB)
       REAL PA,PB
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
