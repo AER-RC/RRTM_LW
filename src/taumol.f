@@ -229,8 +229,7 @@ c         IF (PP .LT. 250.) THEN
 c            CORRADJ = 1. - 0.15 * (250.-PP) / 154.4
 c         ENDIF
          CORRADJ =  1.
-c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
-         SCALEN2 = 0.0
+         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 2000 IG = 1, NG(1)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -264,8 +263,7 @@ c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
 c         PP = PAVEL(LAY)
 c         CORRADJ =  1. - 0.15 * (PP / 95.6)
          CORRADJ = 1.
-c         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
-         SCALEN2 = 0.0
+         SCALEN2 = COLBRD(LAY) * SCALEMINORN2(LAY)
          DO 3000 IG = 1, NG(1)
             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) *
