@@ -271,7 +271,7 @@ c         CORRADJ =  1. - 0.15 * (PP / 95.6)
      &           FAC11(LAY) * ABSB(IND1+1,IG))   
      &           + TAUFOR
      &           + TAUN2)
-            FRACS(LAY,IG) = FRACREFB(IG)
+            FRACS(LAY,IG) = FRACREFA(IG)
  3000    CONTINUE
  3500 CONTINUE
 
