@@ -316,11 +316,6 @@ C        Calculate needed column amounts.
          IF (COLCH4(LAY) .EQ. 0.) COLCH4(LAY) = 1.E-32 * COLDRY(LAY)
          IF (COLSO2(LAY) .EQ. 0.) COLSO2(LAY) = 1.E-32 * COLDRY(LAY)
          COLBRD(LAY) = 1.E-20 * WBROAD(LAY)
-         write (6, 'i5,f8.2,e12.4,e12.4'),lay,pref(jp(lay)),
-     &     chi_mls(9,jp(lay)),wkl(9,lay)/coldry(lay)
-         !print *,colch4(lay),colso2(lay)
-         !print *,RAT_CH4SO2(LAY)
-         !print *,"  "
  5400    CONTINUE
 
 C        We have now isolated the layer ln pressure and temperature,

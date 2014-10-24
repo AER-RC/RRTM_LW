@@ -7870,6 +7870,8 @@ C IDEAL GAS LAW
       XMASS_RATIO = XMASS_H2O/XMASS_DRY                                         
       DO 10 J=1,ILVL                                                            
          DT = TM(J) - 273.15                                                    
+
+c converting pressure to CGS
          TOTAL_AIR = PM(J)*1.0E+3/(BOLTZ*TM(J))                                 
          DRY_AIR = TOTAL_AIR - DENW(J)                                          
          H2O_MIXRAT(J) = DENW(J)/DRY_AIR                                        
