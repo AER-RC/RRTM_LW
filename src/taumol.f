@@ -345,6 +345,7 @@ C Planck fraction mapping level: P = 3.206e-2 mb, T = 197.92 K
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
       REAL KA,KB
 
+C SO2 mapping level: P = 95.58 mbar, T = 215.7 K
       REFVMR_SO2 = 7.0e-10
 
 C     Compute the optical depth by interpolating in ln(pressure) and 
@@ -531,7 +532,7 @@ C Planck fraction mapping level: P = 95.8 mbar, T = 215.7 K
 
 C Minor gas mapping levels:
 C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
-C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
+C     UPPER - N2O, SO2  P = 95.58 mbar, T = 215.7 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
