@@ -65,14 +65,14 @@ C     Clouds are treated with random overlap scheme.
       DIMENSION SECREG(MXANG,MXANG),WTREG(MXANG,MXANG)
       DIMENSION EFCLFRAC(MXLAY,NBANDS,MXANG)
       DIMENSION ABSCLD(MXLAY,NBANDS,MXANG)
-      DIMENSION IPAT(16,0:2)
+      DIMENSION IPAT(17,0:2)
 
 C Dimensions for cloud 
       DIMENSION ICLDLYR(MXLAY)
 
-      DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1,
-     &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5,
-     &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16/
+      DATA IPAT /1,1,1,1,1,1,1,1,1, 1, 1, 1, 1, 1, 1, 1, 1,
+     &           1,2,3,3,3,4,4,4,5, 5, 5, 5, 5, 5, 5, 5, 5,
+     &           1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17/
 
 C *** When standard first-order Gaussian quadrature is chosen as
 C     the method to approximate the integral over angles that yields

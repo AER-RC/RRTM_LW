@@ -112,6 +112,7 @@ C     quadrature is chosen.
  100     CONTINUE
  200  CONTINUE
 
+
 C *** Loop over frequency bands.
       DO 6000 IBAND = ISTART, IEND
          IF (NCBANDS .EQ. 1) THEN
