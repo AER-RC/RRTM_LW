@@ -887,7 +887,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -1223,7 +1223,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
@@ -1592,7 +1592,7 @@ C  Input
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY), INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
@@ -1732,7 +1732,7 @@ C  Input
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY) 
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -2078,7 +2078,7 @@ C  Input
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /SELF/     SELFFAC(MXLAY),SELFFRAC(MXLAY),INDSELF(MXLAY)
       COMMON /FOREIGN/  FORFAC(MXLAY), FORFRAC(MXLAY), INDFOR(MXLAY)
@@ -2278,7 +2278,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -3221,7 +3221,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)  
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)            
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)            
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -3479,7 +3479,7 @@ C  Input
      &                  COLO2(MXLAY),COLBRD(MXLAY)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
@@ -3905,7 +3905,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /SPECIES/  COLDRY(MXLAY),WKL(MXMOL,MXLAY),WBROAD(MXLAY),
      &                  COLMOL(MXLAY),NMOL
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
@@ -4193,7 +4193,7 @@ C  Input
      &                  COLH2O(MXLAY),COLCO2(MXLAY),COLO3(MXLAY),  
      &                  COLN2O(MXLAY),COLCO(MXLAY),COLCH4(MXLAY),  
      &                  COLO2(MXLAY),COLBRD(MXLAY)
-      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(7,59)
+      COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
