@@ -237,9 +237,9 @@ c         ENDIF
             TAUFOR =  FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) * (FORREF(INDF+1,IG) - 
      &           FORREF(INDF,IG))) 
-            TAUN2 = SCALEN2*(KA_MN2(INDM,IG) +  
-     &           MINORFRAC(LAY) *
-     &           (KA_MN2(INDM+1,IG) - KA_MN2(INDM,IG)))
+c            TAUN2 = SCALEN2*(KA_MN2(INDM,IG) +  
+c     &           MINORFRAC(LAY) *
+c     &           (KA_MN2(INDM+1,IG) - KA_MN2(INDM,IG)))
             TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
@@ -268,9 +268,9 @@ c         CORRADJ =  1. - 0.15 * (PP / 95.6)
             TAUFOR = FORFAC(LAY) * (FORREF(INDF,IG) +
      &           FORFRAC(LAY) *
      &           (FORREF(INDF+1,IG) - FORREF(INDF,IG))) 
-            TAUN2 = SCALEN2*(KB_MN2(INDM,IG) +  
-     &           MINORFRAC(LAY) *
-     &           (KB_MN2(INDM+1,IG) - KB_MN2(INDM,IG)))
+c            TAUN2 = SCALEN2*(KB_MN2(INDM,IG) +  
+c     &           MINORFRAC(LAY) *
+c     &           (KB_MN2(INDM+1,IG) - KB_MN2(INDM,IG)))
             TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
