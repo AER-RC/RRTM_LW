@@ -240,6 +240,7 @@ c         ENDIF
 c            TAUN2 = SCALEN2*(KA_MN2(INDM,IG) +  
 c     &           MINORFRAC(LAY) *
 c     &           (KA_MN2(INDM+1,IG) - KA_MN2(INDM,IG)))
+            TAUN2 = 0.0
             TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
@@ -271,6 +272,7 @@ c         CORRADJ =  1. - 0.15 * (PP / 95.6)
 c            TAUN2 = SCALEN2*(KB_MN2(INDM,IG) +  
 c     &           MINORFRAC(LAY) *
 c     &           (KB_MN2(INDM+1,IG) - KB_MN2(INDM,IG)))
+            TAUN2 = 0.0
             TAUG(LAY,IG) = CORRADJ * (COLH2O(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
