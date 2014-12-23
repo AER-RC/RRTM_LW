@@ -755,7 +755,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
 
 
 
- RECORD C1.2  (for INFLAG = 2 or 3)
+ RECORD C1.2  (for INFLAG = 1 or 2)
 (one record for each cloudy layer)
 
       TESTCHAR,    LAY, CLDFRAC,   CWP, FRACICE, EFFSIZEICE, EFFSIZELIQ
@@ -826,7 +826,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
                        
             CLDFRAC    cloud fraction for the layer
 
-            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the layer
+            TAUCLD     total (ice and water) optical depth for the layer
                        for Band 1; if INFLAG = 0, this optical depth is used for all bands
 
 	    SINGLE-SCATTERING Single-scattering albedo for cloudy layer (unitless);
@@ -848,7 +848,7 @@ Band    Wavenumber                   1050 - 96 mb      96 - 0.01 mb    Halocarbo
        15X, E10.5,                     E10.5,      16E10.5
 
 
-            TAUCLD     (INFLAG = 0 only) total (ice and water) optical depth for the band and layer
+            TAUCLD     total (ice and water) optical depth for the band and layer
                        
 	    SINGLE-SCATTERING Single-scattering albedo for band and layer (unitless)
 	    ALBEDO	      
