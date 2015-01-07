@@ -70,7 +70,21 @@ C  --------
 
       REAL MINORFRAC
 
+C NEW VARIABLES 
+      COMMON /NEWINTIND/   jtt(mxlay)
+      COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
+      COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
+     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)      
 
+       DATA CHALF/
+     &0.11214E-01, 0.10959E-01, 0.29497E-01, 0.97672E-01, 0.40717E+00,
+     &0.13483E+01, 0.38884E+01, 0.12583E+02, 0.14372E+02, 0.14372E+02,
+     &0.14372E+02/
+            
+      REAL ftt
+      DIMENSION CHALF(11)
+C END NEW VARIABLES 
+      
 C ****************** START OF EXECUTABLE CODE ***************************
 
 
@@ -205,6 +219,16 @@ C        layer temperature falls.
          WATER = WKL(1,LAY)/COLDRY(LAY)
          SCALEFAC = PAVEL(LAY) * STPFAC / TAVEL(LAY)
 
+C NEW CODE
+         jtt(lay) = int((tavel(lay) - 155.)/15.)
+         if (jtt(lay) .lt. 1) then
+             jtt(lay) = 1
+         elseif (jtt(lay) .gt. 10) then
+             jtt(lay) = 10
+         endif
+         ftt = (TAVEL(LAY)-TREF(JTT(lay)))/15.
+C END NEW CODE
+                  
 C        If the pressure is less than ~100mb, perform a different
 C        set of species interpolations.
          IF (PLOG .LE. 4.56) GO TO 5300
@@ -233,6 +257,11 @@ C        in the calculation of absorption coefficient
 
 C        Setup reference ratio to be used in calculation of binary
 C        species parameter in lower atmosphere.
+
+C NEW CODE
+         combfactor(lay) = CHALF(jtt(lay))
+         combfactor_1(lay) = CHALF(jtt(lay)+1)        
+C END NEW CODE
          
          RAT_H2OCO2(LAY)=CHI_MLS(1,JP(LAY))/CHI_MLS(2,JP(LAY))
          RAT_H2OCO2_1(LAY)=CHI_MLS(1,JP(LAY)+1)/CHI_MLS(2,JP(LAY)+1)
@@ -320,6 +349,13 @@ C        the optical depths (performed in routines TAUGBn for band n).`
          FAC11(LAY) = FP * FT1
          FAC01(LAY) = FP * (1. - FT1)
 
+C NEW CODE
+         FAC10tt(LAY) = COMPFP * ftt
+         FAC00tt(LAY) = COMPFP * (1. - ftt)
+         FAC11tt(LAY) = FP * FTt
+         FAC01tt(LAY) = FP * (1. - ftt)
+C END NEW CODE
+                  
 C        Rescale selffac and forfac for use in taumol
          SELFFAC(LAY) = COLH2O(LAY)*SELFFAC(LAY)
          FORFAC(LAY) = COLH2O(LAY)*FORFAC(LAY)

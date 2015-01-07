@@ -1289,18 +1289,26 @@ C  Input
       COMMON /SELF/     SELFFAC(MXLAY), SELFFRAC(MXLAY),INDSELF(MXLAY)
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
-      COMMON /K5/       KA(9,5,13,MG), KB(5,5,13:59,MG),
+      COMMON /K5/       KA(9,11,13,MG), KB(5,5,13:59,MG),
      &                  FORREF(4,MG),SELFREF(10,MG), KA_MO3(9,19,MG),
-     &                  PA(9,5,13,MG), PB(5,5,13:59,MG)
+     &                  PA(9,11,13,MG), PB(5,5,13:59,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
       CHARACTER*18       HNAMTAU,HVRTAU
 
-      DIMENSION ABSA(585,MG),ABSB(1175,MG)
-      DIMENSION PLAA(585,MG),PLAB(1175,MG)			
+      DIMENSION ABSB(1175,MG)
+      DIMENSION PLAB(1175,MG)			
       DIMENSION CCL4(MG)
 
+C NEW VARIABLES 
+      DIMENSION ABSA(1287,MG)
+      DIMENSION PLAA(1287,MG)
+      COMMON /NEWINTIND/   jtt(mxlay)
+      COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
+      COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
+     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)    
+C END NEW VARIABLES      
 
 C Planck fraction mapping level : P = 473.42 mb, T = 259.83
 c      DATA (FRACREFA(IG, 1),IG=1,16) /
@@ -1400,14 +1408,16 @@ C     interpolated (in temperature) separately.
 
       DO 2500 LAY = 1, LAYTROP
 
-         SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+C OLD    SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
+         SPECCOMB = COLH2O(LAY) + combfactor(lay)*COLCO2(LAY)         
          SPECPARM = COLH2O(LAY)/SPECCOMB
          IF (SPECPARM .GE. ONEMINUS) SPECPARM = ONEMINUS
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
 
-         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+C OLD         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
+         SPECCOMB1 = COLH2O(LAY) + combfactor_1(LAY)*COLCO2(LAY)
          SPECPARM1 = COLH2O(LAY)/SPECCOMB1
          IF (SPECPARM1 .GE. ONEMINUS) SPECPARM1 = ONEMINUS
          SPECMULT1 = 8.*(SPECPARM1)
@@ -1428,73 +1438,106 @@ c         SPECMULT_PLANCK = 8.*SPECPARM_PLANCK
 c         JPL= 1 + INT(SPECMULT_PLANCK)
 c         FPL = AMOD(SPECMULT_PLANCK,1.0)
 
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(5) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS1
+C OLD         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(5) + JS
+C OLD         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS1
+         IND0 = ((JP(LAY)-1)*11+(JTt(LAY)-1))*NSPA(5) + JS
+         IND1 = ((JP(LAY)-1)*11+ JTt(LAY))*NSPA(5) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
-         IF (SPECPARM .LT. 0.125) THEN
-             P = FS - 1
-             P4 = P**4
-             FK0 = P4
-             FK1 = 1 - P - 2.0*P4
-             FK2 = P + P4
-             FAC000 = FK0*FAC00(LAY)
-             FAC100 = FK1*FAC00(LAY)
-             FAC200 = FK2*FAC00(LAY)
-             FAC010 = FK0*FAC10(LAY)
-             FAC110 = FK1*FAC10(LAY)
-             FAC210 = FK2*FAC10(LAY)
-         ELSEIF (SPECPARM .GT. 0.875) THEN
-             P = -FS 
-             P4 = P**4
-             FK0 = P4
-             FK1 = 1 - P - 2.0*P4
-             FK2 = P + P4
-             FAC000 = FK0*FAC00(LAY)
-             FAC100 = FK1*FAC00(LAY)
-             FAC200 = FK2*FAC00(LAY)
-             FAC010 = FK0*FAC10(LAY)
-             FAC110 = FK1*FAC10(LAY)
-             FAC210 = FK2*FAC10(LAY)            
-         ELSE
-             FAC000 = (1. - FS) * FAC00(LAY)
-             FAC010 = (1. - FS) * FAC10(LAY)
-             FAC100 = FS * FAC00(LAY)
-             FAC110 = FS * FAC10(LAY)
-         ENDIF
-         IF (SPECPARM1 .LT. 0.125) THEN
-             P = FS1 - 1
-             P4 = P**4
-             FK0 = P4
-             FK1 = 1 - P - 2.0*P4
-             FK2 = P + P4
-             FAC001 = FK0*FAC01(LAY)
-             FAC101 = FK1*FAC01(LAY)
-             FAC201 = FK2*FAC01(LAY)
-             FAC011 = FK0*FAC11(LAY)
-             FAC111 = FK1*FAC11(LAY)
-             FAC211 = FK2*FAC11(LAY)
-         ELSEIF (SPECPARM1 .GT. 0.875) THEN
-             P = -FS1 
-             P4 = P**4
-             FK0 = P4
-             FK1 = 1 - P - 2.0*P4
-             FK2 = P + P4
-             FAC001 = FK0*FAC01(LAY)
-             FAC101 = FK1*FAC01(LAY)
-             FAC201 = FK2*FAC01(LAY)
-             FAC011 = FK0*FAC11(LAY)
-             FAC111 = FK1*FAC11(LAY)
-             FAC211 = FK2*FAC11(LAY)
-         ELSE
-             FAC001 = (1. - FS1) * FAC01(LAY)
-             FAC011 = (1. - FS1) * FAC11(LAY)
-             FAC101 = FS1 * FAC01(LAY)
-             FAC111 = FS1 * FAC11(LAY)
-         ENDIF
+C         all these definitions apply to the existing rrtm
+C                  fac10 - low P, high T
+C                  fac00 - low P, low T
+C                  fac11 - high P, highT*
+C                  fac01 - high P, low T*
+C
+C                  ind0 - low P, low T, low eta - fac000
+C                  ind0+1 - low P, low T, high eta - fac100
+C                  ind0+9 - low P, high T, low eta - fac010
+C                  ind0+10 - low P, high T, high eta - fac110
+C
+C                  ind1 - high P, low T*, low eta - fac001
+C                  ind1+1 - high P, low T*, high eta - fac101
+C                  ind1+9 - high P, high T*, low eta - fac011
+C                  ind1+10 - high P, high T*, high eta - fac111
+C
+C         all these definitions apply to the new rrtm
+C                  fac10 - low P, high T
+C                  fac00 - low P, low T
+C                  fac11 - high P, highT*
+C                  fac01 - high P, low T*
+C
+C                  ind0 - low P, low T, low eta 
+C                  ind0+1 - low P, low T, high eta
+C                  ind0+99 - high P, low T, low eta 
+C                  ind0+100 - high P, low T, high eta
+C
+C                  ind1 - low P, high T*, low eta 
+C                  ind1+1 - low P, high T*, high eta
+C                  ind1+99 - high P, high T*, low eta 
+C                  ind1+100 - high P, high T*, high eta
 
+        IF (SPECPARM .LT. 0.125) THEN
+            P = FS - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)
+        ELSEIF (SPECPARM .GT. 0.875) THEN
+            P = -FS 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC000 = FK0*FAC00(LAY)
+            FAC100 = FK1*FAC00(LAY)
+            FAC200 = FK2*FAC00(LAY)
+            FAC010 = FK0*FAC10(LAY)
+            FAC110 = FK1*FAC10(LAY)
+            FAC210 = FK2*FAC10(LAY)            
+        ELSE
+            FAC000 = (1. - FS) * FAC00(LAY)
+            FAC010 = (1. - FS) * FAC10(LAY)
+            FAC100 = FS * FAC00(LAY)
+            FAC110 = FS * FAC10(LAY)
+        ENDIF
+        IF (SPECPARM1 .LT. 0.125) THEN
+            P = FS1 - 1
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+        ELSEIF (SPECPARM1 .GT. 0.875) THEN
+            P = -FS1 
+            P4 = P**4
+            FK0 = P4
+            FK1 = 1 - P - 2.0*P4
+            FK2 = P + P4
+            FAC001 = FK0*FAC01(LAY)
+            FAC101 = FK1*FAC01(LAY)
+            FAC201 = FK2*FAC01(LAY)
+            FAC011 = FK0*FAC11(LAY)
+            FAC111 = FK1*FAC11(LAY)
+            FAC211 = FK2*FAC11(LAY)
+        ELSE
+            FAC001 = (1. - FS1) * FAC01(LAY)
+            FAC011 = (1. - FS1) * FAC11(LAY)
+            FAC101 = FS1 * FAC01(LAY)
+            FAC111 = FS1 * FAC11(LAY)
+        ENDIF
 
          DO 2000 IG = 1, NG(5)
              TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
@@ -1511,87 +1554,139 @@ c         FPL = AMOD(SPECMULT_PLANCK,1.0)
              ABSO3 = O3M1 + MINORFRAC(LAY)*(O3M2-O3M1)
              IF (SPECPARM .LT. 0.125) THEN
                  TAU_MAJOR =  SPECCOMB *
-     &               (FAC000 * ABSA(IND0,IG) +
+     &              (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
      &               FAC200 * ABSA(IND0+2,IG) +
-     &               FAC010 * ABSA(IND0+9,IG) +
-     &               FAC110 * ABSA(IND0+10,IG) +
-     &               FAC210 * ABSA(IND0+11,IG))
+     &               FAC010 * ABSA(IND0+99,IG) +
+     &               FAC110 * ABSA(IND0+100,IG) +
+     &               FAC210 * ABSA(IND0+101,IG))
+c     &               (FAC000 * ABSA(IND0,IG) +
+c     &               FAC100 * ABSA(IND0+1,IG) +
+c     &               FAC200 * ABSA(IND0+2,IG) +
+c     &               FAC010 * ABSA(IND0+9,IG) +
+c     &               FAC110 * ABSA(IND0+10,IG) +
+c     &               FAC210 * ABSA(IND0+11,IG))
            	PLANCK_MAJOR =  
-     &               FAC000 * PLAA(IND0,IG) +
+     &               (FAC000 * PLAA(IND0,IG) +
      &               FAC100 * PLAA(IND0+1,IG) +
      &               FAC200 * PLAA(IND0+2,IG) +
-     &               FAC010 * PLAA(IND0+9,IG) +
-     &               FAC110 * PLAA(IND0+10,IG) +
-     &               FAC210 * PLAA(IND0+11,IG)
+     &               FAC010 * PLAA(IND0+99,IG) +
+     &               FAC110 * PLAA(IND0+100,IG) +
+     &               FAC210 * PLAA(IND0+101,IG))            
+c     &               FAC000 * PLAA(IND0,IG) +
+c     &               FAC100 * PLAA(IND0+1,IG) +
+c     &               FAC200 * PLAA(IND0+2,IG) +
+c     &               FAC010 * PLAA(IND0+9,IG) +
+c     &               FAC110 * PLAA(IND0+10,IG) +
+c     &               FAC210 * PLAA(IND0+11,IG)
              ELSEIF (SPECPARM .GT. 0.875) THEN
                  TAU_MAJOR =  SPECCOMB * 
-     &               (FAC200 * ABSA(IND0-1,IG) +
+     &              (FAC200 * ABSA(IND0-1,IG) +
      &               FAC100 * ABSA(IND0,IG) +
      &               FAC000 * ABSA(IND0+1,IG) +
-     &               FAC210 * ABSA(IND0+8,IG) +
-     &               FAC110 * ABSA(IND0+9,IG) +
-     &               FAC010 * ABSA(IND0+10,IG))
-            	PLANCK_MAJOR =  
-     &               FAC200 * PLAA(IND0-1,IG) +
+     &               FAC210 * ABSA(IND0+98,IG) +
+     &               FAC110 * ABSA(IND0+99,IG) +
+     &               FAC010 * ABSA(IND0+100,IG))
+c     &               (FAC200 * ABSA(IND0-1,IG) +
+c     &               FAC100 * ABSA(IND0,IG) +
+c     &               FAC000 * ABSA(IND0+1,IG) +
+c     &               FAC210 * ABSA(IND0+8,IG) +
+c     &               FAC110 * ABSA(IND0+9,IG) +
+c     &               FAC010 * ABSA(IND0+10,IG))
+            	     PLANCK_MAJOR =  
+     &              (FAC200 * PLAA(IND0-1,IG) +
      &               FAC100 * PLAA(IND0,IG) +
      &               FAC000 * PLAA(IND0+1,IG) +
-     &               FAC210 * PLAA(IND0+8,IG) +
-     &               FAC110 * PLAA(IND0+9,IG) +
-     &               FAC010 * PLAA(IND0+10,IG)
+     &               FAC210 * PLAA(IND0+98,IG) +
+     &               FAC110 * PLAA(IND0+99,IG) +
+     &               FAC010 * PLAA(IND0+100,IG))
+c     &               FAC200 * PLAA(IND0-1,IG) +
+c     &               FAC100 * PLAA(IND0,IG) +
+c     &               FAC000 * PLAA(IND0+1,IG) +
+c     &               FAC210 * PLAA(IND0+8,IG) +
+c     &               FAC110 * PLAA(IND0+9,IG) +
+c     &               FAC010 * PLAA(IND0+10,IG)
              ELSE
-                 TAU_MAJOR = SPECCOMB * 
-     &               (FAC000 * ABSA(IND0,IG) +
+               TAU_MAJOR = SPECCOMB * 
+     &              (FAC000 * ABSA(IND0,IG) +
      &               FAC100 * ABSA(IND0+1,IG) +
-     &               FAC010 * ABSA(IND0+9,IG) +
-     &               FAC110 * ABSA(IND0+10,IG))
+     &               FAC010 * ABSA(IND0+99,IG) +
+     &               FAC110 * ABSA(IND0+100,IG))
             	PLANCK_MAJOR = 
-     &               FAC000 * PLAA(IND0,IG) +
+     &              (FAC000 * PLAA(IND0,IG) +
      &               FAC100 * PLAA(IND0+1,IG) +
-     &               FAC010 * PLAA(IND0+9,IG) +
-     &               FAC110 * PLAA(IND0+10,IG)
+     &               FAC010 * PLAA(IND0+99,IG) +
+     &               FAC110 * PLAA(IND0+100,IG))
              ENDIF
              IF (SPECPARM1 .LT. 0.125) THEN
                  TAU_MAJOR1 =  SPECCOMB1 *
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
      &               FAC201 * ABSA(IND1+2,IG) +
-     &               FAC011 * ABSA(IND1+9,IG) +
-     &               FAC111 * ABSA(IND1+10,IG) +
-     &               FAC211 * ABSA(IND1+11,IG))
-             PLANCK_MAJOR1 =  
-     &               FAC001 * PLAA(IND1,IG) +
+     &               FAC011 * ABSA(IND1+99,IG) +
+     &               FAC111 * ABSA(IND1+100,IG) +
+     &               FAC211 * ABSA(IND1+101,IG))
+c     &               (FAC001 * ABSA(IND1,IG) +
+c     &               FAC101 * ABSA(IND1+1,IG) +
+c     &               FAC201 * ABSA(IND1+2,IG) +
+c     &               FAC011 * ABSA(IND1+9,IG) +
+c     &               FAC111 * ABSA(IND1+10,IG) +
+c     &               FAC211 * ABSA(IND1+11,IG))
+             PLANCK_MAJOR1 = 
+     &               (FAC001 * PLAA(IND1,IG) +
      &               FAC101 * PLAA(IND1+1,IG) +
      &               FAC201 * PLAA(IND1+2,IG) +
-     &               FAC011 * PLAA(IND1+9,IG) +
-     &               FAC111 * PLAA(IND1+10,IG) +
-     &               FAC211 * PLAA(IND1+11,IG)
+     &               FAC011 * PLAA(IND1+99,IG) +
+     &               FAC111 * PLAA(IND1+100,IG) +
+     &               FAC211 * PLAA(IND1+101,IG)) 
+c     &               FAC001 * PLAA(IND1,IG) +
+c     &               FAC101 * PLAA(IND1+1,IG) +
+c     &               FAC201 * PLAA(IND1+2,IG) +
+c     &               FAC011 * PLAA(IND1+9,IG) +
+c     &               FAC111 * PLAA(IND1+10,IG) +
+c     &               FAC211 * PLAA(IND1+11,IG)
              ELSEIF (SPECPARM1 .GT. 0.875) THEN
                  TAU_MAJOR1 =  SPECCOMB1 * 
      &               (FAC201 * ABSA(IND1-1,IG) +
      &               FAC101 * ABSA(IND1,IG) +
      &               FAC001 * ABSA(IND1+1,IG) +
-     &               FAC211 * ABSA(IND1+8,IG) +
-     &               FAC111 * ABSA(IND1+9,IG) +
-     &               FAC011 * ABSA(IND1+10,IG))
-		  PLANCK_MAJOR1 = 
-     &               FAC201 * PLAA(IND1-1,IG) +
+     &               FAC211 * ABSA(IND1+98,IG) +
+     &               FAC111 * ABSA(IND1+99,IG) +
+     &               FAC011 * ABSA(IND1+100,IG))
+c     &               (FAC201 * ABSA(IND1-1,IG) +
+c     &               FAC101 * ABSA(IND1,IG) +
+c     &               FAC001 * ABSA(IND1+1,IG) +
+c     &               FAC211 * ABSA(IND1+8,IG) +
+c     &               FAC111 * ABSA(IND1+9,IG) +
+c     &               FAC011 * ABSA(IND1+10,IG))
+		            PLANCK_MAJOR1 = 
+     &               (FAC201 * PLAA(IND1-1,IG) +
      &               FAC101 * PLAA(IND1,IG) +
      &               FAC001 * PLAA(IND1+1,IG) +
-     &               FAC211 * PLAA(IND1+8,IG) +
-     &               FAC111 * PLAA(IND1+9,IG) +
-     &               FAC011 * PLAA(IND1+10,IG)
+     &               FAC211 * PLAA(IND1+98,IG) +
+     &               FAC111 * PLAA(IND1+99,IG) +
+     &               FAC011 * PLAA(IND1+100,IG))
+c     &               FAC201 * PLAA(IND1-1,IG) +
+c     &               FAC101 * PLAA(IND1,IG) +
+c     &               FAC001 * PLAA(IND1+1,IG) +
+c     &               FAC211 * PLAA(IND1+8,IG) +
+c     &               FAC111 * PLAA(IND1+9,IG) +
+c     &               FAC011 * PLAA(IND1+10,IG)
              ELSE
                  TAU_MAJOR1 = SPECCOMB1 * 
      &               (FAC001 * ABSA(IND1,IG) +
      &               FAC101 * ABSA(IND1+1,IG) +
-     &               FAC011 * ABSA(IND1+9,IG) +
-     &               FAC111 * ABSA(IND1+10,IG))
-		 PLANCK_MAJOR1 = 
-     &               FAC001 * PLAA(IND1,IG) +
+     &               FAC011 * ABSA(IND1+99,IG) +
+     &               FAC111 * ABSA(IND1+100,IG))
+c     &               (FAC001 * ABSA(IND1,IG) +
+c     &               FAC101 * ABSA(IND1+1,IG) +
+c     &               FAC011 * ABSA(IND1+9,IG) +
+c     &               FAC111 * ABSA(IND1+10,IG))
+		             PLANCK_MAJOR1 = 
+     &               (FAC001 * PLAA(IND1,IG) +
      &               FAC101 * PLAA(IND1+1,IG) +
-     &               FAC011 * PLAA(IND1+9,IG) +
-     &               FAC111 * PLAA(IND1+10,IG)
+     &               FAC011 * PLAA(IND1+99,IG) +
+     &               FAC111 * PLAA(IND1+100,IG))
              ENDIF
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
