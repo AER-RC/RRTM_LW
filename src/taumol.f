@@ -1484,29 +1484,29 @@ C                  ind1+100 - high P, high T*, high eta
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)
+            FAC000 = FK0*FAC00tt(LAY)
+            FAC100 = FK1*FAC00tt(LAY)
+            FAC200 = FK2*FAC00tt(LAY)
+            FAC010 = FK0*FAC10tt(LAY)
+            FAC110 = FK1*FAC10tt(LAY)
+            FAC210 = FK2*FAC10tt(LAY)
         ELSEIF (SPECPARM .GT. 0.875) THEN
             P = -FS 
             P4 = P**4
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC000 = FK0*FAC00(LAY)
-            FAC100 = FK1*FAC00(LAY)
-            FAC200 = FK2*FAC00(LAY)
-            FAC010 = FK0*FAC10(LAY)
-            FAC110 = FK1*FAC10(LAY)
-            FAC210 = FK2*FAC10(LAY)            
+            FAC000 = FK0*FAC00tt(LAY)
+            FAC100 = FK1*FAC00tt(LAY)
+            FAC200 = FK2*FAC00tt(LAY)
+            FAC010 = FK0*FAC10tt(LAY)
+            FAC110 = FK1*FAC10tt(LAY)
+            FAC210 = FK2*FAC10tt(LAY)            
         ELSE
-            FAC000 = (1. - FS) * FAC00(LAY)
-            FAC010 = (1. - FS) * FAC10(LAY)
-            FAC100 = FS * FAC00(LAY)
-            FAC110 = FS * FAC10(LAY)
+            FAC000 = (1. - FS) * FAC00tt(LAY)
+            FAC010 = (1. - FS) * FAC10tt(LAY)
+            FAC100 = FS * FAC00tt(LAY)
+            FAC110 = FS * FAC10tt(LAY)
         ENDIF
         IF (SPECPARM1 .LT. 0.125) THEN
             P = FS1 - 1
@@ -1514,29 +1514,29 @@ C                  ind1+100 - high P, high T*, high eta
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
+            FAC001 = FK0*FAC01tt(LAY)
+            FAC101 = FK1*FAC01tt(LAY)
+            FAC201 = FK2*FAC01tt(LAY)
+            FAC011 = FK0*FAC11tt(LAY)
+            FAC111 = FK1*FAC11tt(LAY)
+            FAC211 = FK2*FAC11tt(LAY)
         ELSEIF (SPECPARM1 .GT. 0.875) THEN
             P = -FS1 
             P4 = P**4
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC001 = FK0*FAC01(LAY)
-            FAC101 = FK1*FAC01(LAY)
-            FAC201 = FK2*FAC01(LAY)
-            FAC011 = FK0*FAC11(LAY)
-            FAC111 = FK1*FAC11(LAY)
-            FAC211 = FK2*FAC11(LAY)
+            FAC001 = FK0*FAC01tt(LAY)
+            FAC101 = FK1*FAC01tt(LAY)
+            FAC201 = FK2*FAC01tt(LAY)
+            FAC011 = FK0*FAC11tt(LAY)
+            FAC111 = FK1*FAC11tt(LAY)
+            FAC211 = FK2*FAC11tt(LAY)
         ELSE
-            FAC001 = (1. - FS1) * FAC01(LAY)
-            FAC011 = (1. - FS1) * FAC11(LAY)
-            FAC101 = FS1 * FAC01(LAY)
-            FAC111 = FS1 * FAC11(LAY)
+            FAC001 = (1. - FS1) * FAC01tt(LAY)
+            FAC011 = (1. - FS1) * FAC11tt(LAY)
+            FAC101 = FS1 * FAC01tt(LAY)
+            FAC111 = FS1 * FAC11tt(LAY)
         ENDIF
 
          DO 2000 IG = 1, NG(5)
