@@ -80,9 +80,12 @@ C NEW VARIABLES
      &0.11214E-01, 0.10959E-01, 0.29497E-01, 0.97672E-01, 0.40717E+00,
      &0.13483E+01, 0.38884E+01, 0.12583E+02, 0.14372E+02, 0.14372E+02,
      &0.14372E+02/
-            
+       DATA TEMPGRID/ 
+     &170.000,185.000,200.000,215.000,230.000,245.000, 
+     &260.000,275.000,290.000,305.000,320.000/               
       REAL ftt
       DIMENSION CHALF(11)
+      DIMENSION TEMPGRID(11)
 C END NEW VARIABLES 
       
 C ****************** START OF EXECUTABLE CODE ***************************
@@ -226,7 +229,7 @@ C NEW CODE
          elseif (jtt(lay) .gt. 10) then
              jtt(lay) = 10
          endif
-         ftt = (TAVEL(LAY)-TREF(JTT(lay)))/15.
+         ftt = (TAVEL(LAY)-TEMPGRID(JTT(lay)))/15.
 C END NEW CODE
                   
 C        If the pressure is less than ~100mb, perform a different
