@@ -90,7 +90,7 @@ C END NEW VARIABLES
       
 C ****************** START OF EXECUTABLE CODE ***************************
 
-
+      open(25,file='setcoef_output.txt')
       HVRSET = '$Revision$'
 
       STPFAC = 296./1013.
@@ -111,6 +111,8 @@ C ****************** START OF EXECUTABLE CODE ***************************
       T0FRAC = TZ(0) - 159. - FLOAT(INDLEV0)
       LAYTROP = 0
       DO 7000 LAY = 1, NLAYERS
+        write(25,9000) 'LAY, P, T',lay,pavel(lay),tavel(lay)
+9000     format(a20,1x,i2,1x,2(f12.5,1x))
 C        Calculate the integrated Planck functions for each band at the
 C        surface, level, and layer temperatures.
          INDLAY = TAVEL(LAY) - 159.
@@ -230,6 +232,9 @@ C NEW CODE
              jtt(lay) = 10
          endif
          ftt = (TAVEL(LAY)-TEMPGRID(JTT(lay)))/15.
+         write(25,990) '  JP,JP1,FP,JTT,FTT',
+     &     jp(lay),jp1,fp,jtt(lay),ftt
+990      format(a20,1x,2(i2,1x),1e10.4,1x,i2,1x,e10.4)
 C END NEW CODE
                   
 C        If the pressure is less than ~100mb, perform a different
@@ -263,7 +268,10 @@ C        species parameter in lower atmosphere.
 
 C NEW CODE
          combfactor(lay) = CHALF(jtt(lay))
-         combfactor_1(lay) = CHALF(jtt(lay)+1)        
+         combfactor_1(lay) = CHALF(jtt(lay)+1)   
+         write(25,1010) '  CF/CF_1',
+&        combfactor(lay),combfactor_1(lay)
+1010     format(a20,1x,2(e10.4,1x))
 C END NEW CODE
          
          RAT_H2OCO2(LAY)=CHI_MLS(1,JP(LAY))/CHI_MLS(2,JP(LAY))
@@ -351,19 +359,22 @@ C        the optical depths (performed in routines TAUGBn for band n).`
          FAC00(LAY) = COMPFP * (1. - FT)
          FAC11(LAY) = FP * FT1
          FAC01(LAY) = FP * (1. - FT1)
-
+        
 C NEW CODE
          FAC10tt(LAY) = COMPFP * ftt
          FAC00tt(LAY) = COMPFP * (1. - ftt)
          FAC11tt(LAY) = FP * FTt
          FAC01tt(LAY) = FP * (1. - ftt)
+         write(25,1000) '  FAC10/00/11/01',fac10tt(lay),
+     & fac00tt(lay),fac11tt(lay),fac01tt(lay)
+1000     format(a20,1x,4(e10.4,1x))
 C END NEW CODE
                   
 C        Rescale selffac and forfac for use in taumol
          SELFFAC(LAY) = COLH2O(LAY)*SELFFAC(LAY)
          FORFAC(LAY) = COLH2O(LAY)*FORFAC(LAY)
  7000 CONTINUE
-
+      close(25)
       RETURN
       END
 

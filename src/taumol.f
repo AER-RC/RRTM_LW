@@ -1405,9 +1405,10 @@ C     water vapor self-continuum and foreign continuum is
 C     interpolated (in temperature) separately.
 
       HVRTAU = '$Revision$'
-
+      open(26,file='taumol_output.txt')
       DO 2500 LAY = 1, LAYTROP
-
+        write(26,100) 'LAY/H2O/CO2:',lay,colh2o(lay),colco2(lay)
+100     format(a30,1x,i2,1x,2(e12.5,1x))
 C OLD    SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
          SPECCOMB = COLH2O(LAY) + combfactor(lay)*COLCO2(LAY)         
          SPECPARM = COLH2O(LAY)/SPECCOMB
@@ -1415,6 +1416,8 @@ C OLD    SPECCOMB = COLH2O(LAY) + RAT_H2OCO2(LAY)*COLCO2(LAY)
          SPECMULT = 8.*(SPECPARM)
          JS = 1 + INT(SPECMULT)
          FS = AMOD(SPECMULT,1.0)
+         write(26,105) '  SPECCOMB/PARM/JS/FS',speccomb,specparm,js,fs
+105      format(a30,1x,2(e10.4,1x),(i2,1x),e10.4)
 
 C OLD         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
          SPECCOMB1 = COLH2O(LAY) + combfactor_1(LAY)*COLCO2(LAY)
@@ -1423,6 +1426,9 @@ C OLD         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
          SPECMULT1 = 8.*(SPECPARM1)
          JS1 = 1 + INT(SPECMULT1)
          FS1 = AMOD(SPECMULT1,1.0)
+         write(26,110) '  SPECCOMB1/PARM1/JS1/FS1',speccomb1,specparm1,
+     &   js1,fs1
+110      format(a30,1x,2(e10.4,1x),(i2,1x),e10.4)
 
          SPECCOMB_MO3 = COLH2O(LAY) + REFRAT_M_A*COLCO2(LAY)
          SPECPARM_MO3 = COLH2O(LAY)/SPECCOMB_MO3
@@ -1445,11 +1451,12 @@ C OLD         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(5) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
-
+         write(26,115) '  IND0/IND1',ind0,ind1
+115      format(a30,1x,2(i4,1x))
 C         all these definitions apply to the existing rrtm
 C                  fac10 - low P, high T
 C                  fac00 - low P, low T
-C                  fac11 - high P, highT*
+C                  fac11 - high P, highT*d
 C                  fac01 - high P, low T*
 C
 C                  ind0 - low P, low T, low eta - fac000
@@ -1487,9 +1494,12 @@ C                  ind1+100 - high P, high T*, high eta
             FAC000 = FK0*FAC00tt(LAY)
             FAC100 = FK1*FAC00tt(LAY)
             FAC200 = FK2*FAC00tt(LAY)
-            FAC010 = FK0*FAC10tt(LAY)
-            FAC110 = FK1*FAC10tt(LAY)
-            FAC210 = FK2*FAC10tt(LAY)
+            FAC010 = FK0*FAC01tt(LAY)
+            FAC110 = FK1*FAC01tt(LAY)
+            FAC210 = FK2*FAC01tt(LAY)
+            write(26,120) 'LOW:FAC000/100/200/010/110/210',
+&           fac000,fac100,fac200,fac010,fac110,fac210
+120         format(a30,1x,6(e10.4,1x))
         ELSEIF (SPECPARM .GT. 0.875) THEN
             P = -FS 
             P4 = P**4
@@ -1499,14 +1509,20 @@ C                  ind1+100 - high P, high T*, high eta
             FAC000 = FK0*FAC00tt(LAY)
             FAC100 = FK1*FAC00tt(LAY)
             FAC200 = FK2*FAC00tt(LAY)
-            FAC010 = FK0*FAC10tt(LAY)
-            FAC110 = FK1*FAC10tt(LAY)
-            FAC210 = FK2*FAC10tt(LAY)            
+            FAC010 = FK0*FAC01tt(LAY)
+            FAC110 = FK1*FAC01tt(LAY)
+            FAC210 = FK2*FAC01tt(LAY)
+            write(26,125) 'HIGH:FAC000/100/200/010/110/210',
+&           fac000,fac100,fac200,fac010,fac110,fac210
+125         format(a30,1x,6(e10.4,1x))                        
         ELSE
             FAC000 = (1. - FS) * FAC00tt(LAY)
-            FAC010 = (1. - FS) * FAC10tt(LAY)
+            FAC010 = (1. - FS) * FAC01tt(LAY)
             FAC100 = FS * FAC00tt(LAY)
-            FAC110 = FS * FAC10tt(LAY)
+            FAC110 = FS * FAC01tt(LAY)
+            write(26,130) 'FAC000/010/100/110',
+&           fac000,fac010,fac100,fac110
+130         format(a30,1x,6(e10.4,1x))
         ENDIF
         IF (SPECPARM1 .LT. 0.125) THEN
             P = FS1 - 1
@@ -1514,29 +1530,38 @@ C                  ind1+100 - high P, high T*, high eta
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC001 = FK0*FAC01tt(LAY)
-            FAC101 = FK1*FAC01tt(LAY)
-            FAC201 = FK2*FAC01tt(LAY)
+            FAC001 = FK0*FAC10tt(LAY)
+            FAC101 = FK1*FAC10tt(LAY)
+            FAC201 = FK2*FAC10tt(LAY)
             FAC011 = FK0*FAC11tt(LAY)
             FAC111 = FK1*FAC11tt(LAY)
             FAC211 = FK2*FAC11tt(LAY)
+            write(26,135) 'LOW:FAC001/101/201/011/111/211',
+&           fac001,fac101,fac201,fac011,fac111,fac211
+135         format(a30,1x,6(e10.4,1x))
         ELSEIF (SPECPARM1 .GT. 0.875) THEN
             P = -FS1 
             P4 = P**4
             FK0 = P4
             FK1 = 1 - P - 2.0*P4
             FK2 = P + P4
-            FAC001 = FK0*FAC01tt(LAY)
-            FAC101 = FK1*FAC01tt(LAY)
-            FAC201 = FK2*FAC01tt(LAY)
+            FAC001 = FK0*FAC10tt(LAY)
+            FAC101 = FK1*FAC10tt(LAY)
+            FAC201 = FK2*FAC10tt(LAY)
             FAC011 = FK0*FAC11tt(LAY)
             FAC111 = FK1*FAC11tt(LAY)
             FAC211 = FK2*FAC11tt(LAY)
+            write(26,140) 'HIGH:FAC001/101/201/011/111/211',
+&           fac001,fac101,fac201,fac011,fac111,fac211
+140         format(a30,1x,6(e10.4,1x))
         ELSE
-            FAC001 = (1. - FS1) * FAC01tt(LAY)
+            FAC001 = (1. - FS1) * FAC10tt(LAY)
             FAC011 = (1. - FS1) * FAC11tt(LAY)
-            FAC101 = FS1 * FAC01tt(LAY)
+            FAC101 = FS1 * FAC10tt(LAY)
             FAC111 = FS1 * FAC11tt(LAY)
+            write(26,145) 'FAC001/011/101/111',
+&           fac001,fac011,fac101,fac111
+145         format(a30,1x,6(e10.4,1x))
         ENDIF
 
          DO 2000 IG = 1, NG(5)
@@ -1693,7 +1718,20 @@ c     &               FAC111 * ABSA(IND1+10,IG))
      &           + ABSO3*COLO3(LAY)
      &           + WX(1,LAY) * CCL4(IG)
              FRACS(LAY,IG) = PLANCK_MAJOR + PLANCK_MAJOR1
+             tt = tau_major+tau_major1
+             write(26,200) 'IG,TAU,TAU1,TAUTOT ',
+     &         ig,tau_major,tau_major1,tt
+200         format(a30,1x,i2,1x,3(e10.4,1x))
+             write(26,205) 'IG,PL,PL2 ',
+     &         ig,planck_major,planck_major1
+205          format(a30,1x,i2,1x,2(e10.4,1x))
+         if (ig .eq. 16) then 
+           ftot=sum(fracs(lay,1:16))
+           write(26,210) 'FRACSTOT',ftot
+210        format(a20,1x,e12.5)
+         endif
  2000    CONTINUE
+
  2500 CONTINUE
 
       DO 3500 LAY = LAYTROP+1, NLAYERS
@@ -1754,7 +1792,7 @@ c         FPL = AMOD(SPECMULT_PLANCK,1.0)
      &          FAC111 * PLAB(IND1+6,IG))
  3000    CONTINUE
  3500 CONTINUE
-
+      close(26)
       RETURN
       END
 
