@@ -71,10 +71,10 @@ C  --------
       REAL MINORFRAC
 
 C NEW VARIABLES 
-      COMMON /NEWINTIND/   jtt(mxlay)
+      COMMON /NEWINTIND/   jtt(mxlay),tempgrid(11)
       COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
       COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
-     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)      
+     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)   
 
        DATA CHALF/
      &0.11214E-01, 0.10959E-01, 0.29497E-01, 0.97672E-01, 0.40717E+00,
@@ -85,7 +85,7 @@ C NEW VARIABLES
      &260.000,275.000,290.000,305.000,320.000/               
       REAL ftt
       DIMENSION CHALF(11)
-      DIMENSION TEMPGRID(11)
+
 C END NEW VARIABLES 
       
 C ****************** START OF EXECUTABLE CODE ***************************

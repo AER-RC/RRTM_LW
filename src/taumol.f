@@ -1304,7 +1304,7 @@ C  Input
 C NEW VARIABLES 
       DIMENSION ABSA(1287,MG)
       DIMENSION PLAA(1287,MG)
-      COMMON /NEWINTIND/   jtt(mxlay)
+      COMMON /NEWINTIND/   jtt(mxlay),tempgrid(11)
       COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
       COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
      &                  FAC10tt(MXLAY),FAC11tt(MXLAY)    
@@ -1406,6 +1406,8 @@ C     interpolated (in temperature) separately.
 
       HVRTAU = '$Revision$'
       open(26,file='taumol_output.txt')
+      open(27,file='etavals_output.txt')
+      write(27,*) 'LAYER, PAVEL, TAVEL, ETA, ETA1'
       DO 2500 LAY = 1, LAYTROP
         write(26,100) 'LAY/H2O/CO2:',lay,colh2o(lay),colco2(lay)
 100     format(a30,1x,i2,1x,2(e12.5,1x))
@@ -1429,7 +1431,9 @@ C OLD         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
          write(26,110) '  SPECCOMB1/PARM1/JS1/FS1',speccomb1,specparm1,
      &   js1,fs1
 110      format(a30,1x,2(e10.4,1x),(i2,1x),e10.4)
-
+         write(27,112) lay,pavel(lay),
+     &   tavel(lay),specparm,specparm1
+112      format(1(i2,','),2(f12.5,','),1(e12.5,','),1(e12.5))         
          SPECCOMB_MO3 = COLH2O(LAY) + REFRAT_M_A*COLCO2(LAY)
          SPECPARM_MO3 = COLH2O(LAY)/SPECCOMB_MO3
          IF (SPECPARM_MO3 .GE. ONEMINUS) SPECPARM_MO3 = ONEMINUS
@@ -1793,6 +1797,7 @@ c         FPL = AMOD(SPECMULT_PLANCK,1.0)
  3000    CONTINUE
  3500 CONTINUE
       close(26)
+      close(27)
       RETURN
       END
 
