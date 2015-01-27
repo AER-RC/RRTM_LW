@@ -1307,7 +1307,7 @@ C NEW VARIABLES
       COMMON /NEWINTIND/   jtt(mxlay),tempgrid(11)
       COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
       COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
-     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)    
+     &                  FAC10tt(MXLAY),FAC11tt(MXLAY),ftt(mxlay)    
 C END NEW VARIABLES      
 
 C Planck fraction mapping level : P = 473.42 mb, T = 259.83
@@ -1407,7 +1407,7 @@ C     interpolated (in temperature) separately.
       HVRTAU = '$Revision$'
       open(26,file='taumol_output.txt')
       open(27,file='etavals_output.txt')
-      write(27,*) 'LAYER, PAVEL, TAVEL, ETA, ETA1'
+      write(27,*) 'LAYER, PAVEL, TAVEL, FTT, ETA, ETA1'
       DO 2500 LAY = 1, LAYTROP
         write(26,100) 'LAY/H2O/CO2:',lay,colh2o(lay),colco2(lay)
 100     format(a30,1x,i2,1x,2(e12.5,1x))
@@ -1432,8 +1432,8 @@ C OLD         SPECCOMB1 = COLH2O(LAY) + RAT_H2OCO2_1(LAY)*COLCO2(LAY)
      &   js1,fs1
 110      format(a30,1x,2(e10.4,1x),(i2,1x),e10.4)
          write(27,112) lay,pavel(lay),
-     &   tavel(lay),specparm,specparm1
-112      format(1(i2,','),2(f12.5,','),1(e12.5,','),1(e12.5))         
+     &   tavel(lay),ftt(lay),specparm,specparm1
+112      format(1(i2,','),2(f12.5,','),2(e12.5,','),1(e12.5))         
          SPECCOMB_MO3 = COLH2O(LAY) + REFRAT_M_A*COLCO2(LAY)
          SPECPARM_MO3 = COLH2O(LAY)/SPECCOMB_MO3
          IF (SPECPARM_MO3 .GE. ONEMINUS) SPECPARM_MO3 = ONEMINUS
@@ -2344,13 +2344,13 @@ c         ENDIF
 C EMPIRICAL MODIFICATION TO CODE TO IMPROVE STRATOSPHERIC COOLING RATES
 C FOR O3 
 
-         TAUG(LAY,8)=TAUG(LAY,8)*0.92
-         TAUG(LAY,9)=TAUG(LAY,9)*0.88
-         TAUG(LAY,10)=TAUG(LAY,10)*1.07
-         TAUG(LAY,11)=TAUG(LAY,11)*1.1
-         TAUG(LAY,12)=TAUG(LAY,12)*0.99
-         TAUG(LAY,13)=TAUG(LAY,13)*0.88
-         TAUG(LAY,14)=TAUG(LAY,14)*0.83
+c         TAUG(LAY,8)=TAUG(LAY,8)*0.92
+c         TAUG(LAY,9)=TAUG(LAY,9)*0.88
+c         TAUG(LAY,10)=TAUG(LAY,10)*1.07
+c         TAUG(LAY,11)=TAUG(LAY,11)*1.1
+c         TAUG(LAY,12)=TAUG(LAY,12)*0.99
+c         TAUG(LAY,13)=TAUG(LAY,13)*0.88
+c         TAUG(LAY,14)=TAUG(LAY,14)*0.83
 
  3500 CONTINUE
 
