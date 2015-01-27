@@ -74,7 +74,7 @@ C NEW VARIABLES
       COMMON /NEWINTIND/   jtt(mxlay),tempgrid(11)
       COMMON /NEWCOMBFAC/ combfactor(mxlay),combfactor_1(mxlay)
       COMMON /NEWINTFAC/   FAC00tt(MXLAY),FAC01tt(MXLAY),
-     &                  FAC10tt(MXLAY),FAC11tt(MXLAY)   
+     &                  FAC10tt(MXLAY),FAC11tt(MXLAY),ftt(mxlay)  
 
        DATA CHALF/
      &0.11214E-01, 0.10959E-01, 0.29497E-01, 0.97672E-01, 0.40717E+00,
@@ -83,7 +83,7 @@ C NEW VARIABLES
        DATA TEMPGRID/ 
      &170.000,185.000,200.000,215.000,230.000,245.000, 
      &260.000,275.000,290.000,305.000,320.000/               
-      REAL ftt
+C      REAL ftt
       DIMENSION CHALF(11)
 
 C END NEW VARIABLES 
@@ -231,9 +231,9 @@ C NEW CODE
          elseif (jtt(lay) .gt. 10) then
              jtt(lay) = 10
          endif
-         ftt = (TAVEL(LAY)-TEMPGRID(JTT(lay)))/15.
+         ftt(lay) = (TAVEL(LAY)-TEMPGRID(JTT(lay)))/15.
          write(25,990) '  JP,JP1,FP,JTT,FTT',
-     &     jp(lay),jp1,fp,jtt(lay),ftt
+     &     jp(lay),jp1,fp,jtt(lay),ftt(lay)
 990      format(a20,1x,2(i2,1x),1e10.4,1x,i2,1x,e10.4)
 C END NEW CODE
                   
@@ -361,10 +361,10 @@ C        the optical depths (performed in routines TAUGBn for band n).`
          FAC01(LAY) = FP * (1. - FT1)
         
 C NEW CODE
-         FAC10tt(LAY) = COMPFP * ftt
-         FAC00tt(LAY) = COMPFP * (1. - ftt)
-         FAC11tt(LAY) = FP * FTt
-         FAC01tt(LAY) = FP * (1. - ftt)
+         FAC10tt(LAY) = COMPFP * ftt(lay)
+         FAC00tt(LAY) = COMPFP * (1. - ftt(lay))
+         FAC11tt(LAY) = FP * FTt(lay)
+         FAC01tt(LAY) = FP * (1. - ftt(lay))
          write(25,1000) '  FAC10/00/11/01',fac10tt(lay),
      & fac00tt(lay),fac11tt(lay),fac01tt(lay)
 1000     format(a20,1x,4(e10.4,1x))
