@@ -379,7 +379,7 @@ C     Read in atmospheric profile.
       PARAMETER (MXLAY=603, MXMOL=39)
       PARAMETER (NBANDS = 16)
       PARAMETER (MAXINPX=MXMOL)
-      PARAMETER (MAXXSEC=4)
+      PARAMETER (MAXXSEC=38)
       PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
       DIMENSION ALTZ(0:MXLAY),IXTRANS(14),SEMIS(NBANDS)
@@ -399,7 +399,7 @@ C     Read in atmospheric profile.
       COMMON /IFIL/     IRD,IPR,IPU,IDUM(15)
       COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
       COMMON /XSEC/     WX(MAXXSEC,MXLAY)
-      COMMON /PATHX/    IXMAX,NXMOL0,IXINDX0(MAXINPX),WX0(MAXINPX,MXLAY)
+      COMMON /PATHX/    IXMAX,NXMOL0,IXINDX0(MAXXSEC),WX0(MAXXSEC,MXLAY)
       COMMON /XRRTATM/  IXSECT
 
       CHARACTER*80 FORM1(0:1),FORM2(0:1),FORM3(0:1)
@@ -494,7 +494,8 @@ C
          CALL RRTATM
          IF (IXSECT .EQ. 1) THEN
             DO 3300 MX = 1, NXMOL0
-               IXINDX(MX) = IXTRANS(IXINDX0(MX))
+               IXINDX(MX) = IXINDX0(MX)
+               print *,mx,ixindx(mx)
  3300       CONTINUE
          ENDIF
       ENDIF
@@ -738,12 +739,12 @@ C************************  SUBROUTINE XSIDENT  *****************************C
 C                                                                         
 C     This subroutine identifies which cross-sections are to be used.
 
-      PARAMETER (MAXINPX=35)
-      PARAMETER (MAXXSEC=4)
+      PARAMETER (mx_xs=38)
+      PARAMETER (mx_alias=4)
 
       IMPLICIT DOUBLE PRECISION (V) 
 C                                                                         
-      COMMON /XSECCTRL/ NXMOL,IXINDX(MAXINPX)
+      COMMON /XSECCTRL/ NXMOL,IXINDX(mx_xs)
 C                                                                         
 C     NXMOL     - number of cross-sections input by user
 C     IXINDX(I) - index of cross-section molecule corresponding to Ith
@@ -756,16 +757,42 @@ C                 = 4 -- CFC22
 C                                                                         
 C     XSNAME=NAMES, ALIAS=ALIASES OF THE CROSS-SECTION MOLECULES          
 C                                                                         
-      CHARACTER*10 XSNAME(MAXINPX),ALIAS(MAXXSEC,4),BLANK               
+      CHARACTER*10 XSNAME(mx_xs),ALIAS(mx_alias,mx_xs),BLANK               
+
+      DATA (ALIAS(1,I),I=1,mx_xs)/                                      &
+     &    'CLONO2    ', 'HNO4      ', 'CHCL2F    ', 'CCL4      ',       &
+     &    'CCL3F     ', 'CCL2F2    ', 'C2CL2F4   ', 'C2CL3F3   ',       &
+     &    'N2O5      ', 'HNO3      ', 'CF4       ', 'CHCLF2    ',       &
+     &    'CCLF3     ', 'C2CLF5    ', 'NO2       ', 'PAN       ',       &
+     &    'ACET      ', 'CH3CN     ', 'CHF2CF3   ', 'CFH2CF3   ',       &
+     &    'CF3CH3    ', 'CH3CHF2   ', 'CH2F2     ', 'CCl2FCH3  ',       &
+     &    'CH3CClF2  ', 'CHClF2    ', 'CHCl2CF3  ', 'CHCl2C2F5 ',       &
+     &    'C3HCl2F5  ', 'C3HCl2F5  ', 'SO2       ', 'ISOP      ',       &
+     &    'CHF3      ',  5*' ZZZZZZZZ ' /
+      DATA (ALIAS(2,I),I=1,mx_xs)/                                      &
+     &    'CLNO3     ', ' ZZZZZZZZ ', 'CFC21     ', ' ZZZZZZZZ ',       &
+     &    'CFCL3     ', 'CF2CL2    ', 'C2F4CL2   ', 'C2F3CL3   ',       &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CHF2CL    ',       &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', ' ZZZZZZZZ ', ' ZZZZZZZZ ',       &
+     &    'CH3COCH3  ', ' ZZZZZZZZ ', 'HFC-125   ', 'HFC-134a  ',       &
+     &    'HFC-143a  ', 'HFC-152a  ', 'HFC-32    ', 'HCFC-141b ',       &
+     &    'HCFC-142b ', 'HCFC-22   ', 'HCFC-123  ', 'HCFC-124  ',       &
+     &    'HCFC-225ca', 'HCFC-225cb', ' ZZZZZZZZ ', 'C5H8      ',       &
+     &    'HFC-23    ',   5*' ZZZZZZZZ ' /
+      DATA (ALIAS(3,I),I=1,mx_xs)/                                      &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CFC21     ', ' ZZZZZZZZ ',       &
+     &    'CFC11     ', 'CFC12     ', 'CFC114    ', 'CFC113    ',       &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'CFC14     ', 'CFC22     ',       &
+     &    'CFC13     ', 'CFC115    ', ' ZZZZZZZZ ', ' ZZZZZZZZ ',       &
+     &    'ACETONE   ', 21*' ZZZZZZZZ ' /                                
+      DATA (ALIAS(4,I),I=1,mx_xs)/                                      &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'F21       ', ' ZZZZZZZZ ',       &
+     &    'F11       ', 'F12       ', 'F114      ', 'F113      ',       &
+     &    ' ZZZZZZZZ ', ' ZZZZZZZZ ', 'F14       ', 'F22       ',       &
+     &    'F13       ', 'F115      ',  ' ZZZZZZZZ ', ' ZZZZZZZZ ',      &
+     &    'CH3C(O)CH3', 21*' ZZZZZZZZ ' /         
+
 C                                                                         
-      DATA (ALIAS(1,I),I=1,4)/                                           
-     *    'CCL4      ', 'CCL3F     ', 'CCL2F2    ', 'CHCLF2    '/ 
-      DATA (ALIAS(2,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'CFCL3     ', 'CF2CL2    ', 'CHF2CL    '/
-      DATA (ALIAS(3,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'CFC11     ', 'CFC12     ', 'CFC22     '/
-      DATA (ALIAS(4,I),I=1,4)/                                           
-     *    ' ZZZZZZZZ ', 'F11       ', 'F12       ', 'F22       '/
 
       DATA BLANK / '          '/  
 C                                                                         
@@ -807,7 +834,7 @@ C        Left-justify all inputed names.
       PARAMETER (MG = 16)
       PARAMETER (NBANDS = 16)
       PARAMETER (MXLAY=603)
-      PARAMETER (MAXXSEC=4)
+      PARAMETER (MAXXSEC=38)
       PARAMETER (MAXPROD = MXLAY*MAXXSEC)
 
       COMMON /CONSTANTS/ FLUXFAC,HEATFAC
