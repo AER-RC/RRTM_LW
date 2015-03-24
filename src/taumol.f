@@ -2015,6 +2015,7 @@ C  Input
       COMMON /K8/       KA(5,13,MG), KB(5,13:59,MG), FORREF(4,MG),
      &                  SELFREF(10,MG), KA_MCO2(19,MG), KA_MO3(19,MG),
      &                  KA_MN2O(19,MG), KA_X125(19,MG),KB_X125(19,MG), 
+     &                  KA_X134(19,MG),KB_X134(19,MG),
      &                  KB_MCO2(19,MG), KB_MN2O(19,MG)
 
 
@@ -2023,7 +2024,7 @@ C  Input
       CHARACTER*18       HNAMTAU,HVRTAU
 
       REAL KA,KB,KA_MCO2,KA_MO3,KA_MN2O,KA_X125,KB_X125,
-     &     KB_MCO2,KB_MN2O, MINORFRAC              
+     &     KA_X134,KB_X134,KB_MCO2,KB_MN2O, MINORFRAC              
 
       DIMENSION ABSA(65,MG),ABSB(235,MG),CFC12(MG),CFC22ADJ(MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -2045,10 +2046,12 @@ C     LOWER - CO2, P = 1053.63 mb, T = 294.2 K
 C     LOWER - O3,  P = 317.348 mb, T = 240.77 K
 C     LOWER - N2O, P = 706.2720 mb, T= 278.94 K
 C     LOWER - HFC-125, P=473.43 mb, T=259.83K
+C     LOWER - HFC-134a, P=317.34 mb, T=240.77K
 C     LOWER - CFC12,CFC11
 C     UPPER - CO2, P = 35.1632 mb, T = 223.28 K
 C     UPPER - N2O, P = 8.716e-2 mb, T = 226.03 K
 C     UPPER - HFC-125, P=95.58 mb, T=215.7
+C     UPPER - HFC-134a, P=95.58 mb, T=215.7
 
       DATA CFC12/
      &     85.4027, 89.4696, 74.0959, 67.7480,
@@ -2112,6 +2115,9 @@ c     to obtain the proper contribution.
             ABSX125 =  (KA_X125(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KA_X125(INDM+1,IG) - KA_X125(INDM,IG)))
+            ABSX134 =  (KA_X134(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_X134(INDM+1,IG) - KA_X134(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
@@ -2124,6 +2130,7 @@ c     to obtain the proper contribution.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + WX(19,LAY) * ABSX125
+     &           + WX(20,LAY) * ABSX134
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -2156,6 +2163,9 @@ c     to obtain the proper contribution.
             ABSX125 =  (KB_X125(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_X125(INDM+1,IG) - KB_X125(INDM,IG)))
+            ABSX134 =  (KB_X134(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_X134(INDM+1,IG) - KB_X134(INDM,IG)))
             TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
@@ -2166,6 +2176,7 @@ c     to obtain the proper contribution.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + WX(19,LAY) * ABSX125
+     &           + WX(20,LAY) * ABSX134
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
