@@ -2017,6 +2017,7 @@ C  Input
      &                  KA_MN2O(19,MG), KA_X125(19,MG),KB_X125(19,MG), 
      &                  KA_X134(19,MG),KB_X134(19,MG),
      &                  KA_XR32(19,MG),KB_XR32(19,MG),
+     &                  KA_XR23(19,MG),KB_XR23(19,MG),
      &                  KB_MCO2(19,MG), KB_MN2O(19,MG)
 
 
@@ -2025,7 +2026,9 @@ C  Input
       CHARACTER*18       HNAMTAU,HVRTAU
 
       REAL KA,KB,KA_MCO2,KA_MO3,KA_MN2O,KA_X125,KB_X125,
-     &     KA_X134,KB_X134,KA_XR32,KB_XR32,KB_MCO2,KB_MN2O, MINORFRAC              
+     &     KA_X134,KB_X134,KA_XR32,KB_XR32,KA_XR23,KB_XR23,
+     &     KB_MCO2,KB_MN2O, MINORFRAC              
+     
 
       DIMENSION ABSA(65,MG),ABSB(235,MG),CFC12(MG),CFC22ADJ(MG)
       DIMENSION FRACREFA(MG),FRACREFB(MG)
@@ -2047,10 +2050,15 @@ C     LOWER - CO2, P = 1053.63 mb, T = 294.2 K
 C     LOWER - O3,  P = 317.348 mb, T = 240.77 K
 C     LOWER - N2O, P = 706.2720 mb, T= 278.94 K
 C     LOWER - HFC-125, P=473.43 mb, T=259.83K
+C     LOWER - HFC-134a, P=473.43 mb, T=259.83K
+C     LOWER - HFC-32, P=473.43 mb, T=259.83K
 C     LOWER - CFC12,CFC11
+
 C     UPPER - CO2, P = 35.1632 mb, T = 223.28 K
 C     UPPER - N2O, P = 8.716e-2 mb, T = 226.03 K
 C     UPPER - HFC-125, P=95.58 mb, T=215.7
+C     UPPER - HFC-134a, P=95.58 mb, T=215.7
+C     UPPER - HFC-23, P=95.58 mb, T=215.7
 
       DATA CFC12/
      &     85.4027, 89.4696, 74.0959, 67.7480,
@@ -2120,6 +2128,9 @@ c     to obtain the proper contribution.
             ABSXR32 =  (KA_XR32(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KA_XR32(INDM+1,IG) - KA_XR32(INDM,IG)))
+            ABSXR23 =  (KA_XR23(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_XR23(INDM+1,IG) - KA_XR23(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
@@ -2134,6 +2145,7 @@ c     to obtain the proper contribution.
      &           + WX(19,LAY) * ABSX125
      &           + WX(20,LAY) * ABSX134
      &           + WX(23,LAY) * ABSXR32
+     &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
@@ -2172,6 +2184,9 @@ c     to obtain the proper contribution.
             ABSXR32 =  (KB_XR32(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_XR32(INDM+1,IG) - KB_XR32(INDM,IG)))
+            ABSXR23 =  (KB_XR23(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_XR23(INDM+1,IG) - KB_XR23(INDM,IG)))
             TAUG(LAY,IG) = COLO3(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
@@ -2184,6 +2199,7 @@ c     to obtain the proper contribution.
      &           + WX(19,LAY) * ABSX125
      &           + WX(20,LAY) * ABSX134
      &           + WX(23,LAY) * ABSXR32
+     &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -2198,7 +2214,7 @@ C----------------------------------------------------------------------------
 C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
 C                             (high key - CH4; high minor - N2O)
 
-      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16)
+      PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16,MAXXSEC=38)
 
 C  Output
 
@@ -2220,6 +2236,7 @@ C  Input
       COMMON /MLS_REF/  PREF(59),PREFLOG(59),TREF(59),CHI_MLS(9,59)
       COMMON /INTFAC/   FAC00(MXLAY),FAC01(MXLAY),                            
      &                  FAC10(MXLAY),FAC11(MXLAY)                             
+      COMMON /XSEC/     WX(MAXXSEC,MXLAY)
       COMMON /INTIND/   JP(MXLAY),JT(MXLAY),JT1(MXLAY)
       COMMON /REFRAT_ETA/ RAT_H2OCO2(MXLAY),RAT_H2OCO2_1(MXLAY),
      &                  RAT_H2OO3(MXLAY),RAT_H2OO3_1(MXLAY),
@@ -2232,7 +2249,8 @@ C  Input
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K9/       KA(9,5,13,MG),KB(5,13:59,MG),FORREF(4,MG),
-     &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(19,MG)
+     &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(19,MG),
+     &                  KA_X125(9,19,MG),KB_X125(19,MG),
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -2240,6 +2258,7 @@ C  Input
 
       REAL KA,KB
       REAL KA_MN2O,KB_MN2O,MINORFRAC,N2OM1,N2OM2
+      REAL KA_X125, KB_X125
       DIMENSION ABSA(585,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
@@ -2304,6 +2323,13 @@ C     P = 212 mb
 C     P = 706.272 mb 
       REFRAT_M_A = CHI_MLS(1,3)/CHI_MLS(6,3)
 
+c     !open (55,file='minor_map_level')
+c     read (55,*) minor_map_lev
+c     close(55)
+
+      minor_map_lev = 5
+      REFRAT_X_A = CHI_MLS(1,minor_map_lev)/CHI_MLS(6,minor_map_lev)
+
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
 C     vapor self-continuum and foreign continuum is interpolated 
@@ -2333,6 +2359,16 @@ C     (in temperature) separately.
          SPECMULT_MN2O = 8.*SPECPARM_MN2O
          JMN2O = 1 + INT(SPECMULT_MN2O)
          FMN2O = AMOD(SPECMULT_MN2O,1.0)
+
+         SPECCOMB_X125 = COLH2O(LAY) + REFRAT_X_A*COLCH4(LAY)
+         SPECPARM_X125 = COLH2O(LAY)/SPECCOMB_X125
+         !print *,'  '
+         !print *,lay,speccomb_x125,specparm_x125
+         IF (SPECPARM_X125 .GE. ONEMINUS) SPECPARM_X125 = ONEMINUS
+         SPECMULT_X125 = 8.*SPECPARM_X125
+         JX125 = 1 + INT(SPECMULT_X125)
+         FX125 = AMOD(SPECMULT_X125,1.0)
+
 
 c     In atmospheres where the amount of N2O is too great to be considered
 c     a minor species, adjust the column amount of N2O by an empirical factor 
@@ -2420,6 +2456,7 @@ c     to obtain the proper contribution.
              FAC111 = FS1 * FAC11(LAY)
          ENDIF
 
+         !print *,lay,wx(19,lay)
          DO 2000 IG = 1, NG(9)
              TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
      &           SELFFRAC(LAY)  *
@@ -2435,6 +2472,25 @@ c     to obtain the proper contribution.
      &           KA_MN2O(JMN2O,INDM+1,IG))
              ABSN2O = N2OM1 + MINORFRAC(LAY)
      &           * (N2OM2 - N2OM1)
+
+             X125_1 = KA_X125(JX125,INDM,IG) + FX125*
+     &           (KA_X125(JX125+1,INDM,IG)-
+     &           KA_X125(JX125,INDM,IG))
+             X125_2 = KA_X125(JX125,INDM+1,IG) + FX125*
+     &           (KA_X125(JX125+1,INDM+1,IG)-
+     &           KA_X125(JX125,INDM+1,IG))
+             ABSX125 = X125_1 + MINORFRAC(LAY)
+     &           * (X125_2 - X125_1)
+             !if (lay.eq.27) then
+             !print *,'extra for layer 27'
+             ! print *,  KA_X125(JX125,INDM,IG),KA_X125(JX125+1,INDM,IG)
+             !   print *, FX125, X125_1
+         ! print *,  KA_X125(JX125,INDM+1,IG),KA_X125(JX125+1,INDM+1,IG)
+         !       print *, FX125, X125_2
+         !       print *, ig,absx125
+         !    print *,'end extra for layer 27'
+         !     endif
+
              IF (SPECPARM .LT. 0.125) THEN
                  TAU_MAJOR =  SPECCOMB *
      &               (FAC000 * ABSA(IND0,IG) +
@@ -2484,6 +2540,8 @@ c     to obtain the proper contribution.
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
      &           + ADJCOLN2O*ABSN2O            
+     &           + WX(19,LAY)*ABSX125
+            !print *,ig,absx125,WX(19,LAY)*ABSX125
              FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
      &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
  2000    CONTINUE
@@ -2506,16 +2564,22 @@ c     to obtain the proper contribution.
          IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(9) + 1
          INDM = INDMINOR(LAY)
 
+         !print *,lay,wx(19,lay)
          DO 3000 IG = 1, NG(9)
             ABSN2O = KB_MN2O(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_MN2O(INDM+1,IG) - KB_MN2O(INDM,IG))
+            ABSX125 = KB_X125(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_X125(INDM+1,IG) - KB_X125(INDM,IG))
             TAUG(LAY,IG) = COLCH4(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
      &           + ADJCOLN2O*ABSN2O
+     &           + ABSX125*WX(19,LAY)
+            !print *,ig,absx125,WX(19,LAY)*ABSX125
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
