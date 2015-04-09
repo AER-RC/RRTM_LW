@@ -1496,8 +1496,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB6
 
-C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2)
-C                           (high key - nothing; high minor - CFC11, CFC12)
+C     BAND 6:  820-980 cm-1 (low key - H2O; low minor - CO2,CFC11,CFC12, HFC-125, HFC-143a)
+C                           (high key - nothing; high minor - CFC11, CFC12, HFC-125, HFC-143a)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, MAXXSEC=38, NBANDS=16)
 
@@ -1527,7 +1527,8 @@ C  Input
       COMMON /MINOR/    MINORFRAC(MXLAY), INDMINOR(MXLAY), 
      &                  SCALEMINOR(MXLAY),SCALEMINORN2(MXLAY)
       COMMON /K6/       KA(5,13,MG), FORREF(4,MG), SELFREF(10,MG), 
-     &                  KA_MCO2(19,MG)
+     &                  KA_MCO2(19,MG),KA_X125(19,MG),KB_X125(19,MG),
+     &                  KA_X143(19,MG),KB_X143(19,MG)
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -1535,7 +1536,7 @@ C  Input
 
       DIMENSION ABSA(65,MG)
       DIMENSION FRACREFA(MG),CFC11ADJ(MG), CFC12(MG)
-      REAL KA_MCO2, MINORFRAC
+      REAL KA_MCO2, MINORFRAC, KA_X125, KB_X125, KA_X143, KB_X143
       
 C Planck fraction mapping level : P = 473.4280 mb, T = 259.83 K
       DATA FRACREFA /
@@ -1545,7 +1546,12 @@ C Planck fraction mapping level : P = 473.4280 mb, T = 259.83 K
 
 C Minor gas mapping level:
 C     LOWER - CO2, P = 706.2720 mb, T = 294.2 K
+C     LOWER - CFC11, CFC12
+C     HFC-125, P=473.42 mb, T=259.83K
+C     HFC-143, P=317.34 mb, T=240.77K
+
 C     UPPER - CFC11, CFC12
+C     UPPER - HFC-125 and HFC-143 use same Ks as in troposphere
 
 C      DATA CFC11/
 C     &     0., 0., 26.5435, 108.850,
@@ -1596,6 +1602,11 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
+         scl143 = 1.0
+         if (pavel(lay) .lt. 600.) then
+             scl143 = 1. + 0.6 * (pavel(lay)-600.)/(95.-600.)
+         endif
+
          DO 2000 IG = 1, NG(6)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -1606,6 +1617,12 @@ c     to obtain the proper contribution.
             ABSCO2 =  (KA_MCO2(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KA_MCO2(INDM+1,IG) - KA_MCO2(INDM,IG)))
+            ABSX125 =  (KA_X125(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_X125(INDM+1,IG) - KA_X125(INDM,IG)))
+            ABSX143 =  (KA_X143(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KA_X143(INDM+1,IG) - KA_X143(INDM,IG)))
             TAUG(LAY,IG) = COLH2O(LAY) *
      &          (FAC00(LAY) * ABSA(IND0,IG) +
      &           FAC10(LAY) * ABSA(IND0+1,IG) +
@@ -1615,16 +1632,32 @@ c     to obtain the proper contribution.
      &           + ADJCOLCO2 * ABSCO2
      &           + WX(2,LAY) * CFC11ADJ(IG)
      &           + WX(3,LAY) * CFC12(IG)
+     &           + WX(19,LAY) * ABSX125
+     &           + scl143 * WX(21,LAY) * ABSX143
+                   !print *, ig,ka_x125(indm,ig),absx125
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
  2500 CONTINUE
 
-C     Nothing important goes on above LAYTROP in this band.
+C     Nothing important goes on above LAYTROP in this band, except for CFCs and HFCs.
       DO 3500 LAY = LAYTROP+1, NLAYERS
+
+         IND0 = ((JP(LAY)-13)*5+(JT(LAY)-1))*NSPB(6) + 1
+         IND1 = ((JP(LAY)-12)*5+(JT1(LAY)-1))*NSPB(6) + 1
+         INDM = INDMINOR(LAY)
+
          DO 3000 IG = 1, NG(6)
+            ABSX125 =  (KB_X125(INDM,IG) +
+     &           MINORFRAC(LAY) *
+     &           (KB_X125(INDM+1,IG) - KB_X125(INDM,IG)))
+            ABSX143 =  (KB_X143(INDM,IG) +
+     &           MINORFRAC(LAY) *
+     &           (KB_X143(INDM+1,IG) - KB_X143(INDM,IG)))
             TAUG(LAY,IG) = 0.0 
      &           + WX(2,LAY) * CFC11ADJ(IG)
      &           + WX(3,LAY) * CFC12(IG)
+     &           + WX(19,LAY) * ABSX125
+     &           + 1.6 * WX(21,LAY) * ABSX143
             FRACS(LAY,IG) = FRACREFA(IG)
  3000    CONTINUE
  3500 CONTINUE
@@ -2049,16 +2082,21 @@ C Minor gas mapping level:
 C     LOWER - CO2, P = 1053.63 mb, T = 294.2 K
 C     LOWER - O3,  P = 317.348 mb, T = 240.77 K
 C     LOWER - N2O, P = 706.2720 mb, T= 278.94 K
-C     LOWER - HFC-125, P=473.43 mb, T=259.83K
+C     LOWER - HFC-125, P=317.34 mb, T=240.77K
 C     LOWER - HFC-134a, P=473.43 mb, T=259.83K
+
+C     LOWER - HFC-23, P=317.34 mb, T=240.77K
 C     LOWER - HFC-32, P=473.43 mb, T=259.83K
+C     LOWER - HFC-125, P=473.43 mb, T=259.83K
+C     LOWER - HFC-134, P=473.43 mb, T=259.83K
 C     LOWER - CFC12,CFC11
 
 C     UPPER - CO2, P = 35.1632 mb, T = 223.28 K
 C     UPPER - N2O, P = 8.716e-2 mb, T = 226.03 K
+C     UPPER - HFC-23, P=95.58 mb, T=215.7
+C     UPPER - HFC-32, P=95.58 mb, T=215.7
 C     UPPER - HFC-125, P=95.58 mb, T=215.7
 C     UPPER - HFC-134a, P=95.58 mb, T=215.7
-C     UPPER - HFC-23, P=95.58 mb, T=215.7
 
       DATA CFC12/
      &     85.4027, 89.4696, 74.0959, 67.7480,
@@ -2103,6 +2141,11 @@ c     to obtain the proper contribution.
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
 
+         scl134 = 1.6
+         if (pavel(lay) .lt. 500.) then
+             scl134 = 1.6 + 1.2 * (pavel(lay)-500.)/(95.-500.)
+         endif   
+
       DO 2000 IG = 1, NG(8)
             TAUSELF = SELFFAC(LAY) * (SELFREF(INDS,IG) + 
      &           SELFFRAC(LAY) *
@@ -2143,8 +2186,8 @@ c     to obtain the proper contribution.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + WX(19,LAY) * ABSX125
-     &           + WX(20,LAY) * ABSX134
-     &           + WX(23,LAY) * ABSXR32
+     &           + scl134* WX(20,LAY) * ABSX134
+     &           + 1.33 * WX(23,LAY) * ABSXR32
      &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFA(IG)
  2000    CONTINUE
@@ -2197,7 +2240,7 @@ c     to obtain the proper contribution.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + WX(19,LAY) * ABSX125
-     &           + WX(20,LAY) * ABSX134
+     &           + 2.8* WX(20,LAY) * ABSX134
      &           + WX(23,LAY) * ABSXR32
      &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFB(IG)
@@ -2211,8 +2254,8 @@ C----------------------------------------------------------------------------
 
       SUBROUTINE TAUGB9
 
-C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O)
-C                             (high key - CH4; high minor - N2O)
+C     BAND 9:  1180-1390 cm-1 (low key - H2O,CH4; low minor - N2O,HFC-125,HFC-134a,HFC-143a)
+C                             (high key - CH4; high minor - N2O,HFC-125,HFC-134a,HFC-143a)
 
       PARAMETER (MG=16, MXLAY=603, MXMOL=39, NBANDS=16,MAXXSEC=38)
 
@@ -2251,7 +2294,8 @@ C  Input
       COMMON /K9/       KA(9,5,13,MG),KB(5,13:59,MG),FORREF(4,MG),
      &                  SELFREF(10,MG),KA_MN2O(9,19,MG),KB_MN2O(19,MG),
      &                  KA_X125(9,19,MG),KB_X125(19,MG),
-     &                  KA_X134(9,19,MG),KB_X134(19,MG)
+     &                  KA_X134(9,19,MG),KB_X134(19,MG),
+     &                  KA_X143(9,19,MG),KB_X143(19,MG),
 
       COMMON /CVRTAU/    HNAMTAU,HVRTAU
 
@@ -2259,7 +2303,7 @@ C  Input
 
       REAL KA,KB
       REAL KA_MN2O,KB_MN2O,MINORFRAC,N2OM1,N2OM2
-      REAL KA_X125, KB_X125,KA_X134, KB_X134
+      REAL KA_X125, KB_X125,KA_X134, KB_X134,KA_X143, KB_X143
       DIMENSION ABSA(585,MG),ABSB(235,MG)
       DIMENSION FRACREFA(MG,9), FRACREFB(MG)
 
@@ -2311,7 +2355,13 @@ C Planck fraction mapping level : P=3.20e-2 mb, T = 197.92 K
 
 C Minor gas mapping level :
 C     LOWER - N2O, P = 706.272 mbar, T = 278.94 K
+C     LOWER - HFC-125, P=473.43 mbar, ,T=259.83 K
+C     LOWER - HFC-134a, P=317.35 mbar, ,T=240.77 K
+C     LOWER - HFC-143a, P=142.59 mbar, ,T=215.77 K
+
 C     UPPER - N2O, P = 95.58 mbar, T = 215.7 K
+C     UPPER - HFC-125, HFC-134a and HFC-143a all mapped by the first stratospheric level
+C      at 95.58 mbar and 215,77 K
 
       EQUIVALENCE (KA,ABSA),(KB,ABSB)
 
@@ -2330,6 +2380,7 @@ C     P = 706.272 mb
 
       REFRAT_X125_A = CHI_MLS(1,5)/CHI_MLS(6,5)
       REFRAT_X134_A = CHI_MLS(1,7)/CHI_MLS(6,7)
+      REFRAT_X143_A = CHI_MLS(1,11)/CHI_MLS(6,11)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
@@ -2374,6 +2425,13 @@ C     (in temperature) separately.
          SPECMULT_X134 = 8.*SPECPARM_X134
          JX134 = 1 + INT(SPECMULT_X134)
          FX134 = AMOD(SPECMULT_X134,1.0)
+
+         SPECCOMB_X143 = COLH2O(LAY) + REFRAT_X143_A*COLCH4(LAY)
+         SPECPARM_X143 = COLH2O(LAY)/SPECCOMB_X143
+         IF (SPECPARM_X143 .GE. ONEMINUS) SPECPARM_X143 = ONEMINUS
+         SPECMULT_X143 = 8.*SPECPARM_X143
+         JX143 = 1 + INT(SPECMULT_X143)
+         FX143 = AMOD(SPECMULT_X143,1.0)
 
 
 c     In atmospheres where the amount of N2O is too great to be considered
@@ -2496,6 +2554,15 @@ c     to obtain the proper contribution.
              ABSX134 = X134_1 + MINORFRAC(LAY)
      &           * (X134_2 - X134_1)
 
+             X143_1 = KA_X143(JX143,INDM,IG) + FX143*
+     &           (KA_X143(JX143+1,INDM,IG)-
+     &           KA_X143(JX143,INDM,IG))
+             X143_2 = KA_X143(JX143,INDM+1,IG) + FX143*
+     &           (KA_X143(JX143+1,INDM+1,IG)-
+     &           KA_X143(JX143,INDM+1,IG))
+             ABSX143 = X143_1 + MINORFRAC(LAY)
+     &           * (X143_2 - X143_1)
+
              IF (SPECPARM .LT. 0.125) THEN
                  TAU_MAJOR =  SPECCOMB *
      &               (FAC000 * ABSA(IND0,IG) +
@@ -2547,6 +2614,7 @@ c     to obtain the proper contribution.
      &           + ADJCOLN2O*ABSN2O            
      &           + WX(19,LAY)*ABSX125
      &           + WX(20,LAY)*ABSX134
+     &           + WX(21,LAY)*ABSX143
              FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
      &           (FRACREFA(IG,JPL+1)-FRACREFA(IG,JPL))
  2000    CONTINUE
@@ -2579,6 +2647,9 @@ c     to obtain the proper contribution.
             ABSX134 = KB_X134(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_X134(INDM+1,IG) - KB_X134(INDM,IG))
+            ABSX143 = KB_X143(INDM,IG) + 
+     &           MINORFRAC(LAY) *
+     &           (KB_X143(INDM+1,IG) - KB_X143(INDM,IG))
             TAUG(LAY,IG) = COLCH4(LAY) * 
      &          (FAC00(LAY) * ABSB(IND0,IG) +
      &           FAC10(LAY) * ABSB(IND0+1,IG) +
@@ -2587,6 +2658,7 @@ c     to obtain the proper contribution.
      &           + ADJCOLN2O*ABSN2O
      &           + ABSX125*WX(19,LAY)
      &           + ABSX134*WX(20,LAY)
+     &           + ABSX143*WX(21,LAY)
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
  3500 CONTINUE
