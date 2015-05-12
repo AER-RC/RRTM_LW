@@ -1,5 +1,13 @@
 Update Notes for AER RRTM
 
+
+RRTM_LW_3.3.1
+
+Date May 2015: Not an official release.
+
+Fixed unit inconsistencies in CMPALT.
+
+
 RRTM_LW v3.3
 
 Date: June 2010

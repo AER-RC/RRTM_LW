@@ -1,5 +1,8 @@
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
+May 2015
+
+Fixed unit inconsistencies in CMPALT. Beta release.
 
 June 2010
 
