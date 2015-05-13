@@ -7862,7 +7862,7 @@ c      REAL BTZ
                                                                                 
 C CALCULATE GRAVITY AT REFERENCE LATITUDE AT SURFACE (cm/s2)                            
                                                                                 
-      G0 = GRAV - 0.02586*COS(2.0*PI*REF_LAT/180.0)                             
+      G0 = GRAV - 2.586*COS(2.0*PI*REF_LAT/180.0)                             
                                                                                 
 C CALCULATE THE NUMBER DENSITY OF TOTAL AIR MOLECULES [MOLEC/CM^3]              
 C CALCULATE THE COMPRESSIBILITY FACTOR (COMP_FAC) FOR THE                       
@@ -7891,7 +7891,7 @@ C CONVERT REFERENCE ALTITUDE TO METERS
       DO 20 I=1, ILVL - 1                                                       
          GAVE = G0*(RE/(RE+ZTEMP(I)/1000.0))**2                                 
 
-c Now comvert to to m/s2 for use with xmass_dry (kg) below
+c Now convert to to m/s2 for use with xmass_dry (kg) below
          GAVE = GAVE/100.
          Y =  LOG(PM(I+1)/PM(I))                                                
                                                                                 
