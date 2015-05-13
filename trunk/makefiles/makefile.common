@@ -1,0 +1,109 @@
+# $Revision$
+# USER INPUT: To be used with the make_rrtm file, also in this directory.
+# RUN MAKEFILE from parent directory using make -f makefiles/make_rrtm
+
+#Set compiler; Search the list in the README.
+
+# example: linux
+FC_TYPE = pgi
+#example: sun
+#FC_TYPE =  sunf90
+# example: sgi
+#FC_TYPE =  mips
+
+#Set version Name
+VERSION = v3.3.1
+
+# Set name of RRTM executable
+OUTPUT = rrtm_$(VERSION)_$(PLTFRM)_$(FC)
+
+# Set directory containing source files, relative to main directory from which
+# you are executing the makefile
+CPATH = src
+
+# Set directory for object files
+CDOTO = makefiles/$(PLTFRM)_$(FC)_$(VERSION).obj
+
+#PLATFORM := $(shell uname)
+PLATFORM=$(shell uname)
+
+# COMPILE OPTIONS
+# THESE OPTIONS CAN BE EXPANDED FOR OTHER SYSTEMS, JUST FOLLOW THE GIVEN FORMAT.
+
+# Mac operating system
+ifeq ($(PLATFORM),Darwin) 
+	PLTFRM=OS_X
+# Open source GNU Fortran 95/2003 compiler
+		ifeq ($(FC_TYPE),gnu)
+			FC = gfortran
+			FCFLAG =   -fdefault-integer-8 -fdefault-real-8 -Wall -frecord-marker=4     
+			UTIL_FILE = util_gfortran.f
+		endif
+# IBM XL Fortran
+		ifeq ($(FC_TYPE),ibm_xl)
+		        FC = xlf90
+			FCFLAG =  -qfixed -s -O -qrealsize=8 -qintsize=8 -qmaxmem=-1
+			UTIL_FILE = util_OS_X_ibm_xl.f
+		endif		
+
+# Absoft Pro Fortran Compiler
+		ifeq ($(FC_TYPE),absoft)
+		        FC = f90
+			FCFLAG = -s -O -N11 -i8 -N113
+			UTIL_FILE = util_OS_X_absoft.f
+		endif	
+
+# Intel Fortran Compiler
+		ifeq ($(FC_TYPE),intel)
+		        FC = ifort
+			FCFLAG = -O3
+			UTIL_FILE = util_OS_X_ifort.f			
+		endif	
+	
+endif
+
+ifeq ($(PLATFORM),Linux)
+     PLTFRM = linux
+
+# Portland Group Compiler
+     ifeq ($(FC_TYPE),pgi)
+		FC = pgf90
+		FCFLAG = -r8 -i8
+		UTIL_FILE = util_linux_pgi.f	  
+     endif
+
+# Intel Fortran Compiler
+     ifeq ($(FC_TYPE),intel)
+		FC = ifc
+		FCFLAG = -r8 -i8 -w -Vaxlib
+		UTIL_FILE = util_linux_intel.f	  
+     endif
+
+# g95 project
+     ifeq ($(FC_TYPE),g95)
+		FC = g95
+		FCFLAG = -O3 -r8 -i8
+		UTIL_FILE = util_linux_intel.f	  
+     endif
+endif 
+
+ifeq ($(PLATFORM),IRIX64) 
+		PLTFRM = sgi
+# MIPS pro Fortran compiler
+		ifeq ($(FC_TYPE),mips)
+		     FC = f90
+		     FCFLAG = -mips4 -r10000 -lfastm -O3 -r8 -i8 -TENV:X=0
+	             UTIL_FILE = util_sgi.f		
+		endif  
+endif
+
+ifeq ($(PLATFORM),SunOS) 
+		PLTFRM = Sun
+
+# Sun studio Fortran compiler		
+		ifeq ($(FC_TYPE),sunf90)
+		     FC = f90
+		     FCFLAG = -xtypemap=real:64,double:64,integer:64
+	             UTIL_FILE = util_sun.f		
+		endif  
+endif

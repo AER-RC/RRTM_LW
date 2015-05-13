@@ -1,0 +1,141 @@
+NOTE:
+** CVS rtags can't accept "." in strings, substitute "_"
+May 2015
+
+Fixed unit inconsistencies in CMPALT. Beta release.
+
+June 2010
+
+Release_3_3
+
+     - Modify rrtm_instructions to reflect updates
+
+     - Fix interpolation scheme bug in taumol.f
+		- See email notes from July 2009, Subject: CCMVal Case B
+
+     - Add new continuum coefficients created by Andy Maher (obtained from 
+     /storm/rc4/amaher/rrtm_cntm_mt_ckd_2.5/new-k_gB-files) in early May 2010.
+
+     - rrtm.f, cldprop.f: Overhaul the code to read in cloud optical properties, so a number
+     of revisions were made to the August 2009 revisions.  New code is
+     stored in src_newcloudopts, and has been copied into src.
+
+	- Attempted to accomodate all options properly for
+          iscat=0,1,2/inflag=0,1,2,10; Modified OUT_CLD_RRTM file to
+          reflect these options/.
+
+	- Modified many common blocks to bring read-in properties into
+          main part of code
+
+	!!- Fixed significant bug in cldprop.f that utilized the
+          iceflag=2 extinction properties in the iceflag=3 routine.
+
+	- There was an apparent bug for inflag = 0,1 in that taucloud
+          was only set for the first band.  So, in cldprop.f, added:
+	                  DO 1000 IB = 1, NCBANDS                  
+	                     TAUCLOUD(LAY,IB) = ABSCLD1 * CWP
+			  1000             CONTINUE
+
+	- Lower limit on radliq now set to 2.5 (see emails from Mike Iacono, 
+	February 2010, subject: cldprop issues).  This is now consistent with RRTMG_LW.
+
+     - Updated rrtatm.f to be consistent with lblatm v9.14 using program lbl2r_v9.14.f; this mean that the CO2MX 
+     input parameter NO LONGER works and all run decks using this scaling factor will need modification.
+
+     - extra.f: Changed MXZMD to 6000 to be consistent with new rrtatm.f; Replaced MXMOL in most all points 
+     with MX_XS to be consistent with LBLRTM and original RRTM.
+
+     - Changed MXMOL in all subroutines to 39
+
+     - rrtm.f,rrtatm.f, and others: Added gravity, specific heat of air, molecular weight of air,
+     sec/day to NIST data block in rrtm.f; Modified common blocks
+     accordingly; removed AIRMWT data statement from rrtatm.f
+
+     - rrtm.f: Updated NIST constants
+
+     - rrtatm.f: Revised gravity formulation to use "grav" constant rather
+     than hard-wired value of 9.80 in the formula for g0.
+
+     - Increase number of calculational output levels to 600 
+	- Modify MXLAY to 603 in all codes.
+	- Modify MXFSC to 600 in rrtatm.f, extra.f
+
+     - rtrdis.f: 
+	- DIMENSION BBD1(MXLAY),BBD2(MXLAY),BBD3(MXLAY)
+	- DIMENSION WTNUM(MXANG)
+	- LOGICAL DELTAM
+
+July 1, 2005
+
+Release_3_2
+
+	Not publicly released at this time.  
+
+	- Fixed bug in rtrdis.f: heating rate calculation needed a "-" in front
+		of variable heatfac to produce appropriate sign (Note: RRTM_LW and RRTM_SW
+		were designed to keep the net flux positive for both spectral regimes, thereby
+		necessitating the "-" sign for the LW heating rate calculations).
+	- Fixed minor bugs in taumol, setcoef, as reported by NCEP  
+	- Added WV continuum coefficients inadvertently left out of the original v3.0 release
+	- Fixed other minor bugs
+	- Added Absoft Pro Fortran Compiler makefile for MAC OS_X
+	- Upgraded rrtatm.f to be compatible with CVS revision 9.3 lblatm.f
+
+July 29, 2004
+
+	Release_3_1
+
+	Archiving numerous changes to the code.  Not publicly released at this time. 
+
+	- Fixed bug in the digits of PI in rrtm.f
+	- Created rtrdis to call DISORT v2 to do scattering calculations
+	- Modified disort v2 to do double precision, and change sgi makefile to compile in double
+	- Modified cldprop to do scattering.  
+		* Updated the cldprop spheres to use latest streamer version 3.0. 
+		* Remade Fu properties on finer grid.  
+		* Modified documentation. 
+		* Now output a file called OUT_CLD_RRTM with the cloud optical properties.  
+	- Added patent statement
+	- Changed number of digits printed out in net flux in rrtm.f
+	- Added new rrtatm.f made from lblatm.f v8.1 and updated extra.f to be compatible
+	- Removed numatmos option in rrtm.f
+	- Removed NUMATMOS option 
+	- Updated pressure level formatting to be consistent with RRMT_SW
+	- Updated revision number format to be consistent with RRTM_SW/LBLRTM	
+	- Updated rrtm_instructions
+
+September 16 Archive Note:  
+	Removed all utilities from the RRTM CVS repository.  Now using CVS utility repository.
+	Note that the utilities in the release 3.0 and 3.01 were also from the CVS
+	utility repository AND NOT FROM THE ARCHIVED one.  This is important when
+	checking our Release_3_0 and Release_3_01.
+
+September 16, 2002:
+
+	Release_3_01
+		This version was released to the public on September 16 (aer_rrtm_v3.01.tar.Z).  
+		It is 
+		nearly identical to v3.0 EXCEPT for a change to the SUN/SGI makefiles, a
+		a minor modification to the instruction file, and a minor modification
+		to the sample_runs directory in the tar file.
+
+August 2002: 
+
+	Release_3_0
+		This version was released to the public in mid-August.  It is the full
+		release of the new version.  Comprised the tar file aer_rrtm_v3.0.tar.Z
+
+June 10, 2002:
+
+	Release_3_0_beta_a
+		This is the first archived version in CVS of the new (3.0) release
+		RRTM.  It is being sent to Tim Shippert at PNL for testing in the BBHRP.
+		(Note: For the ARM 2002 STM, Tim received an unarchived version which
+		was called release_3_0_beta).
+
+1998:
+
+	Release 2.3
+		This was the last version archived in SCCS, and pulled into CVS.  It
+		is currently (as of June 2002) been place on the RT web-site 
+		(rtweb.aer.com).

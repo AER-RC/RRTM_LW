@@ -1,0 +1,39 @@
+# $Revision$
+
+Directions to compile RRTM (longwave) on Linux/Unix platforms with
+Fortran 90.
+
+* Edit makefiles/makefile.common.  
+
+FC_TYPE = The abbreviated name of the Fortran compiler from column 1, TABLE I.
+
+VERSION = The RRTM version number.  
+
+OUTPUT = The name of the RRTM executable, identified by version,
+platform, and compiler type.  
+
+CPATH = The directory containing the source code relative to the
+parent directory.
+
+CDOTO = The location where the Fortran object files are stored.
+
+* From parent directory above makefile directory, use the gmake utility and 
+  type: gmake -f makefiles/make_rrtm
+
+NOTE: The options in TABLE I can be expanded to include additional
+compilers.  See the "COMPILE OPTIONS" portion of the makefile.common
+file, and follow a consistent format.
+
+TABLE I.
+
+FC_TYPE		Compiler	Platform	Compiler executable
+---------------------------------------------------
+absoft		Absoft, Inc	Darwin		f90
+g95		g95		Linux		g95
+gnu		gnu		Darwin		gfortran
+ibm_xl		IBM XL		Darwin		xlf90
+intel		Intel, Inc	Darwin		ifort
+intel		Intel, Inc	Linux		ifc
+mips		Irix Fortran	SGI		f90
+pgi		Portland Group  Linux		pgf90
+sunf90		Sun Fortran 	Sun		f90
