@@ -2145,10 +2145,6 @@ c     to obtain the proper contribution.
          INDM = INDMINOR(LAY)
 
          scl32 = 1.33
-         scl125 = 1.0
-         if (pavel(lay) .lt. 600.) then
-             scl125 = 1.0 + 0.22 * (pavel(lay)-600.)/(95.-600.)
-         endif
          scl134 = 1.6
          if (pavel(lay) .lt. 500.) then
              scl134 = 1.6 + 1.2 * (pavel(lay)-500.)/(95.-500.)
@@ -2193,8 +2189,8 @@ c     to obtain the proper contribution.
      &           + COLN2O(LAY) * ABSN2O
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
-     &           + scl125 *WX(19,LAY) * ABSX125
-     &           + scl134* WX(20,LAY) * ABSX134
+     &           + WX(19,LAY) * ABSX125
+     &           + scl134 * WX(20,LAY) * ABSX134
      &           + scl32 * WX(23,LAY) * ABSXR32
      &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFA(IG)
@@ -2231,7 +2227,7 @@ c     to obtain the proper contribution.
      &           (KB_X125(INDM+1,IG) - KB_X125(INDM,IG)))
             ABSX134 =  (KB_X134(INDM,IG) + 
      &           MINORFRAC(LAY) *
-     &           (KB_X134(INDM+1,IG) - KB_X134(INDM,IG)))
+     &           (KB_X134(INDM+1,IG) - KB_X134(INDM,IG))) 
             ABSXR32 =  (KB_XR32(INDM,IG) + 
      &           MINORFRAC(LAY) *
      &           (KB_XR32(INDM+1,IG) - KB_XR32(INDM,IG)))
@@ -2248,8 +2244,8 @@ c     to obtain the proper contribution.
      &           + WX(3,LAY) * CFC12(IG)
      &           + WX(4,LAY) * CFC22ADJ(IG)
      &           + WX(19,LAY) * ABSX125
-     &           + 2.8* WX(20,LAY) * ABSX134
-     &           + WX(23,LAY) * ABSXR32
+     &           + 2.8 * WX(20,LAY) * ABSX134
+     &           + scl32 * WX(23,LAY) * ABSXR32
      &           + WX(33,LAY) * ABSXR23
             FRACS(LAY,IG) = FRACREFB(IG)
  3000    CONTINUE
@@ -2391,7 +2387,7 @@ C     P = 706.272 mb
       REFRAT_X125_A = CHI_MLS(1,1)/CHI_MLS(6,1)
       REFRAT_X134_A = CHI_MLS(1,7)/CHI_MLS(6,7)
       REFRAT_X143_A = CHI_MLS(1,11)/CHI_MLS(6,11)
-      REFRAT_XCF4 = CHI_MLS(1,5)/CHI_MLS(6,5)
+      REFRAT_XCF4_A = CHI_MLS(1,7)/CHI_MLS(6,7)
 
 C     Compute the optical depth by interpolating in ln(pressure), 
 C     temperature, and appropriate species.  Below LAYTROP, the water
@@ -2538,6 +2534,11 @@ c     to obtain the proper contribution.
              FAC111 = FS1 * FAC11(LAY)
          ENDIF
 
+         scl125 = 1.0
+         if (pavel(lay) .lt. 600.) then
+             scl125 = 1.0 + 0.2 * (pavel(lay)-600.)/(95.-600.)
+         endif
+
          DO 2000 IG = 1, NG(9)
              TAUSELF = SELFFAC(LAY)* (SELFREF(INDS,IG) +
      &           SELFFRAC(LAY)  *
@@ -2639,8 +2640,9 @@ c     to obtain the proper contribution.
              TAUG(LAY,IG) = TAU_MAJOR + TAU_MAJOR1
      &           + TAUSELF + TAUFOR
      &           + ADJCOLN2O*ABSN2O            
-     &           + WX(11,LAY)*ABSXCF4
-     &           + WX(19,LAY)*ABSX125
+     &           + 1.3 * WX(11,LAY)*ABSXCF4
+     &           + scl125 * WX(19,LAY) * ABSX125
+c     &           + WX(19,LAY)*ABSX125
      &           + WX(20,LAY)*ABSX134
      &           + WX(21,LAY)*ABSX143
              FRACS(LAY,IG) = FRACREFA(IG,JPL) + FPL *
@@ -2687,8 +2689,8 @@ c     to obtain the proper contribution.
      &           FAC01(LAY) * ABSB(IND1,IG) + 
      &           FAC11(LAY) * ABSB(IND1+1,IG))
      &           + ADJCOLN2O*ABSN2O
-     &           + ABSXCF4*WX(11,LAY)
-     &           + ABSX125*WX(19,LAY)
+     &           + 1.3 * ABSXCF4*WX(11,LAY)
+     &           + 1.2 * ABSX125*WX(19,LAY)
      &           + ABSX134*WX(20,LAY)
      &           + ABSX143*WX(21,LAY)
             FRACS(LAY,IG) = FRACREFB(IG)
