@@ -2364,7 +2364,7 @@ C     P = 212 mb
       !iplanck_map_lev = iplanck_map_lev
       !close(33)
       !print *,iplanck_map_lev
-      !iplanck_map_lev = 9
+      iplanck_map_lev = 9
 
       REFRAT_PLANCK_A = CHI_MLS(1,iplanck_map_lev)/
      &    CHI_MLS(6,iplanck_map_lev)
@@ -3626,8 +3626,8 @@ c     to obtain the proper contribution.
          JPL= 1 + INT(SPECMULT_PLANCK)
          FPL = AMOD(SPECMULT_PLANCK,1.0)
 
-         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(13) + JS
-         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(13) + JS1
+         IND0 = ((JP(LAY)-1)*5+(JT(LAY)-1))*NSPA(14) + JS
+         IND1 = (JP(LAY)*5+(JT1(LAY)-1))*NSPA(14) + JS1
          INDS = INDSELF(LAY)
          INDF = INDFOR(LAY)
          INDM = INDMINOR(LAY)
