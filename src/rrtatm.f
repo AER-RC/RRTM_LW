@@ -582,7 +582,7 @@ C                                                                        FA04820
      *                  IFXTYP,MUNITS,RE,HSPACE,XVBAR,dumrd,sref_lat            
          XVBAR = 1.0
          ITYPE = 2
-         NOZERO = 1
+         N_ZERO = 1
                                                                                 
 c Set REF_LAT variable based on input character string in SREF_LAT              
          IF (SREF_LAT .eq. '          ') THEN                                   
